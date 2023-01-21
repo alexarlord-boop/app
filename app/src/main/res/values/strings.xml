@@ -1,0 +1,8 @@
+<resources>
+    <string name="app_name">app</string>
+    <string name="add_record">add</string>
+    <string name="download_file">upload</string>
+    <string name="add_photo">Add photo</string>
+    <string name="pick_file">Select file</string>
+    <string name="course_name">courseName</string>
+</resources>
