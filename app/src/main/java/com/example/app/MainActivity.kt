@@ -14,6 +14,7 @@ import android.provider.MediaStore.Audio.Media
 import android.util.Log
 import android.view.View
 import android.widget.Button
+import android.widget.TextClock
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.result.ActivityResultLauncher
@@ -35,9 +36,9 @@ class MainActivity : AppCompatActivity() {
 
     lateinit var btnSelectFile: Button
     lateinit var streetName: TextView
+    lateinit var fio_header: TextView
     lateinit var house_header: TextView
     lateinit var flat_header: TextView
-    lateinit var account_header: TextView
     lateinit var recyclerView: RecyclerView
 
     fun getPath(context: Context, uri: Uri?): String {
@@ -78,9 +79,9 @@ class MainActivity : AppCompatActivity() {
         // Getting view elements
         btnSelectFile = findViewById(R.id.btn_select)
         streetName = findViewById(R.id.street)
+        fio_header = findViewById(R.id.fio_header)
         house_header = findViewById(R.id.house_header)
         flat_header = findViewById(R.id.flat_header)
-        account_header = findViewById(R.id.account_header)
 
         // Setting the layout as linear layout for vertical orientation
         val linearLayoutManager = LinearLayoutManager(applicationContext)
@@ -154,9 +155,9 @@ class MainActivity : AppCompatActivity() {
     }
 
     fun showListHeaders() {
+        fio_header.visibility = View.VISIBLE
         house_header.visibility = View.VISIBLE
         flat_header.visibility = View.VISIBLE
-        account_header.visibility = View.VISIBLE
     }
 
 }
