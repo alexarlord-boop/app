@@ -15,8 +15,8 @@ import java.io.FileOutputStream
 *  ---  */
 class WorkBookHandler(val context: Context, fileName: String) {
 
-    val STORAGE_PATH = Environment.getExternalStorageDirectory().toString() + "/"
-    private val file: File = File(fileName)
+    val STORAGE_PATH = Environment.getExternalStoragePublicDirectory("Download")
+    private val file: File = File(STORAGE_PATH, fileName)
     private lateinit var workbook: Workbook
     lateinit var streetName: String
 
