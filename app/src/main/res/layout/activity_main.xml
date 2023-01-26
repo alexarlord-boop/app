@@ -8,45 +8,29 @@
 
     <Button
         android:id="@+id/btn_select"
-        android:layout_width="186dp"
+        android:layout_width="wrap_content"
         android:layout_height="50dp"
 
         android:layout_marginEnd="10dp"
         android:onClick="selectFile"
         android:text="@string/pick_file"
+        android:textSize="14sp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.973"
+        app:layout_constraintHorizontal_bias="0.978"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.038" />
-
-    <TextView
-        android:id="@+id/street"
-        android:layout_width="164dp"
-        android:layout_height="35dp"
-        android:layout_marginTop="20dp"
-        android:layout_marginBottom="10dp"
-        android:gravity="center"
-        android:textStyle="bold"
-        app:autoSizeMaxTextSize="20sp"
-        app:autoSizeMinTextSize="10sp"
-        app:autoSizeTextType="uniform"
-        app:layout_constraintBottom_toTopOf="@+id/header"
-        app:layout_constraintEnd_toStartOf="@+id/btn_select"
-        app:layout_constraintHorizontal_bias="0.19"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintVertical_bias="0.058" />
 
     <LinearLayout
         android:id="@+id/header"
-        android:layout_width="409dp"
-        android:layout_height="48dp"
-        android:layout_marginTop="10dp"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="10dp"
         android:orientation="horizontal"
+        app:layout_constraintBottom_toTopOf="@+id/linearLayout"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/btn_select">
+        app:layout_constraintStart_toStartOf="parent">
 
         <androidx.constraintlayout.widget.ConstraintLayout
             android:layout_width="match_parent"
@@ -70,11 +54,10 @@
                 android:id="@+id/flat_header"
                 android:layout_width="22dp"
                 android:layout_height="20dp"
-                android:layout_marginEnd="40dp"
+                android:layout_marginEnd="35dp"
                 android:width="71dp"
                 android:gravity="center"
                 android:text="кв"
-                android:textStyle="bold"
                 android:visibility="invisible"
                 app:autoSizeMaxTextSize="20sp"
                 app:autoSizeMinTextSize="10sp"
@@ -83,7 +66,8 @@
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintHorizontal_bias="1.0"
                 app:layout_constraintStart_toEndOf="@+id/house_header"
-                app:layout_constraintTop_toTopOf="parent" />
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintVertical_bias="0.0" />
 
             <TextView
                 android:id="@+id/house_header"
@@ -91,7 +75,6 @@
                 android:layout_height="20dp"
                 android:gravity="center"
                 android:text="дом"
-                android:textStyle="bold"
                 android:visibility="invisible"
                 app:autoSizeMaxTextSize="20sp"
                 app:autoSizeMinTextSize="10sp"
@@ -126,5 +109,48 @@
             android:layout_height="wrap_content" />
 
     </LinearLayout>
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="wrap_content"
+        android:layout_height="62dp"
+        android:layout_marginStart="10dp"
+        android:layout_marginTop="10dp"
+        android:layout_marginEnd="10dp"
+        android:layout_marginBottom="10dp"
+        app:layout_constraintBottom_toTopOf="@+id/header"
+        app:layout_constraintEnd_toStartOf="@+id/btn_select"
+        app:layout_constraintHorizontal_bias="0.23"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.666">
+
+        <TextView
+            android:id="@+id/hood_area"
+            android:layout_width="135dp"
+            android:layout_height="22dp"
+            android:layout_marginTop="8dp"
+            android:textStyle="bold"
+            app:autoSizeTextType="uniform"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.0"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            tools:text="Батецкий" />
+
+        <TextView
+            android:id="@+id/street"
+            android:layout_width="136dp"
+            android:layout_height="25dp"
+            android:layout_marginTop="5dp"
+            android:layout_marginBottom="10dp"
+            android:gravity="left"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.0"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/hood_area"
+            app:layout_constraintVertical_bias="0.625"
+            tools:text="Дубецкая улица" />
+    </androidx.constraintlayout.widget.ConstraintLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

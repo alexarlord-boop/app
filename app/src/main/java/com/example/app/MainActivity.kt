@@ -24,8 +24,8 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import org.w3c.dom.Text
 import java.util.*
-
 
 class MainActivity : AppCompatActivity() {
     lateinit var launcher: ActivityResultLauncher<Intent>
@@ -35,6 +35,7 @@ class MainActivity : AppCompatActivity() {
     lateinit var workbookHandler: WorkBookHandler
 
     lateinit var btnSelectFile: Button
+    lateinit var area: TextView
     lateinit var streetName: TextView
     lateinit var fio_header: TextView
     lateinit var house_header: TextView
@@ -78,6 +79,7 @@ class MainActivity : AppCompatActivity() {
 
         // Getting view elements
         btnSelectFile = findViewById(R.id.btn_select)
+        area = findViewById(R.id.hood_area)
         streetName = findViewById(R.id.street)
         fio_header = findViewById(R.id.fio_header)
         house_header = findViewById(R.id.house_header)
@@ -136,6 +138,7 @@ class MainActivity : AppCompatActivity() {
             fileRecords = workbookHandler.getRecordsFromFile()
 
             // визуализация
+            area.text = workbookHandler.area
             streetName.text = workbookHandler.streetName
 
             // Sending reference and data to Adapter
