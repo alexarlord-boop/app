@@ -141,7 +141,8 @@ class MainActivity : AppCompatActivity(), RecyclerViewInterface{
     }
 
     override fun onItemCLick(position: Int) {
-        TODO("Not yet implemented")
+         intent =  Intent(this, recordActivity::class.java)
+        startActivity(intent)
     }
 
 }
