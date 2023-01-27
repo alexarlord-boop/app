@@ -1,20 +1,16 @@
 package com.example.app
 
 import android.Manifest
-import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
-import android.database.Cursor
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.os.Environment
 import android.provider.MediaStore
-import android.provider.MediaStore.Audio.Media
 import android.util.Log
 import android.view.View
 import android.widget.Button
-import android.widget.TextClock
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.result.ActivityResultLauncher
@@ -24,7 +20,6 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import org.w3c.dom.Text
 import java.util.*
 
 class MainActivity : AppCompatActivity() {
@@ -37,28 +32,10 @@ class MainActivity : AppCompatActivity() {
     lateinit var btnSelectFile: Button
     lateinit var area: TextView
     lateinit var streetName: TextView
-    lateinit var fio_header: TextView
-    lateinit var house_header: TextView
-    lateinit var flat_header: TextView
+    lateinit var fioHeader: TextView
+    lateinit var houseHeader: TextView
+    lateinit var flatHeader: TextView
     lateinit var recyclerView: RecyclerView
-
-    fun getPath(context: Context, uri: Uri?): String {
-        var result: String? = null
-        val proj = arrayOf(MediaStore.Downloads.DATA)
-        val cursor: Cursor? =
-            uri?.let { context.contentResolver.query(it, proj, null, null, null) }
-        if (cursor != null) {
-            if (cursor.moveToFirst()) {
-                val column_index = cursor.getColumnIndexOrThrow(proj[0])
-                result = cursor.getString(column_index)
-            }
-            cursor.close()
-        }
-        if (result == null) {
-            result = "Not found"
-        }
-        return result
-    }
 
     @RequiresApi(Build.VERSION_CODES.Q)
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -81,9 +58,9 @@ class MainActivity : AppCompatActivity() {
         btnSelectFile = findViewById(R.id.btn_select)
         area = findViewById(R.id.hood_area)
         streetName = findViewById(R.id.street)
-        fio_header = findViewById(R.id.fio_header)
-        house_header = findViewById(R.id.house_header)
-        flat_header = findViewById(R.id.flat_header)
+        fioHeader = findViewById(R.id.fio_header)
+        houseHeader = findViewById(R.id.house_header)
+        flatHeader = findViewById(R.id.flat_header)
 
         // Setting the layout as linear layout for vertical orientation
         val linearLayoutManager = LinearLayoutManager(applicationContext)
@@ -158,9 +135,9 @@ class MainActivity : AppCompatActivity() {
     }
 
     fun showListHeaders() {
-        fio_header.visibility = View.VISIBLE
-        house_header.visibility = View.VISIBLE
-        flat_header.visibility = View.VISIBLE
+        fioHeader.visibility = View.VISIBLE
+        houseHeader.visibility = View.VISIBLE
+        flatHeader.visibility = View.VISIBLE
     }
 
 }
