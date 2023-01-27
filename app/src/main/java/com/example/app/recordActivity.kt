@@ -3,6 +3,7 @@ package com.example.app
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
+import android.widget.TextView
 
 class recordActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -11,5 +12,17 @@ class recordActivity : AppCompatActivity() {
 
         val passedRecord = intent.getParcelableExtra<RecordDto>("record")
         Log.i("MyLog", passedRecord.toString())
+
+        val name: TextView = findViewById(R.id.record_name)
+        val puType: TextView = findViewById(R.id.record_pu_type)
+        val puNumber: TextView = findViewById(R.id.record_pu_number)
+
+
+        name.text = passedRecord?.name
+        puType.text = passedRecord?.puType
+        puNumber.text = passedRecord?.puNumber
+
+
+
     }
 }
