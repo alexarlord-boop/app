@@ -22,7 +22,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import java.util.*
 
-class MainActivity : AppCompatActivity(), RecyclerViewInterface{
+class MainActivity : AppCompatActivity(), RecyclerViewInterface {
     lateinit var launcher: ActivityResultLauncher<Intent>
 
     lateinit var fileRecords: MutableList<RecordDto>
@@ -141,7 +141,9 @@ class MainActivity : AppCompatActivity(), RecyclerViewInterface{
     }
 
     override fun onItemCLick(position: Int) {
-         intent =  Intent(this, recordActivity::class.java)
+        intent = Intent(this, recordActivity::class.java)
+        val clickedRecord = fileRecords[position]
+        intent.putExtra("record", clickedRecord)
         startActivity(intent)
     }
 

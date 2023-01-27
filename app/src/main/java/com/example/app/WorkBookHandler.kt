@@ -51,16 +51,16 @@ class WorkBookHandler(val context: Context, fileName: String) {
             row.getCell(0).stringCellValue,
             row.getCell(1).stringCellValue,
             row.getCell(2).stringCellValue,
-            row.getCell(3).numericCellValue,
-            row.getCell(4).numericCellValue,
+            row.getCell(3).numericCellValue.toString().split(".")[0],
+            row.getCell(4).numericCellValue.toString(),
             row.getCell(5).stringCellValue,
             row.getCell(6).stringCellValue,
             row.getCell(7).stringCellValue,
-            row.getCell(8).numericCellValue,
-            row.getCell(9).numericCellValue,
-            row.getCell(10).numericCellValue,
-            row.getCell(11).numericCellValue,
-            row.getCell(12).numericCellValue,
+            row.getCell(8).numericCellValue.toString(),
+            row.getCell(9).numericCellValue.toString(),
+            row.getCell(10).numericCellValue.toString(),
+            row.getCell(11).numericCellValue.toString(),
+            row.getCell(12).numericCellValue.toString(),
             row.getCell(13).stringCellValue
         )
 

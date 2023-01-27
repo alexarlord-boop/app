@@ -1,6 +1,5 @@
 package com.example.app
 
-import android.os.Parcel
 import android.os.Parcelable
 import kotlinx.android.parcel.Parcelize
 
@@ -13,33 +12,19 @@ import kotlinx.android.parcel.Parcelize
 class RecordDto(
     val area: String,
     val street: String,
-    houseNumber: String,
-    flatNumber: Double,
-    account: Double,
+    val houseNumber: String,
+    val flatNumber: String,
+    val account: String,
     val name: String,
     val puNumber: String,
     val puType: String,
-    val lastKoDate: Double,
-    val lastKo_D: Double,
-    val lastKo_N: Double,
-    val ko_D: Double,
-    val ko_N: Double,
-    comments: String
+    val lastKoDate: String,
+    val lastKo_D: String,
+    val lastKo_N: String,
+    val ko_D: String,
+    val ko_N: String,
+    val comments: String
 ) : Parcelable {
-
-
-    val flatNumber: String = flatNumber.toInt().toString()
-        //        get() = "кв. $field"
-        get() = field
-
-    val account: String = account.toInt().toString()
-        //        get() = "л/с $field"
-        get() = field
-
-    val houseNumber: String = houseNumber.split(".")[0]
-        //        get() = "д. $field"
-        get() = field
-
 
     override fun toString(): String {
         return "$area | $houseNumber | $name"
