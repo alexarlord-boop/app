@@ -18,14 +18,12 @@ class RecordAdapter(val records: MutableList<RecordDto>) :
         val name: TextView
         val house: TextView
         val flat: TextView
-        val account: TextView
 
         init {
             // Define click listener for the ViewHolder's View
             name = view.findViewById(R.id.renter_name)
             house = view.findViewById(R.id.renter_house)
             flat = view.findViewById(R.id.renter_flat)
-            account = view.findViewById(R.id.renter_account)
 
         }
     }
@@ -47,7 +45,6 @@ class RecordAdapter(val records: MutableList<RecordDto>) :
         viewHolder.name.text = records[position].name
         viewHolder.house.text = records[position].houseNumber
         viewHolder.flat.text = records[position].flatNumber.toString()
-        viewHolder.account.text = records[position].account.toString()
 
     }
 

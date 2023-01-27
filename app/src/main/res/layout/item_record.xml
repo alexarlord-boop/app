@@ -34,7 +34,7 @@
                 app:autoSizeMinTextSize="10sp"
                 app:autoSizeTextType="uniform"
                 app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintEnd_toStartOf="@+id/renter_house"
                 app:layout_constraintHorizontal_bias="0.0"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent"
@@ -44,7 +44,6 @@
                 android:id="@+id/renter_house"
                 android:layout_width="59dp"
                 android:layout_height="51dp"
-                android:layout_marginStart="60dp"
                 android:gravity="center"
                 android:text="house"
                 app:autoSizeMaxTextSize="20sp"
@@ -52,7 +51,9 @@
                 app:autoSizeTextType="uniform"
 
                 app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintStart_toEndOf="@+id/renter_name"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintHorizontal_bias="0.595"
+                app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent"
                 app:layout_constraintVertical_bias="0.0" />
 
@@ -60,34 +61,18 @@
                 android:id="@+id/renter_flat"
                 android:layout_width="71dp"
                 android:layout_height="52dp"
-                android:layout_marginStart="8dp"
+                android:layout_marginStart="56dp"
                 android:gravity="center"
-                android:textStyle="bold"
                 android:text="flat"
-                app:autoSizeMaxTextSize="20sp"
-                app:autoSizeMinTextSize="10sp"
-                app:autoSizeTextType="uniform"
-                app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintStart_toEndOf="@+id/renter_house"
-                app:layout_constraintTop_toTopOf="parent"
-                app:layout_constraintVertical_bias="0.0" />
-
-            <TextView
-                android:id="@+id/renter_account"
-                android:layout_width="210dp"
-                android:layout_height="52dp"
-                android:layout_marginStart="20dp"
-                android:gravity="center"
                 android:textStyle="bold"
-                android:text="account"
                 app:autoSizeMaxTextSize="20sp"
                 app:autoSizeMinTextSize="10sp"
                 app:autoSizeTextType="uniform"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toEndOf="@+id/renter_flat"
+                app:layout_constraintStart_toEndOf="@+id/renter_house"
                 app:layout_constraintTop_toTopOf="parent"
-                app:layout_constraintVertical_bias="1.0" />
+                app:layout_constraintVertical_bias="0.0" />
 
         </androidx.constraintlayout.widget.ConstraintLayout>
     </androidx.cardview.widget.CardView>

@@ -15,10 +15,11 @@ import java.io.FileOutputStream
 *  ---  */
 class WorkBookHandler(val context: Context, fileName: String) {
 
-    val STORAGE_PATH = Environment.getExternalStorageDirectory().toString() + "/"
-    private val file: File = File(STORAGE_PATH + fileName)
+    val STORAGE_PATH = Environment.getExternalStoragePublicDirectory("Download")
+    private val file: File = File(STORAGE_PATH, fileName)
     private lateinit var workbook: Workbook
     lateinit var streetName: String
+    lateinit var area: String
 
     /*
         превращает содержимое файла в объект workbook
@@ -40,6 +41,7 @@ class WorkBookHandler(val context: Context, fileName: String) {
         for (recordId in 1..lastId) {
             records.add(parseRow(sheet.getRow(recordId)))
         }
+        area = records[0].area
         streetName = records[0].street
         return records
     }
