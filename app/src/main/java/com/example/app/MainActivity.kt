@@ -22,7 +22,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import java.util.*
 
-class MainActivity : AppCompatActivity() {
+class MainActivity : AppCompatActivity(), RecyclerViewInterface{
     lateinit var launcher: ActivityResultLauncher<Intent>
 
     lateinit var fileRecords: MutableList<RecordDto>
@@ -138,6 +138,10 @@ class MainActivity : AppCompatActivity() {
         fioHeader.visibility = View.VISIBLE
         houseHeader.visibility = View.VISIBLE
         flatHeader.visibility = View.VISIBLE
+    }
+
+    override fun onItemCLick(position: Int) {
+        TODO("Not yet implemented")
     }
 
 }
