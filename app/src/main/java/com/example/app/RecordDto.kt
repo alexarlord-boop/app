@@ -1,9 +1,15 @@
 package com.example.app
 
+import android.os.Parcel
+import android.os.Parcelable
+import kotlinx.android.parcel.Parcelize
+
 /*
     Data Transfer Object для записи из файла
 */
 // TODO: -refactor data types of cells
+
+@Parcelize
 class RecordDto(
     val area: String,
     val street: String,
@@ -18,8 +24,10 @@ class RecordDto(
     val lastKo_N: Double,
     val ko_D: Double,
     val ko_N: Double,
-    val comments: String
-) {
+    comments: String
+) : Parcelable {
+
+
     val flatNumber: String = flatNumber.toInt().toString()
         //        get() = "кв. $field"
         get() = field
@@ -36,4 +44,5 @@ class RecordDto(
     override fun toString(): String {
         return "$area | $houseNumber | $name"
     }
+
 }
