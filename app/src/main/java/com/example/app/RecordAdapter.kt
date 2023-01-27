@@ -6,15 +6,14 @@ import android.view.ViewGroup
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 
-class RecordAdapter(val records: MutableList<RecordDto>) :
+class RecordAdapter(val records: MutableList<RecordDto>, val recyclerViewInterface: RecyclerViewInterface) :
     RecyclerView.Adapter<RecordAdapter.MyViewHolder>() {
-
 
     /**
      * Provide a reference to the type of views that you are using
      * (custom ViewHolder)
      */
-    class MyViewHolder(view: View) : RecyclerView.ViewHolder(view) {
+    class MyViewHolder(view: View, recyclerViewInterface: RecyclerViewInterface) : RecyclerView.ViewHolder(view) {
         val name: TextView
         val house: TextView
         val flat: TextView
@@ -24,8 +23,14 @@ class RecordAdapter(val records: MutableList<RecordDto>) :
             name = view.findViewById(R.id.renter_name)
             house = view.findViewById(R.id.renter_house)
             flat = view.findViewById(R.id.renter_flat)
-
+            view.setOnClickListener(View.OnClickListener {
+                val pos = adapterPosition
+                if (pos != RecyclerView.NO_POSITION) {
+                    recyclerViewInterface.onItemCLick(pos)
+                }
+            })
         }
+
     }
 
     // Create new views (invoked by the layout manager)
@@ -34,7 +39,7 @@ class RecordAdapter(val records: MutableList<RecordDto>) :
         val view = LayoutInflater.from(viewGroup.context)
             .inflate(R.layout.item_record, viewGroup, false)
 
-        return MyViewHolder(view)
+        return MyViewHolder(view, recyclerViewInterface)
     }
 
     // Replace the contents of a view (invoked by the layout manager)

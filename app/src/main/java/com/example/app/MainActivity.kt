@@ -119,7 +119,7 @@ class MainActivity : AppCompatActivity(), RecyclerViewInterface{
             streetName.text = workbookHandler.streetName
 
             // Sending reference and data to Adapter
-            val adapter = RecordAdapter(fileRecords)
+            val adapter = RecordAdapter(fileRecords, this)
 
             // Setting Adapter to RecyclerView
             recyclerView.setAdapter(adapter);
