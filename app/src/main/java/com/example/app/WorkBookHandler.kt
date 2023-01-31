@@ -39,12 +39,19 @@ class WorkBookHandler(val context: Context, fileName: String) {
         val sheet = workbook.getSheetAt(0)
         val records = mutableListOf<RecordDto>()
         val lastId = sheet.lastRowNum
+
         for (recordId in 1..lastId) {
-            records.add(parseRow(sheet.getRow(recordId)))
+            val row = sheet.getRow(recordId)
+            if (!row.isEmpty()) records.add(parseRow(row)) else continue
         }
+
         area = records[0].area
         streetName = records[0].street
         return records
+    }
+
+    fun Row.isEmpty(): Boolean {
+        return this.getCell(2).toString().isEmpty()
     }
 
     fun parseRow(row: Row): RecordDto {
