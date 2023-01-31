@@ -115,8 +115,8 @@ class MainActivity : AppCompatActivity(), RecyclerViewInterface {
             fileRecords = workbookHandler.getRecordsFromFile()
 
             // визуализация
-            area.text = workbookHandler.area
-            streetName.text = workbookHandler.streetName
+            area.text = workbookHandler.getArea()
+            streetName.text = workbookHandler.getStreet()
 
             // Sending reference and data to Adapter
             val adapter = RecordAdapter(fileRecords, this)

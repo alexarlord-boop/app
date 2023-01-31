@@ -20,17 +20,15 @@ class WorkBookHandler(val fileName: String): Parcelable {
 
     val STORAGE_PATH = Environment.getExternalStoragePublicDirectory("Download")
     private val file: File = File(STORAGE_PATH, fileName)
-    private lateinit var workbook: Workbook
-    lateinit var streetName: String
-    lateinit var area: String
+    var workbook = readWorkBookFromFile()
 
     /*
         превращает содержимое файла в объект workbook
     */
-    fun readWorkBookFromFile() {
+    fun readWorkBookFromFile():Workbook {
         FileInputStream(file).use {
             val workbook = WorkbookFactory.create(it)
-            this.workbook = workbook
+            return workbook
         }
     }
 
@@ -42,13 +40,11 @@ class WorkBookHandler(val fileName: String): Parcelable {
         val records = mutableListOf<RecordDto>()
         val lastId = sheet.lastRowNum
 
-        for (recordId in 1..lastId) {
+        for (recordId in 1..lastId) {  // skipping headers in row 0
             val row = sheet.getRow(recordId)
             if (!row.isEmpty()) records.add(parseRow(row)) else continue
         }
 
-        area = records[0].area
-        streetName = records[0].street
         return records
     }
 
@@ -75,6 +71,14 @@ class WorkBookHandler(val fileName: String): Parcelable {
             row.getCell(13).stringCellValue.trim()
         )
 
+    }
+
+    fun getStreet(): String {
+        return workbook.getSheetAt(0).getRow(1).getCell(1).stringCellValue
+    }
+
+    fun getArea(): String {
+        return workbook.getSheetAt(0).getRow(1).getCell(0).stringCellValue
     }
 
     fun saveRowData() {
