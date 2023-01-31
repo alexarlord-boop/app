@@ -15,6 +15,9 @@ class recordActivity : AppCompatActivity() {
         val passedRecord = intent.getParcelableExtra<RecordDto>("record")
         Log.i("MyLog", passedRecord.toString())
 
+        val workbookHandler = intent.getParcelableExtra<WorkBookHandler>("workbookHandler")
+        Log.i("MyLog", "${workbookHandler?.area}")
+
         val saveBtn: Button = findViewById(R.id.save_btn)
         saveBtn.setOnClickListener(View.OnClickListener {
 

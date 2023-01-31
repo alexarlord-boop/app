@@ -1,6 +1,5 @@
 package com.example.app
 
-import android.content.Context
 import android.os.Environment
 import android.os.Parcelable
 import android.util.Log
@@ -17,7 +16,7 @@ import java.io.FileOutputStream
 *  CRUD methods
 *  ---  */
 @Parcelize
-class WorkBookHandler(val context: Context, fileName: String): Parcelable {
+class WorkBookHandler(val fileName: String): Parcelable {
 
     val STORAGE_PATH = Environment.getExternalStoragePublicDirectory("Download")
     private val file: File = File(STORAGE_PATH, fileName)

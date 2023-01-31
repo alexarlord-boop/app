@@ -110,7 +110,7 @@ class MainActivity : AppCompatActivity(), RecyclerViewInterface {
         val fileName = filePath.split("/").last()
         Log.i("MyLog", fileName)
         try {
-            workbookHandler = WorkBookHandler(this, fileName)
+            workbookHandler = WorkBookHandler(fileName)
             workbookHandler.readWorkBookFromFile()
             fileRecords = workbookHandler.getRecordsFromFile()
 
@@ -144,6 +144,7 @@ class MainActivity : AppCompatActivity(), RecyclerViewInterface {
         intent = Intent(this, recordActivity::class.java)
         val clickedRecord = fileRecords[position]
         intent.putExtra("record", clickedRecord)
+        intent.putExtra("workbookHandler", workbookHandler)
         startActivity(intent)
     }
 
