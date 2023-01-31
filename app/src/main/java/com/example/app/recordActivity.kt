@@ -29,7 +29,9 @@ class recordActivity : AppCompatActivity() {
         val lastCheckDate: TextView = findViewById(R.id.record_last_check)
         val lastCheckDateDay: TextView = findViewById(R.id.record_last_check_day)
         val lastCheckDateNight: TextView = findViewById(R.id.record_last_check_night)
-
+        val newDataDay: EditText = findViewById(R.id.record_current_check_day)
+        val newDataNight: EditText = findViewById(R.id.record_current_check_night)
+        val newComments: TextInputEditText = findViewById(R.id.textInputEditText)
 
         passedRecord?.let {
             name.text = it.name
@@ -39,32 +41,28 @@ class recordActivity : AppCompatActivity() {
             lastCheckDateDay.text = it.lastKo_D.toString().beforeZeroOrBlank()
             lastCheckDateNight.text = it.lastKo_N.toString().beforeZeroOrBlank()
 
-            val newDataDay: EditText = findViewById(R.id.record_current_check_day)
+
             newDataDay.setText(it.ko_D.toString().beforeZeroOrBlank())
-            val newDataNight: EditText = findViewById(R.id.record_current_check_night)
             newDataNight.setText(it.ko_N.toString().beforeZeroOrBlank())
-            val comments: TextInputEditText = findViewById(R.id.textInputEditText)
-            comments.setText(it.comments)
+            newComments.setText(it.comments)
         }
 
 
         val saveBtn: Button = findViewById(R.id.save_btn)
-        saveBtn.setOnClickListener(View.OnClickListener {
-            val newDataDay: EditText = findViewById(R.id.record_current_check_day)
-            val newDataNight: EditText = findViewById(R.id.record_current_check_night)
-            val comments: TextInputEditText = findViewById(R.id.textInputEditText)
+
+        saveBtn.setOnClickListener {
+            val day = newDataDay.text.toString()
+            val night = newDataNight.text.toString()
+            val comments = newComments.text.toString()
 
             passedRecord?.let {
-                val day = newDataDay.text.toString()
-                val night = newDataNight.text.toString()
                 it.ko_D = if (day != "") day.toDouble() else 0.0
                 it.ko_N = if (night != "") night.toDouble() else 0.0
-                it.comments = comments.text.toString()
+                it.comments = comments
                 workbookHandler?.updateRowData(position, it)
                 Toast.makeText(this, "Сохранено", Toast.LENGTH_SHORT).show()
             }
-
-        })
+        }
     }
 
     fun String.beforeZeroOrBlank(): String {
