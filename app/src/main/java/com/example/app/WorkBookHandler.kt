@@ -48,20 +48,20 @@ class WorkBookHandler(val context: Context, fileName: String) {
 
     fun parseRow(row: Row): RecordDto {
         return RecordDto(
-            row.getCell(0).stringCellValue,
-            row.getCell(1).stringCellValue,
-            row.getCell(2).stringCellValue,
+            row.getCell(0).stringCellValue.trim(),
+            row.getCell(1).stringCellValue.trim(),
+            row.getCell(2).stringCellValue.trim(),
             row.getCell(3).numericCellValue.toString().split(".")[0],
             row.getCell(4).numericCellValue.toString(),
-            row.getCell(5).stringCellValue,
-            row.getCell(6).stringCellValue,
-            row.getCell(7).stringCellValue,
+            row.getCell(5).stringCellValue.trim(),
+            row.getCell(6).stringCellValue.trim(),
+            row.getCell(7).stringCellValue.trim(),
             row.getCell(8).numericCellValue.toString(),
             row.getCell(9).numericCellValue.toString(),
             row.getCell(10).numericCellValue.toString(),
             row.getCell(11).numericCellValue.toString(),
             row.getCell(12).numericCellValue.toString(),
-            row.getCell(13).stringCellValue
+            row.getCell(13).stringCellValue.trim()
         )
 
     }

@@ -21,8 +21,10 @@ class recordActivity : AppCompatActivity() {
         name.text = passedRecord?.name
         puType.text = passedRecord?.puType
         puNumber.text = passedRecord?.puNumber
+    }
 
-
-
+    override fun onBackPressed() {
+        super.onBackPressed()
+        finish() // destroys activity and returns to the previous one
     }
 }
