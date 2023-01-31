@@ -49,7 +49,7 @@ class RecordAdapter(val records: MutableList<RecordDto>, val recyclerViewInterfa
         // contents of the view with that element
         viewHolder.name.text = records[position].name
         viewHolder.house.text = records[position].houseNumber
-        viewHolder.flat.text = records[position].flatNumber.toString()
+        viewHolder.flat.text = records[position].flatNumber.toString().split(".")[0]
 
     }
 

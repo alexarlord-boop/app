@@ -10,13 +10,18 @@ import org.apache.poi.ss.usermodel.WorkbookFactory
 import java.io.File
 import java.io.FileInputStream
 import java.io.FileOutputStream
+import java.text.SimpleDateFormat
+import java.util.*
+
 
 /* This class helps manage an excel file
 *  You can download from server, modify in local storage and upload to server unique excel file
 *  CRUD methods
 *  ---  */
 @Parcelize
-class WorkBookHandler(val fileName: String) : Parcelable {
+class WorkBookHandler
+
+    (val fileName: String) : Parcelable {
 
     val STORAGE_PATH = Environment.getExternalStoragePublicDirectory("Download")
     private val file: File = File(STORAGE_PATH, fileName)
@@ -55,25 +60,36 @@ class WorkBookHandler(val fileName: String) : Parcelable {
     }
 
     fun parseRow(row: Row): RecordDto {
-        Log.w("MyLog", row.getCell(8).stringCellValue.toString())
+        Log.w("MyLog", row.getCell(8).numericCellValue.toString())
         return RecordDto(
             row.getCell(0).stringCellValue.trim(),
             row.getCell(1).stringCellValue.trim(),
             row.getCell(2).stringCellValue.trim(),
-            row.getCell(3).stringCellValue.trim().split(".")[0],
-            row.getCell(4).stringCellValue.trim(),
+            row.getCell(3).numericCellValue,
+            row.getCell(4).numericCellValue,
             row.getCell(5).stringCellValue.trim(),
             row.getCell(6).stringCellValue.trim(),
             row.getCell(7).stringCellValue.trim(),
-            row.getCell(8).stringCellValue.trim(),
-            row.getCell(9).stringCellValue.trim(),
-            row.getCell(10).stringCellValue.trim(),
-            row.getCell(11).stringCellValue.trim(),
-            row.getCell(12).stringCellValue.trim(),
+            convertNumericToDate(row.getCell(8).dateCellValue),
+            row.getCell(9).numericCellValue,
+            row.getCell(10).numericCellValue,
+            row.getCell(11).numericCellValue,
+            row.getCell(12).numericCellValue,
             row.getCell(13).stringCellValue.trim()
         )
 
     }
+
+    fun convertNumericToDate(date: Date): String {
+        val format = SimpleDateFormat("MM/dd/yy")
+        return format.format(date)
+    }
+
+    fun convertStringToDate(str: String): Date {
+        val format = SimpleDateFormat("MM/dd/yy")
+        return format.parse(str)
+    }
+
 
     fun dataToRow(position: Int, recordDto: RecordDto) {
         val row = sheet.createRow(position)
@@ -85,7 +101,7 @@ class WorkBookHandler(val fileName: String) : Parcelable {
         row.createCell(5).setCellValue(recordDto.name)
         row.createCell(6).setCellValue(recordDto.puNumber)
         row.createCell(7).setCellValue(recordDto.puType)
-        row.createCell(8).setCellValue(recordDto.lastKoDate)
+        row.createCell(8).setCellValue(convertStringToDate(recordDto.lastKoDate))
         row.createCell(9).setCellValue(recordDto.lastKo_D)
         row.createCell(10).setCellValue(recordDto.lastKo_N)
         row.createCell(11).setCellValue(recordDto.ko_D)

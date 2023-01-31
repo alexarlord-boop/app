@@ -9,6 +9,7 @@ import android.widget.EditText
 import android.widget.TextView
 import android.widget.Toast
 import com.google.android.material.textfield.TextInputEditText
+import kotlin.time.Duration.Companion.days
 
 class recordActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -33,15 +34,15 @@ class recordActivity : AppCompatActivity() {
         passedRecord?.let {
             name.text = it.name
             puType.text = it.puType
-            puNumber.text = it.puNumber
+            puNumber.text = it.puNumber.toString()
             lastCheckDate.text = it.lastKoDate
-            lastCheckDateDay.text = it.lastKo_D
-            lastCheckDateNight.text = it.lastKo_N
+            lastCheckDateDay.text = it.lastKo_D.toString().beforeZero()
+            lastCheckDateNight.text = it.lastKo_N.toString().beforeZero()
 
             val newDataDay: EditText = findViewById(R.id.record_current_check_day)
-            newDataDay.setText(it.ko_D)
+            newDataDay.setText(it.ko_D.toString().beforeZero())
             val newDataNight: EditText = findViewById(R.id.record_current_check_night)
-            newDataNight.setText(it.ko_N)
+            newDataNight.setText(it.ko_N.toString().beforeZero())
             val comments: TextInputEditText = findViewById(R.id.textInputEditText)
             comments.setText(it.comments)
         }
@@ -54,14 +55,18 @@ class recordActivity : AppCompatActivity() {
             val comments: TextInputEditText = findViewById(R.id.textInputEditText)
 
             passedRecord?.let {
-                it.ko_D = newDataDay.text.toString()
-                it.ko_N = newDataNight.text.toString()
+                it.ko_D = newDataDay.text.toString().toDouble()
+                it.ko_N = newDataNight.text.toString().toDouble()
                 it.comments = comments.text.toString()
                 workbookHandler?.updateRowData(position, it)
                 Toast.makeText(this, "Сохранено", Toast.LENGTH_SHORT).show()
             }
 
         })
+    }
+
+    fun String.beforeZero(): String {
+        return this.split(".")[0]
     }
 
     override fun onBackPressed() {
