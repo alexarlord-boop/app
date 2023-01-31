@@ -46,15 +46,9 @@ class MainActivity : AppCompatActivity(), RecyclerViewInterface {
         launcher =
             registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
                 if (result.resultCode == RESULT_OK) {
-                    val uri = Uri.parse(result.data?.data?.path)
-                    Log.d("MyLog", uri.toString())
                     result.data?.data?.path?.let {
-
                         filename = it.split("/").last()
-                        Log.i("MyLog", filename.toString())
-                        workbookHandler = WorkBookHandler(filename.toString())
-                        workbookHandler.readWorkBookFromFile()
-                        visualiseDataFromXlsFile()
+                        reloadData()
                     }
                 }
             }
@@ -75,8 +69,6 @@ class MainActivity : AppCompatActivity(), RecyclerViewInterface {
         recyclerView.layoutManager = linearLayoutManager
 
 
-//        workbookHandler = WorkBookHandler(applicationContext)
-
         ActivityCompat.requestPermissions(
             this, arrayOf(
                 Manifest.permission.WRITE_EXTERNAL_STORAGE,
@@ -89,14 +81,15 @@ class MainActivity : AppCompatActivity(), RecyclerViewInterface {
 
     override fun onResume() {
         super.onResume()
+        reloadData()
+    }
 
+    fun reloadData() {
         filename?.let {
             workbookHandler = WorkBookHandler(it)
             workbookHandler.readWorkBookFromFile()
             visualiseDataFromXlsFile()
         }
-
-
     }
 
     /* Business Logic Section */
@@ -115,10 +108,6 @@ class MainActivity : AppCompatActivity(), RecyclerViewInterface {
             println(ex.message)
         }
     }
-
-    /*
-        обработка запросов
-    */
 
 
     /*
@@ -140,9 +129,6 @@ class MainActivity : AppCompatActivity(), RecyclerViewInterface {
             recyclerView.setAdapter(adapter);
             recyclerView.layoutManager = LinearLayoutManager(this)
             showListHeaders()
-
-            Toast.makeText(this, "Загружаем данные из ${filename}", Toast.LENGTH_LONG).show()
-
         } catch (ex: Exception) {
             Toast.makeText(this, "Выберите подходящий формат", Toast.LENGTH_SHORT).show()
             println(ex.message)
