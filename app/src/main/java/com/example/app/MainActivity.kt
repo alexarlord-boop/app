@@ -33,7 +33,7 @@ class MainActivity : AppCompatActivity(), RecyclerViewInterface {
     lateinit var area: TextView
     lateinit var streetName: TextView
     lateinit var fioHeader: TextView
-    lateinit var filename: String
+    var filename: String? = null
     lateinit var houseHeader: TextView
     lateinit var flatHeader: TextView
     lateinit var recyclerView: RecyclerView
@@ -51,8 +51,8 @@ class MainActivity : AppCompatActivity(), RecyclerViewInterface {
                     result.data?.data?.path?.let {
 
                         filename = it.split("/").last()
-                        Log.i("MyLog", filename)
-                        workbookHandler = WorkBookHandler(filename)
+                        Log.i("MyLog", filename.toString())
+                        workbookHandler = WorkBookHandler(filename.toString())
                         workbookHandler.readWorkBookFromFile()
                         visualiseDataFromXlsFile()
                     }
@@ -87,6 +87,17 @@ class MainActivity : AppCompatActivity(), RecyclerViewInterface {
 
     }
 
+    override fun onResume() {
+        super.onResume()
+
+        filename?.let {
+            workbookHandler = WorkBookHandler(it)
+            workbookHandler.readWorkBookFromFile()
+            visualiseDataFromXlsFile()
+        }
+
+
+    }
 
     /* Business Logic Section */
 
