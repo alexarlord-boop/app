@@ -12,6 +12,6 @@
     <string name="save">Сохранить</string>
     <string name="dayTitle">День:</string>
     <string name="nightTitle">Ночь:</string>
-    <string name="puTitle">Показания счетчика:</string>
+    <string name="puTitle">Показания ПУ</string>
 
 </resources>
