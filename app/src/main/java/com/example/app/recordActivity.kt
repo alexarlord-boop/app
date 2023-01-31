@@ -3,6 +3,8 @@ package com.example.app
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
+import android.view.View
+import android.widget.Button
 import android.widget.TextView
 
 class recordActivity : AppCompatActivity() {
@@ -12,6 +14,11 @@ class recordActivity : AppCompatActivity() {
 
         val passedRecord = intent.getParcelableExtra<RecordDto>("record")
         Log.i("MyLog", passedRecord.toString())
+
+        val saveBtn: Button = findViewById(R.id.save_btn)
+        saveBtn.setOnClickListener(View.OnClickListener {
+
+        })
 
         val name: TextView = findViewById(R.id.record_name)
         val puType: TextView = findViewById(R.id.record_pu_type)
