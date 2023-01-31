@@ -106,6 +106,7 @@
                 android:orientation="vertical">
 
                 <TextView
+                    style="@style/RecordMiniHeader"
                     android:id="@+id/lkoDay"
                     android:layout_width="50dp"
                     android:layout_height="wrap_content"
@@ -114,6 +115,8 @@
                     android:text="@string/dayTitle" />
 
                 <TextView
+                    style="@style/RecordMiniHeader"
+
                     android:id="@+id/lkoNight"
                     android:layout_width="50dp"
                     android:layout_height="wrap_content"
@@ -190,6 +193,8 @@
             android:orientation="vertical">
 
             <TextView
+                style="@style/RecordMiniHeader"
+
                 android:id="@+id/ckoDay"
                 android:layout_width="50dp"
                 android:layout_height="wrap_content"
@@ -198,6 +203,8 @@
                 android:text="@string/dayTitle" />
 
             <TextView
+                style="@style/RecordMiniHeader"
+
                 android:id="@+id/ckoNight"
                 android:layout_width="50dp"
                 android:layout_height="wrap_content"
