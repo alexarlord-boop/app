@@ -5,4 +5,8 @@
     <string name="add_photo">Add photo</string>
     <string name="pick_file">Select file</string>
     <string name="course_name">courseName</string>
+    <string name="dayTitle">День:</string>
+    <string name="nightTitle">Ночь:</string>
+    <string name="ko_header_1">Последний КО</string>
+    <string name="ko_header_2">Текущий КО</string>
 </resources>
