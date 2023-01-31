@@ -36,13 +36,13 @@ class recordActivity : AppCompatActivity() {
             puType.text = it.puType
             puNumber.text = it.puNumber.toString()
             lastCheckDate.text = it.lastKoDate
-            lastCheckDateDay.text = it.lastKo_D.toString().beforeZero()
-            lastCheckDateNight.text = it.lastKo_N.toString().beforeZero()
+            lastCheckDateDay.text = it.lastKo_D.toString().beforeZeroOrBlank()
+            lastCheckDateNight.text = it.lastKo_N.toString().beforeZeroOrBlank()
 
             val newDataDay: EditText = findViewById(R.id.record_current_check_day)
-            newDataDay.setText(it.ko_D.toString().beforeZero())
+            newDataDay.setText(it.ko_D.toString().beforeZeroOrBlank())
             val newDataNight: EditText = findViewById(R.id.record_current_check_night)
-            newDataNight.setText(it.ko_N.toString().beforeZero())
+            newDataNight.setText(it.ko_N.toString().beforeZeroOrBlank())
             val comments: TextInputEditText = findViewById(R.id.textInputEditText)
             comments.setText(it.comments)
         }
@@ -55,8 +55,10 @@ class recordActivity : AppCompatActivity() {
             val comments: TextInputEditText = findViewById(R.id.textInputEditText)
 
             passedRecord?.let {
-                it.ko_D = newDataDay.text.toString().toDouble()
-                it.ko_N = newDataNight.text.toString().toDouble()
+                val day = newDataDay.text.toString()
+                val night = newDataNight.text.toString()
+                it.ko_D = if (day != "") day.toDouble() else 0.0
+                it.ko_N = if (night != "") night.toDouble() else 0.0
                 it.comments = comments.text.toString()
                 workbookHandler?.updateRowData(position, it)
                 Toast.makeText(this, "Сохранено", Toast.LENGTH_SHORT).show()
@@ -65,8 +67,9 @@ class recordActivity : AppCompatActivity() {
         })
     }
 
-    fun String.beforeZero(): String {
-        return this.split(".")[0]
+    fun String.beforeZeroOrBlank(): String {
+        val before = this.split(".")[0]
+        return if (before != "0") before else ""
     }
 
     override fun onBackPressed() {
