@@ -16,16 +16,18 @@ import java.io.FileOutputStream
 *  CRUD methods
 *  ---  */
 @Parcelize
-class WorkBookHandler(val fileName: String): Parcelable {
+class WorkBookHandler(val fileName: String) : Parcelable {
 
     val STORAGE_PATH = Environment.getExternalStoragePublicDirectory("Download")
     private val file: File = File(STORAGE_PATH, fileName)
     var workbook = readWorkBookFromFile()
+    var sheet = workbook.getSheetAt(0)
+    var records = getRecordsFromFile()
 
     /*
         превращает содержимое файла в объект workbook
     */
-    fun readWorkBookFromFile():Workbook {
+    fun readWorkBookFromFile(): Workbook {
         FileInputStream(file).use {
             val workbook = WorkbookFactory.create(it)
             return workbook
@@ -73,6 +75,25 @@ class WorkBookHandler(val fileName: String): Parcelable {
 
     }
 
+    fun dataToRow(position: Int, recordDto: RecordDto) {
+        val row = sheet.createRow(position)
+        row.createCell(0).setCellValue(recordDto.area)
+        row.createCell(1).setCellValue(recordDto.street)
+        row.createCell(2).setCellValue(recordDto.houseNumber)
+        row.createCell(3).setCellValue(recordDto.flatNumber)
+        row.createCell(4).setCellValue(recordDto.account)
+        row.createCell(5).setCellValue(recordDto.name)
+        row.createCell(6).setCellValue(recordDto.puNumber)
+        row.createCell(7).setCellValue(recordDto.puType)
+        row.createCell(8).setCellValue(recordDto.lastKoDate)
+        row.createCell(9).setCellValue(recordDto.lastKo_D)
+        row.createCell(10).setCellValue(recordDto.lastKo_N)
+        row.createCell(11).setCellValue(recordDto.ko_D)
+        row.createCell(12).setCellValue(recordDto.ko_N)
+        row.createCell(13).setCellValue(recordDto.comments)
+        saveWorkBookToFile()
+    }
+
     fun getStreet(): String {
         return workbook.getSheetAt(0).getRow(1).getCell(1).stringCellValue
     }
@@ -81,15 +102,20 @@ class WorkBookHandler(val fileName: String): Parcelable {
         return workbook.getSheetAt(0).getRow(1).getCell(0).stringCellValue
     }
 
-    fun saveRowData() {
-
+    fun updateRowData(position: Int, recordDto: RecordDto) {
+        records[position] = recordDto
+        dataToRow(position + 1, recordDto)
     }
 
     private fun saveWorkBookToFile() {
-        if (!file.exists()) {
-            file.createNewFile()
+        try {
+            if (!file.exists()) {
+                file.createNewFile()
+            }
+            FileOutputStream(file).use { fileOut -> workbook.write(fileOut) }
+        } catch (ex: Exception) {
+            Log.e("MyLog", ex.message.toString())
         }
-        FileOutputStream(file).use { fileOut -> workbook.write(fileOut) }
     }
 
 

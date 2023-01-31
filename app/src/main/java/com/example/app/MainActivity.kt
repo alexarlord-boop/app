@@ -143,6 +143,7 @@ class MainActivity : AppCompatActivity(), RecyclerViewInterface {
     override fun onItemCLick(position: Int) {
         intent = Intent(this, recordActivity::class.java)
         val clickedRecord = fileRecords[position]
+        intent.putExtra ("position", position)
         intent.putExtra("record", clickedRecord)
         intent.putExtra("workbookHandler", workbookHandler)
         startActivity(intent)
