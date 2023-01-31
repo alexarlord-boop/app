@@ -33,6 +33,7 @@ class MainActivity : AppCompatActivity(), RecyclerViewInterface {
     lateinit var area: TextView
     lateinit var streetName: TextView
     lateinit var fioHeader: TextView
+    lateinit var filename: String
     lateinit var houseHeader: TextView
     lateinit var flatHeader: TextView
     lateinit var recyclerView: RecyclerView
@@ -47,7 +48,14 @@ class MainActivity : AppCompatActivity(), RecyclerViewInterface {
                 if (result.resultCode == RESULT_OK) {
                     val uri = Uri.parse(result.data?.data?.path)
                     Log.d("MyLog", uri.toString())
-                    result.data?.data?.path?.let { visualiseDataFromXlsFile(it) }
+                    result.data?.data?.path?.let {
+
+                        filename = it.split("/").last()
+                        Log.i("MyLog", filename)
+                        workbookHandler = WorkBookHandler(filename)
+                        workbookHandler.readWorkBookFromFile()
+                        visualiseDataFromXlsFile()
+                    }
                 }
             }
 
@@ -105,13 +113,9 @@ class MainActivity : AppCompatActivity(), RecyclerViewInterface {
     /*
         читаем данные из выбранного .xls файла и отображаем списком
     */
-    private fun visualiseDataFromXlsFile(filePath: String) {
+    private fun visualiseDataFromXlsFile() {
 
-        val fileName = filePath.split("/").last()
-        Log.i("MyLog", fileName)
         try {
-            workbookHandler = WorkBookHandler(fileName)
-            workbookHandler.readWorkBookFromFile()
             fileRecords = workbookHandler.getRecordsFromFile()
 
             // визуализация
@@ -126,10 +130,10 @@ class MainActivity : AppCompatActivity(), RecyclerViewInterface {
             recyclerView.layoutManager = LinearLayoutManager(this)
             showListHeaders()
 
-            Toast.makeText(this, "Загружаем данные из $fileName", Toast.LENGTH_LONG).show()
+            Toast.makeText(this, "Загружаем данные из ${filename}", Toast.LENGTH_LONG).show()
 
         } catch (ex: Exception) {
-            Toast.makeText(this, "Ошибка", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, "Выберите подходящий формат", Toast.LENGTH_SHORT).show()
             println(ex.message)
         }
     }
@@ -143,7 +147,7 @@ class MainActivity : AppCompatActivity(), RecyclerViewInterface {
     override fun onItemCLick(position: Int) {
         intent = Intent(this, recordActivity::class.java)
         val clickedRecord = fileRecords[position]
-        intent.putExtra ("position", position)
+        intent.putExtra("position", position)
         intent.putExtra("record", clickedRecord)
         intent.putExtra("workbookHandler", workbookHandler)
         startActivity(intent)

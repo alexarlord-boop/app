@@ -30,13 +30,22 @@ class recordActivity : AppCompatActivity() {
         val lastCheckDateNight: TextView = findViewById(R.id.record_last_check_night)
 
 
+        passedRecord?.let {
+            name.text = it.name
+            puType.text = it.puType
+            puNumber.text = it.puNumber
+            lastCheckDate.text = it.lastKoDate
+            lastCheckDateDay.text = it.lastKo_D
+            lastCheckDateNight.text = it.lastKo_N
 
-        name.text = passedRecord?.name
-        puType.text = passedRecord?.puType
-        puNumber.text = passedRecord?.puNumber
-        lastCheckDate.text = passedRecord?.lastKoDate
-        lastCheckDateDay.text = passedRecord?.lastKo_D
-        lastCheckDateNight.text = passedRecord?.lastKo_N
+            val newDataDay: EditText = findViewById(R.id.record_current_check_day)
+            newDataDay.setText(it.ko_D)
+            val newDataNight: EditText = findViewById(R.id.record_current_check_night)
+            newDataNight.setText(it.ko_N)
+            val comments: TextInputEditText = findViewById(R.id.textInputEditText)
+            comments.setText(it.comments)
+        }
+
 
         val saveBtn: Button = findViewById(R.id.save_btn)
         saveBtn.setOnClickListener(View.OnClickListener {
