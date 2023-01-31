@@ -9,4 +9,5 @@
     <string name="nightTitle">Ночь:</string>
     <string name="ko_header_1">Последний КО</string>
     <string name="ko_header_2">Текущий КО</string>
+    <string name="comments">Примечания</string>
 </resources>

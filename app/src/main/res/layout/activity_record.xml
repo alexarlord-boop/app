@@ -17,7 +17,7 @@
         app:layout_constraintHorizontal_bias="0.533"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.060000002">
+        app:layout_constraintVertical_bias="0.100000024">
 
         <TextView
             android:id="@+id/record_name"
@@ -161,7 +161,8 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.051"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/linearLayout3" />
+        app:layout_constraintTop_toBottomOf="@+id/linearLayout3"
+        app:layout_constraintVertical_bias="0.86" />
 
     <LinearLayout
         android:id="@+id/currentKO"
@@ -181,6 +182,8 @@
         <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="match_parent"
+            android:layout_weight="2"
+            android:gravity="center"
             android:orientation="vertical">
 
             <TextView
@@ -204,26 +207,64 @@
         <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_weight="3"
             android:orientation="vertical">
 
-            <TextView
-                android:id="@+id/record_current_check_day"
-                style="@style/RecordInfo"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:gravity="center"
-                tools:text="day value" />
 
-            <TextView
+            <EditText
+                android:id="@+id/record_current_check_day"
+                android:layout_width="match_parent"
+                android:layout_height="60dp"
+                android:ems="10"
+                android:hint="@string/dayTitle"
+                android:inputType="numberDecimal" />
+
+            <EditText
                 android:id="@+id/record_current_check_night"
-                style="@style/RecordInfo"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:gravity="center"
-                tools:text="night value" />
+                android:layout_width="match_parent"
+                android:layout_height="60dp"
+                android:ems="10"
+                android:hint="@string/nightTitle"
+                android:inputType="numberDecimal" />
+
         </LinearLayout>
     </LinearLayout>
+
+    <TextView
+        android:id="@+id/comments_header"
+        style="@style/RecordInfoHeader"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="30dp"
+        android:layout_marginBottom="5dp"
+        android:text="@string/comments"
+        app:layout_constraintBottom_toTopOf="@+id/textInputEditText"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.045"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/currentKO" />
+
+    <com.google.android.material.textfield.TextInputLayout
+        android:id="@+id/textInputLayout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent">
+
+    </com.google.android.material.textfield.TextInputLayout>
+
+    <com.google.android.material.textfield.TextInputEditText
+        android:id="@+id/textInputEditText"
+        android:layout_width="match_parent"
+        android:layout_height="70dp"
+        android:layout_marginStart="10dp"
+        android:layout_marginEnd="10dp"
+        android:gravity="start"
+        android:hint="введите комментарий"
+        app:layout_constraintBottom_toTopOf="@+id/textInputLayout"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/currentKO"
+        app:layout_constraintVertical_bias="0.48000002" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
