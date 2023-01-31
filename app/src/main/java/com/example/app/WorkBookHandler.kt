@@ -2,7 +2,9 @@ package com.example.app
 
 import android.content.Context
 import android.os.Environment
+import android.os.Parcelable
 import android.util.Log
+import kotlinx.android.parcel.Parcelize
 import org.apache.poi.ss.usermodel.Row
 import org.apache.poi.ss.usermodel.Workbook
 import org.apache.poi.ss.usermodel.WorkbookFactory
@@ -14,7 +16,8 @@ import java.io.FileOutputStream
 *  You can download from server, modify in local storage and upload to server unique excel file
 *  CRUD methods
 *  ---  */
-class WorkBookHandler(val context: Context, fileName: String) {
+@Parcelize
+class WorkBookHandler(val context: Context, fileName: String): Parcelable {
 
     val STORAGE_PATH = Environment.getExternalStoragePublicDirectory("Download")
     private val file: File = File(STORAGE_PATH, fileName)
