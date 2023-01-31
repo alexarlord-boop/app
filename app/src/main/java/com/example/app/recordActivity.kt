@@ -16,11 +16,17 @@ class recordActivity : AppCompatActivity() {
         val name: TextView = findViewById(R.id.record_name)
         val puType: TextView = findViewById(R.id.record_pu_type)
         val puNumber: TextView = findViewById(R.id.record_pu_number)
+        val lastCheckDate: TextView = findViewById(R.id.record_last_check)
+        val lastCheckDateDay: TextView = findViewById(R.id.record_last_check_day)
+        val lastCheckDateNight: TextView = findViewById(R.id.record_last_check_night)
 
 
         name.text = passedRecord?.name
         puType.text = passedRecord?.puType
         puNumber.text = passedRecord?.puNumber
+        lastCheckDate.text = passedRecord?.lastKoDate
+        lastCheckDateDay.text = passedRecord?.lastKo_D
+        lastCheckDateNight.text = passedRecord?.lastKo_N
     }
 
     override fun onBackPressed() {

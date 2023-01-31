@@ -2,6 +2,7 @@ package com.example.app
 
 import android.content.Context
 import android.os.Environment
+import android.util.Log
 import org.apache.poi.ss.usermodel.Row
 import org.apache.poi.ss.usermodel.Workbook
 import org.apache.poi.ss.usermodel.WorkbookFactory
@@ -47,20 +48,21 @@ class WorkBookHandler(val context: Context, fileName: String) {
     }
 
     fun parseRow(row: Row): RecordDto {
+        Log.w("MyLog", row.getCell(8).stringCellValue.toString())
         return RecordDto(
             row.getCell(0).stringCellValue.trim(),
             row.getCell(1).stringCellValue.trim(),
             row.getCell(2).stringCellValue.trim(),
-            row.getCell(3).numericCellValue.toString().split(".")[0],
-            row.getCell(4).numericCellValue.toString(),
+            row.getCell(3).stringCellValue.trim().split(".")[0],
+            row.getCell(4).stringCellValue.trim(),
             row.getCell(5).stringCellValue.trim(),
             row.getCell(6).stringCellValue.trim(),
             row.getCell(7).stringCellValue.trim(),
-            row.getCell(8).numericCellValue.toString(),
-            row.getCell(9).numericCellValue.toString(),
-            row.getCell(10).numericCellValue.toString(),
-            row.getCell(11).numericCellValue.toString(),
-            row.getCell(12).numericCellValue.toString(),
+            row.getCell(8).stringCellValue.trim(),
+            row.getCell(9).stringCellValue.trim(),
+            row.getCell(10).stringCellValue.trim(),
+            row.getCell(11).stringCellValue.trim(),
+            row.getCell(12).stringCellValue.trim(),
             row.getCell(13).stringCellValue.trim()
         )
 

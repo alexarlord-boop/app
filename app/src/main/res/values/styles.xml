@@ -5,6 +5,10 @@
         <item name="android:textStyle">bold</item>
     </style>
 
+    <style name="RecordInfoHeader">
+        <item name="android:textSize">20sp</item>
+    </style>
+
     <style name="RecordRowBackground">
         <item name="android:background">@color/grey</item>
 
