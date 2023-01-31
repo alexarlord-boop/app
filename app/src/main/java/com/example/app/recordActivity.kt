@@ -9,6 +9,9 @@ import android.widget.EditText
 import android.widget.TextView
 import android.widget.Toast
 import com.google.android.material.textfield.TextInputEditText
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
+import java.util.Date
 import kotlin.time.Duration.Companion.days
 
 class recordActivity : AppCompatActivity() {
@@ -59,8 +62,10 @@ class recordActivity : AppCompatActivity() {
                 it.ko_D = if (day != "") day.toDouble() else 0.0
                 it.ko_N = if (night != "") night.toDouble() else 0.0
                 it.comments = comments
+
+                it.lastKoDate = LocalDate.now().format(DateTimeFormatter.ofPattern(workbookHandler?.FORMAT))
+
                 workbookHandler?.updateRowData(position, it)
-                Toast.makeText(this, "Сохранено", Toast.LENGTH_SHORT).show()
             }
         }
     }

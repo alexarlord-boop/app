@@ -20,10 +20,10 @@ import java.util.*
 *  ---  */
 @Parcelize
 class WorkBookHandler
-
     (val fileName: String) : Parcelable {
 
     val STORAGE_PATH = Environment.getExternalStoragePublicDirectory("Download")
+    val FORMAT = "MM/dd/yy"
     private val file: File = File(STORAGE_PATH, fileName)
     var workbook = readWorkBookFromFile()
     var sheet = workbook.getSheetAt(0)
@@ -81,13 +81,13 @@ class WorkBookHandler
     }
 
     fun convertNumericToDate(date: Date): String {
-        val format = SimpleDateFormat("MM/dd/yy")
-        return format.format(date)
+
+        return SimpleDateFormat(FORMAT).format(date)
     }
 
     fun convertStringToDate(str: String): Date {
-        val format = SimpleDateFormat("MM/dd/yy")
-        return format.parse(str)
+
+        return SimpleDateFormat(FORMAT).parse(str)
     }
 
 

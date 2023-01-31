@@ -19,7 +19,7 @@ class RecordDto(
     val name: String,
     val puNumber: String,
     val puType: String,
-    val lastKoDate: String,
+    var lastKoDate: String,
     val lastKo_D: Double,
     val lastKo_N: Double,
     var ko_D: Double,
