@@ -16,6 +16,9 @@
 
     <style name="RecordRowBackground">
         <item name="android:background">@color/grey</item>
+    </style>
 
+    <style name="UpdatedRecord">
+        <item name="android:textColor">@color/green_primary</item>
     </style>
 </resources>
