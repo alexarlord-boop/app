@@ -4,9 +4,7 @@ import android.os.Environment
 import android.os.Parcelable
 import android.util.Log
 import kotlinx.android.parcel.Parcelize
-import org.apache.poi.ss.usermodel.Row
-import org.apache.poi.ss.usermodel.Workbook
-import org.apache.poi.ss.usermodel.WorkbookFactory
+import org.apache.poi.ss.usermodel.*
 import java.io.File
 import java.io.FileInputStream
 import java.io.FileOutputStream
@@ -27,6 +25,7 @@ class WorkBookHandler
     private val file: File = File(STORAGE_PATH, fileName)
     var workbook = readWorkBookFromFile()
     var sheet = workbook.getSheetAt(0)
+    val columnsCount = 14
     var records = getRecordsFromFile()
 
     /*
@@ -56,11 +55,10 @@ class WorkBookHandler
     }
 
     fun Row.isEmpty(): Boolean {
-        return this.getCell(2).toString().isEmpty()
+        return this.getCell(0).stringCellValue.isBlank()
     }
 
     fun parseRow(row: Row): RecordDto {
-        Log.w("MyLog", row.getCell(8).numericCellValue.toString())
         return RecordDto(
             row.getCell(0).stringCellValue.trim(),
             row.getCell(1).stringCellValue.trim(),
