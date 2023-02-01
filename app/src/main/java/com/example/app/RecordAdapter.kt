@@ -1,21 +1,25 @@
 package com.example.app
 
-import android.graphics.Color
-import android.graphics.Paint
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 
-class RecordAdapter(val records: MutableList<RecordDto>, val recyclerViewInterface: RecyclerViewInterface) :
+
+class RecordAdapter(
+    val records: MutableList<RecordDto>,
+    val recyclerViewInterface: RecyclerViewInterface
+) :
     RecyclerView.Adapter<RecordAdapter.MyViewHolder>() {
 
     /**
      * Provide a reference to the type of views that you are using
      * (custom ViewHolder)
      */
-    class MyViewHolder(view: View, recyclerViewInterface: RecyclerViewInterface) : RecyclerView.ViewHolder(view) {
+    class MyViewHolder(view: View, recyclerViewInterface: RecyclerViewInterface) :
+        RecyclerView.ViewHolder(view) {
         val name: TextView
         val house: TextView
         val flat: TextView
@@ -35,6 +39,7 @@ class RecordAdapter(val records: MutableList<RecordDto>, val recyclerViewInterfa
 
     }
 
+
     // Create new views (invoked by the layout manager)
     override fun onCreateViewHolder(viewGroup: ViewGroup, viewType: Int): MyViewHolder {
         // Create a new view, which defines the UI of the list item
@@ -52,7 +57,6 @@ class RecordAdapter(val records: MutableList<RecordDto>, val recyclerViewInterfa
         viewHolder.name.text = records[position].name
         viewHolder.house.text = records[position].houseNumber
         viewHolder.flat.text = records[position].flatNumber.toString().split(".")[0]
-        viewHolder
     }
 
     // Return the size of your dataset (invoked by the layout manager)
