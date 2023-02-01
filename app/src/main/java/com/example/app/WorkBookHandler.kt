@@ -9,6 +9,7 @@ import java.io.File
 import java.io.FileInputStream
 import java.io.FileOutputStream
 import java.text.SimpleDateFormat
+import java.time.LocalDate
 import java.util.*
 
 
@@ -25,6 +26,7 @@ class WorkBookHandler
     private val file: File = File(STORAGE_PATH, fileName)
     var workbook = readWorkBookFromFile()
     var sheet = workbook.getSheetAt(0)
+    val cellStyle = sheet.getRow(1).getCell(8).cellStyle
     val columnsCount = 14
 
     /*
@@ -67,7 +69,7 @@ class WorkBookHandler
             row.getCell(5).stringCellValue.trim(),
             row.getCell(6).stringCellValue.trim(),
             row.getCell(7).stringCellValue.trim(),
-            convertNumericToDate(row.getCell(8).dateCellValue),
+            convertNumericDateToString(row.getCell(8).dateCellValue),
             row.getCell(9).numericCellValue,
             row.getCell(10).numericCellValue,
             row.getCell(11).numericCellValue,
@@ -78,13 +80,11 @@ class WorkBookHandler
 
     }
 
-    fun convertNumericToDate(date: Date): String {
-
+    fun convertNumericDateToString(date: Date): String {
         return SimpleDateFormat(FORMAT).format(date)
     }
 
     fun convertStringToDate(str: String): Date {
-
         return SimpleDateFormat(FORMAT).parse(str)
     }
 
@@ -100,9 +100,11 @@ class WorkBookHandler
         row.createCell(6).setCellValue(recordDto.puNumber)
         row.createCell(7).setCellValue(recordDto.puType)
 
+        // passing same date value
 
-        row.createCell(8).setCellValue(recordDto.lastKoDate)
-
+        val cell = row.createCell(8)
+        cell.setCellValue(recordDto.lastKoDate)
+        cell.cellStyle = cellStyle
 
         row.createCell(9).setCellValue(recordDto.lastKo_D)
         row.createCell(10).setCellValue(recordDto.lastKo_N)
