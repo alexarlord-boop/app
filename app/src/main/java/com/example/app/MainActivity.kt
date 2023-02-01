@@ -31,7 +31,6 @@ class MainActivity : AppCompatActivity(), RecyclerViewInterface {
 
     lateinit var btnSelectFile: Button
     lateinit var area: TextView
-    lateinit var streetName: TextView
     lateinit var fioHeader: TextView
     var filename: String? = null
     lateinit var houseHeader: TextView
@@ -59,7 +58,6 @@ class MainActivity : AppCompatActivity(), RecyclerViewInterface {
         // Getting view elements
         btnSelectFile = findViewById(R.id.btn_select)
         area = findViewById(R.id.hood_area)
-        streetName = findViewById(R.id.street)
         fioHeader = findViewById(R.id.fio_header)
         houseHeader = findViewById(R.id.house_header)
         flatHeader = findViewById(R.id.flat_header)
@@ -121,7 +119,6 @@ class MainActivity : AppCompatActivity(), RecyclerViewInterface {
 
             // визуализация
             area.text = workbookHandler.getArea()
-            streetName.text = workbookHandler.getStreet()
 
             // Sending reference and data to Adapter
             val adapter = RecordAdapter(fileRecords, this)

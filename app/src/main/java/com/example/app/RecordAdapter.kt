@@ -20,12 +20,14 @@ class RecordAdapter(
      */
     class MyViewHolder(view: View, recyclerViewInterface: RecyclerViewInterface) :
         RecyclerView.ViewHolder(view) {
+        val street: TextView
         val name: TextView
         val house: TextView
         val flat: TextView
 
         init {
             // Define click listener for the ViewHolder's View
+            street = view.findViewById(R.id.renter_street)
             name = view.findViewById(R.id.renter_name)
             house = view.findViewById(R.id.renter_house)
             flat = view.findViewById(R.id.renter_flat)
@@ -54,6 +56,7 @@ class RecordAdapter(
 
         // Get element from your dataset at this position and replace the
         // contents of the view with that element
+        viewHolder.street.text = records[position].street
         viewHolder.name.text = records[position].name
         viewHolder.house.text = records[position].houseNumber
         viewHolder.flat.text = records[position].flatNumber.toString().split(".")[0]
