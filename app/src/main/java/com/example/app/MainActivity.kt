@@ -118,6 +118,7 @@ class MainActivity : AppCompatActivity(), RecyclerViewInterface {
         try {
             fileRecords = workbookHandler.getRecordsFromFile()
 
+
             // визуализация
             area.text = workbookHandler.getArea()
             streetName.text = workbookHandler.getStreet()

@@ -1,5 +1,7 @@
 package com.example.app
 
+import android.graphics.Color
+import android.graphics.Paint
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -50,7 +52,7 @@ class RecordAdapter(val records: MutableList<RecordDto>, val recyclerViewInterfa
         viewHolder.name.text = records[position].name
         viewHolder.house.text = records[position].houseNumber
         viewHolder.flat.text = records[position].flatNumber.toString().split(".")[0]
-
+        viewHolder
     }
 
     // Return the size of your dataset (invoked by the layout manager)

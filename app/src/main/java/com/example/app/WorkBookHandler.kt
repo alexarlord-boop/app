@@ -26,7 +26,6 @@ class WorkBookHandler
     var workbook = readWorkBookFromFile()
     var sheet = workbook.getSheetAt(0)
     val columnsCount = 14
-    var records = getRecordsFromFile()
 
     /*
         превращает содержимое файла в объект workbook
@@ -119,7 +118,6 @@ class WorkBookHandler
     }
 
     fun updateRowData(position: Int, recordDto: RecordDto) {
-        records[position] = recordDto
         dataToRow(position + 1, recordDto)
     }
 
