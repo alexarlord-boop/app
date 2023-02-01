@@ -54,18 +54,26 @@ class recordActivity : AppCompatActivity() {
         val saveBtn: Button = findViewById(R.id.save_btn)
 
         saveBtn.setOnClickListener {
-            val day = newDataDay.text.toString()
-            val night = newDataNight.text.toString()
-            val comments = newComments.text.toString()
+            val day = newDataDay.text.toString().trim()
+            if ((day.isEmpty() || day.isBlank()) ||
+                day.toInt() <= lastCheckDateDay.text.toString().toInt() // ? может быть равно
+            ) {
+                newDataDay.error = "Значение должно быть больше предыдущего"
+            } else {
+                val night = newDataNight.text.toString()
+                val comments = newComments.text.toString()
 
-            passedRecord?.let {
-                it.ko_D = if (day != "") day.toDouble() else 0.0
-                it.ko_N = if (night != "") night.toDouble() else 0.0
-                it.comments = comments
+                passedRecord?.also {
+                    it.ko_D = if (day != "") day.toDouble() else 0.0
+                    it.ko_N = if (night != "") night.toDouble() else 0.0
+                    it.comments = comments
 
-                it.lastKoDate = LocalDate.now().format(DateTimeFormatter.ofPattern(workbookHandler?.FORMAT))
+                    it.lastKoDate =
+                        LocalDate.now().format(DateTimeFormatter.ofPattern(workbookHandler?.FORMAT))
 
-                workbookHandler?.updateRowData(position, it)
+                    workbookHandler?.updateRowData(position, it)
+                    Toast.makeText(this, "Сохранено", Toast.LENGTH_SHORT).show()
+                }
             }
         }
     }
