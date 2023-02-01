@@ -228,7 +228,8 @@
                 android:layout_height="60dp"
                 android:ems="10"
                 android:hint="@string/puTitle"
-                android:inputType="numberDecimal" />
+                android:inputType="numberDecimal"
+                android:selectAllOnFocus="true" />
 
             <EditText
                 android:id="@+id/record_current_check_night"
@@ -236,7 +237,8 @@
                 android:layout_height="60dp"
                 android:ems="10"
                 android:hint="@string/puTitle"
-                android:inputType="numberDecimal" />
+                android:inputType="numberDecimal"
+                android:selectAllOnFocus="true" />
 
         </LinearLayout>
     </LinearLayout>

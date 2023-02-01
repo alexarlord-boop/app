@@ -80,7 +80,7 @@ class recordActivity : AppCompatActivity() {
 
     fun String.beforeZeroOrBlank(): String {
         val before = this.split(".")[0]
-        return if (before != "0") before else ""
+        return before
     }
 
     override fun onBackPressed() {
