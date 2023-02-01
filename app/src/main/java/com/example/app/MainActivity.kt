@@ -22,6 +22,8 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import java.util.*
 
+const val LAST_FILE_OPENED = "lastFileOpened"
+
 class MainActivity : AppCompatActivity(), RecyclerViewInterface {
     lateinit var launcher: ActivityResultLauncher<Intent>
 
@@ -41,6 +43,12 @@ class MainActivity : AppCompatActivity(), RecyclerViewInterface {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+
+        if (savedInstanceState != null) {
+            filename = savedInstanceState.getString(LAST_FILE_OPENED)
+            reloadData()
+        }
+
 
         launcher =
             registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
@@ -82,11 +90,17 @@ class MainActivity : AppCompatActivity(), RecyclerViewInterface {
         reloadData()
     }
 
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+        outState.putString(LAST_FILE_OPENED, filename)
+    }
+
     fun reloadData() {
         filename?.let {
             workbookHandler = WorkBookHandler(it)
             workbookHandler.readWorkBookFromFile()
             visualiseDataFromXlsFile()
+            Log.i("MyLog", "RELOADED")
         }
     }
 
