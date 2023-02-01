@@ -68,9 +68,6 @@ class recordActivity : AppCompatActivity() {
                     it.ko_N = if (night != "") night.toDouble() else 0.0
                     it.comments = comments
 
-                    it.lastKoDate =
-                        LocalDate.now().format(DateTimeFormatter.ofPattern(workbookHandler?.FORMAT))
-
                     workbookHandler?.updateRowData(position, it)
                     Toast.makeText(this, "Сохранено", Toast.LENGTH_SHORT).show()
                 }

@@ -21,7 +21,7 @@ class WorkBookHandler
     (val fileName: String) : Parcelable {
 
     val STORAGE_PATH = Environment.getExternalStoragePublicDirectory("Download")
-    val FORMAT = "MM/dd/yy"
+    val FORMAT = "dd.MM.yyyy"
     private val file: File = File(STORAGE_PATH, fileName)
     var workbook = readWorkBookFromFile()
     var sheet = workbook.getSheetAt(0)
@@ -99,7 +99,11 @@ class WorkBookHandler
         row.createCell(5).setCellValue(recordDto.name)
         row.createCell(6).setCellValue(recordDto.puNumber)
         row.createCell(7).setCellValue(recordDto.puType)
-        row.createCell(8).setCellValue(convertStringToDate(recordDto.lastKoDate))
+
+
+        row.createCell(8).setCellValue(recordDto.lastKoDate)
+
+
         row.createCell(9).setCellValue(recordDto.lastKo_D)
         row.createCell(10).setCellValue(recordDto.lastKo_N)
         row.createCell(11).setCellValue(recordDto.ko_D)
