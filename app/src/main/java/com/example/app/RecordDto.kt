@@ -24,7 +24,8 @@ class RecordDto(
     val lastKo_N: Double,
     var ko_D: Double,
     var ko_N: Double,
-    var comments: String
+    var comments: String,
+    val ID: Double
 ) : Parcelable {
 
     override fun toString(): String {

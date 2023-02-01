@@ -73,7 +73,8 @@ class WorkBookHandler
             row.getCell(10).numericCellValue,
             row.getCell(11).numericCellValue,
             row.getCell(12).numericCellValue,
-            row.getCell(13).stringCellValue.trim()
+            row.getCell(13).stringCellValue.trim(),
+            row.getCell(14).numericCellValue
         )
 
     }
@@ -105,6 +106,7 @@ class WorkBookHandler
         row.createCell(11).setCellValue(recordDto.ko_D)
         row.createCell(12).setCellValue(recordDto.ko_N)
         row.createCell(13).setCellValue(recordDto.comments)
+        row.createCell(14).setCellValue(recordDto.ID)
         saveWorkBookToFile()
     }
 
