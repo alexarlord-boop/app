@@ -43,7 +43,7 @@ class recordActivity : AppCompatActivity() {
             name.text = it.name
             puType.text = it.puType
             puNumber.text = it.puNumber.toString()
-            lastCheckDate.text = it.lastKoDate
+            lastCheckDate.text = workbookHandler?.convertDateToFormattedString(it.lastKoDate)
             lastCheckDateDay.text = it.lastKo_D.toString().beforeZeroOrBlank()
             lastCheckDateNight.text = it.lastKo_N.toString().beforeZeroOrBlank()
 

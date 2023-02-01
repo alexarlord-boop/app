@@ -2,6 +2,7 @@ package com.example.app
 
 import android.os.Parcelable
 import kotlinx.android.parcel.Parcelize
+import java.time.LocalDateTime
 import java.util.Date
 
 /*
@@ -19,7 +20,7 @@ class RecordDto(
     val name: String,
     val puNumber: String,
     val puType: String,
-    var lastKoDate: String,
+    var lastKoDate: LocalDateTime,
     val lastKo_D: Double,
     val lastKo_N: Double,
     var ko_D: Double,

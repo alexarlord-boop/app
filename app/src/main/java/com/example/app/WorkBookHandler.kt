@@ -10,6 +10,8 @@ import java.io.FileInputStream
 import java.io.FileOutputStream
 import java.text.SimpleDateFormat
 import java.time.LocalDate
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 import java.util.*
 
 
@@ -69,7 +71,7 @@ class WorkBookHandler
             row.getCell(5).stringCellValue.trim(),
             row.getCell(6).stringCellValue.trim(),
             row.getCell(7).stringCellValue.trim(),
-            convertNumericDateToString(row.getCell(8).dateCellValue),
+            row.getCell(8).localDateTimeCellValue,
             row.getCell(9).numericCellValue,
             row.getCell(10).numericCellValue,
             row.getCell(11).numericCellValue,
@@ -80,12 +82,10 @@ class WorkBookHandler
 
     }
 
-    fun convertNumericDateToString(date: Date): String {
-        return SimpleDateFormat(FORMAT).format(date)
-    }
 
-    fun convertStringToDate(str: String): Date {
-        return SimpleDateFormat(FORMAT).parse(str)
+    fun convertDateToFormattedString(date: LocalDateTime): String {
+        val dateTimeFormatter = DateTimeFormatter.ofPattern(FORMAT)
+        return date.format(dateTimeFormatter)
     }
 
 
@@ -134,7 +134,7 @@ class WorkBookHandler
             }
             FileOutputStream(file).use { fileOut -> workbook.write(fileOut) }
         } catch (ex: Exception) {
-            Log.e("MyLog", ex.message.toString())
+            Log.e("MyLog", ex.stackTraceToString())
         }
     }
 
