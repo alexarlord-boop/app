@@ -14,7 +14,6 @@
         android:layout_marginStart="8dp"
         android:layout_marginTop="12dp"
         android:layout_marginBottom="12dp"
-        app:cardBackgroundColor="@color/grey"
         app:cardElevation="4dp"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent">
@@ -22,61 +21,135 @@
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:orientation="horizontal">
+            android:orientation="vertical">
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:layout_weight="1"
-                android:layout_gravity="center"
-                android:orientation="vertical">
+                android:orientation="horizontal"
+                app:cardBackgroundColor="@color/grey">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_gravity="center"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:id="@+id/renter_street"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:layout_weight="1"
+                        android:gravity="center"
+                        android:text="street"
+                        app:autoSizeTextType="uniform" />
+
+                    <TextView
+                        android:id="@+id/renter_house"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:layout_weight="1"
+                        android:gravity="center"
+                        android:text="house"
+                        app:autoSizeMaxTextSize="20sp"
+                        app:autoSizeMinTextSize="10sp"
+                        app:autoSizeTextType="uniform"
+
+                        />
+                </LinearLayout>
 
                 <TextView
-                    android:id="@+id/renter_street"
+                    android:id="@+id/renter_flat"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
                     android:layout_weight="1"
                     android:gravity="center"
-                    app:autoSizeTextType="uniform"
-                    android:text="street" />
-
-                <TextView
-                    android:id="@+id/renter_house"
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:layout_weight="1"
-                    android:gravity="center"
-                    android:text="house"
+                    android:text="flat"
+                    android:textStyle="bold"
                     app:autoSizeMaxTextSize="20sp"
                     app:autoSizeMinTextSize="10sp"
-                    app:autoSizeTextType="uniform"
+                    app:autoSizeTextType="uniform" />
 
-                    />
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:id="@+id/renter_name"
+                        android:layout_width="match_parent"
+                        android:layout_height="53dp"
+                        android:gravity="center"
+                        android:text="name"
+                        app:autoSizeMaxTextSize="20sp"
+                        app:autoSizeMinTextSize="10sp"
+                        app:autoSizeTextType="uniform" />
+
+                </LinearLayout>
+
             </LinearLayout>
 
-            <TextView
-                android:id="@+id/renter_flat"
-                android:layout_width="match_parent"
-                android:layout_height="52dp"
-                android:gravity="center"
-                android:text="flat"
-                android:textStyle="bold"
-                app:autoSizeMaxTextSize="20sp"
-                app:autoSizeMinTextSize="10sp"
-                android:layout_weight="1"
-                app:autoSizeTextType="uniform" />
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:layout_gravity="end"
+                android:elevation="6dp"
+                android:gravity="end"
+                android:orientation="horizontal"
+                android:background="@color/grey">
 
-            <TextView
-                android:id="@+id/renter_name"
-                android:layout_width="match_parent"
-                android:layout_height="53dp"
-                android:layout_weight="1"
-                android:gravity="center"
-                android:text="name"
-                app:autoSizeMaxTextSize="20sp"
-                app:autoSizeMinTextSize="10sp"
-                app:autoSizeTextType="uniform" />
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:padding="1dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:padding="5dp"
+                        android:text="д:" />
+
+                    <TextView
+                        android:id="@+id/daySuccess"
+                        android:layout_width="wrap_content"
+                        android:layout_height="match_parent"
+                        android:padding="5dp"
+                        android:text="TextView"
+                        android:textStyle="bold"
+                        android:visibility="visible"
+                        app:autoSizeTextType="uniform" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:padding="1dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:padding="5dp"
+                        android:text="н:" />
+
+                    <TextView
+                        android:id="@+id/nightSuccess"
+                        android:layout_width="wrap_content"
+                        android:layout_height="match_parent"
+                        android:padding="5dp"
+                        android:text="TextView"
+                        android:textStyle="bold"
+                        android:visibility="visible"
+                        app:autoSizeTextType="uniform" />
+                </LinearLayout>
+            </LinearLayout>
         </LinearLayout>
 
+
     </androidx.cardview.widget.CardView>
+
+
 </androidx.constraintlayout.widget.ConstraintLayout>

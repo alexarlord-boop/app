@@ -6,28 +6,41 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
+import org.w3c.dom.Text
 
 
-class RecordAdapter(val records: MutableList<RecordDto>, val recyclerViewInterface: RecyclerViewInterface,
-                val clickListener: (RecordDto) -> Unit) :
+class RecordAdapter(
+    val records: MutableList<RecordDto>, val recyclerViewInterface: RecyclerViewInterface,
+    val clickListener: (RecordDto) -> Unit
+) :
     RecyclerView.Adapter<RecordAdapter.MyViewHolder>() {
 
     /**
      * Provide a reference to the type of views that you are using
      * (custom ViewHolder)
      */
-    class MyViewHolder(view: View, recyclerViewInterface: RecyclerViewInterface, clickAtPosition: (Int) -> Unit) :
+    class MyViewHolder(
+        view: View,
+        recyclerViewInterface: RecyclerViewInterface,
+        clickAtPosition: (Int) -> Unit
+    ) :
         RecyclerView.ViewHolder(view) {
         val street: TextView
         val name: TextView
         val house: TextView
         val flat: TextView
+        val daySuccessText: TextView
+        val nightSuccessText: TextView
+
         init {
             // Define click listener for the ViewHolder's View
             street = view.findViewById(R.id.renter_street)
             name = view.findViewById(R.id.renter_name)
             house = view.findViewById(R.id.renter_house)
             flat = view.findViewById(R.id.renter_flat)
+            daySuccessText = view.findViewById(R.id.daySuccess)
+            nightSuccessText = view.findViewById(R.id.nightSuccess)
+
             view.setOnClickListener(View.OnClickListener {
                 val pos = adapterPosition
                 Log.i("MyLog", "POSITION -- ${layoutPosition.toString()}")  // saving to a file
@@ -61,6 +74,26 @@ class RecordAdapter(val records: MutableList<RecordDto>, val recyclerViewInterfa
         viewHolder.name.text = records[position].name
         viewHolder.house.text = records[position].houseNumber
         viewHolder.flat.text = records[position].flatNumber.toString().split(".")[0]
+
+        if (records[position].ko_D > records[position].lastKo_D) {
+            viewHolder.daySuccessText.text = records[position].ko_D.toString()
+            viewHolder.nightSuccessText.text = records[position].ko_N.toString()
+
+            showSuccesData(viewHolder.daySuccessText)
+            showSuccesData(viewHolder.nightSuccessText)
+        } else {
+            hideData(viewHolder.daySuccessText)
+            hideData(viewHolder.nightSuccessText)
+        }
+    }
+
+    fun showSuccesData(dataElement: TextView) {
+        dataElement.visibility = View.VISIBLE
+        dataElement.setTextAppearance(R.style.UpdatedRecord)
+    }
+
+    fun hideData(dataElement: TextView) {
+        dataElement.visibility = View.GONE
     }
 
     // Return the size of your dataset (invoked by the layout manager)
