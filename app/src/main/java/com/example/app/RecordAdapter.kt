@@ -76,8 +76,8 @@ class RecordAdapter(
         viewHolder.flat.text = records[position].flatNumber.toString().split(".")[0]
 
         if (records[position].ko_D > records[position].lastKo_D) {
-            viewHolder.daySuccessText.text = records[position].ko_D.toString()
-            viewHolder.nightSuccessText.text = records[position].ko_N.toString()
+            viewHolder.daySuccessText.text = records[position].ko_D.toString().split(".")[0]
+            viewHolder.nightSuccessText.text = records[position].ko_N.toString().split(".")[0]
 
             showSuccesData(viewHolder.daySuccessText)
             showSuccesData(viewHolder.nightSuccessText)
