@@ -138,8 +138,9 @@ class MainActivity : AppCompatActivity(), RecyclerViewInterface {
             val adapter = RecordAdapter(fileRecords, this)
 
             // Setting Adapter to RecyclerView
-            recyclerView.setAdapter(adapter);
+            recyclerView.adapter = adapter
             recyclerView.layoutManager = LinearLayoutManager(this)
+//            recyclerView.scrollToPosition(8)  //   scroll to particular list item (get from a file)
             showListHeaders()
         } catch (ex: Exception) {
             Toast.makeText(this, "Выберите подходящий формат", Toast.LENGTH_SHORT).show()
