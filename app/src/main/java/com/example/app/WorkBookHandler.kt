@@ -49,9 +49,9 @@ class WorkBookHandler
         val records = mutableListOf<RecordDto>()
         val lastId = sheet.lastRowNum
 
-        for (recordId in 1..lastId) {  // skipping headers in row 0
-            val row = sheet.getRow(recordId)
-            if (!row.isEmpty()) records.add(parseRow(row)) else continue
+        for (position in 1..lastId) {  // skipping headers in row 0
+            val row = sheet.getRow(position)
+            if (!row.isEmpty()) records.add(parseRow(row, position - 1)) else continue
         }
 
         return records
@@ -61,7 +61,7 @@ class WorkBookHandler
         return this.getCell(0).stringCellValue.isBlank()
     }
 
-    fun parseRow(row: Row): RecordDto {
+    fun parseRow(row: Row, position: Int): RecordDto {
         return RecordDto(
             row.getCell(0).stringCellValue.trim(),
             row.getCell(1).stringCellValue.trim(),
@@ -77,7 +77,8 @@ class WorkBookHandler
             row.getCell(11).numericCellValue,
             row.getCell(12).numericCellValue,
             row.getCell(13).stringCellValue.trim(),
-            row.getCell(14).numericCellValue
+            row.getCell(14).numericCellValue,
+            position
         )
 
     }

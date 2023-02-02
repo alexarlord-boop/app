@@ -35,6 +35,7 @@ class MainActivity : AppCompatActivity(), RecyclerViewInterface {
     lateinit var area: TextView
     lateinit var fioHeader: TextView
     var filename: String? = null
+    var clickedRecordId = -1
     lateinit var houseHeader: TextView
     lateinit var flatHeader: TextView
     lateinit var recyclerView: RecyclerView
@@ -135,12 +136,14 @@ class MainActivity : AppCompatActivity(), RecyclerViewInterface {
             area.text = workbookHandler.getArea()
 
             // Sending reference and data to Adapter
-            val adapter = RecordAdapter(fileRecords, this)
+            val adapter = RecordAdapter(fileRecords, this) {
+                clickedRecordId = it.positionInView
+            }
 
             // Setting Adapter to RecyclerView
             recyclerView.adapter = adapter
             recyclerView.layoutManager = LinearLayoutManager(this)
-//            recyclerView.scrollToPosition(8)  //   scroll to particular list item (get from a file)
+            recyclerView.scrollToPosition(clickedRecordId)  //   scroll to particular list item (get from a file)
             showListHeaders()
         } catch (ex: Exception) {
             Toast.makeText(this, "Выберите подходящий формат", Toast.LENGTH_SHORT).show()

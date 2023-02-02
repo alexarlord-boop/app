@@ -26,7 +26,9 @@ class RecordDto(
     var ko_D: Double,
     var ko_N: Double,
     var comments: String,
-    val ID: Double
+    val ID: Double,
+
+    val positionInView: Int
 ) : Parcelable {
 
     override fun toString(): String {

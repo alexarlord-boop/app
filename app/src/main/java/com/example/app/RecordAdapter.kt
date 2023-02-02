@@ -8,23 +8,20 @@ import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 
 
-class RecordAdapter(
-    val records: MutableList<RecordDto>,
-    val recyclerViewInterface: RecyclerViewInterface
-) :
+class RecordAdapter(val records: MutableList<RecordDto>, val recyclerViewInterface: RecyclerViewInterface,
+                val clickListener: (RecordDto) -> Unit) :
     RecyclerView.Adapter<RecordAdapter.MyViewHolder>() {
 
     /**
      * Provide a reference to the type of views that you are using
      * (custom ViewHolder)
      */
-    class MyViewHolder(view: View, recyclerViewInterface: RecyclerViewInterface) :
+    class MyViewHolder(view: View, recyclerViewInterface: RecyclerViewInterface, clickAtPosition: (Int) -> Unit) :
         RecyclerView.ViewHolder(view) {
         val street: TextView
         val name: TextView
         val house: TextView
         val flat: TextView
-
         init {
             // Define click listener for the ViewHolder's View
             street = view.findViewById(R.id.renter_street)
@@ -36,6 +33,7 @@ class RecordAdapter(
                 Log.i("MyLog", "POSITION -- ${layoutPosition.toString()}")  // saving to a file
                 if (pos != RecyclerView.NO_POSITION) {
                     recyclerViewInterface.onItemCLick(pos)
+                    clickAtPosition(pos)
                 }
             })
         }
@@ -48,8 +46,10 @@ class RecordAdapter(
         // Create a new view, which defines the UI of the list item
         val view = LayoutInflater.from(viewGroup.context)
             .inflate(R.layout.item_record, viewGroup, false)
-
-        return MyViewHolder(view, recyclerViewInterface)
+        val vh = MyViewHolder(view, recyclerViewInterface) {
+            clickListener(records[it])
+        }
+        return vh
     }
 
     // Replace the contents of a view (invoked by the layout manager)
