@@ -97,16 +97,16 @@
 
         <TextView
             android:id="@+id/hood_area"
-            android:layout_width="135dp"
-            android:layout_height="22dp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
             android:textStyle="bold"
-            app:autoSizeTextType="uniform"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintHorizontal_bias="0.0"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"
-            tools:text="Батецкий" />
+            android:textSize="20sp"
+            tools:text="" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 
