@@ -37,7 +37,6 @@ class MainActivity : AppCompatActivity(), RecyclerViewInterface {
     var filename: String? = null
     var clickedRecordId = -1
     lateinit var houseHeader: TextView
-    lateinit var flatHeader: TextView
     lateinit var recyclerView: RecyclerView
 
     @RequiresApi(Build.VERSION_CODES.Q)
@@ -69,7 +68,6 @@ class MainActivity : AppCompatActivity(), RecyclerViewInterface {
         area = findViewById(R.id.hood_area)
         fioHeader = findViewById(R.id.fio_header)
         houseHeader = findViewById(R.id.house_header)
-        flatHeader = findViewById(R.id.flat_header)
 
         // Setting the layout as linear layout for vertical orientation
         recyclerView.layoutManager = LinearLayoutManager(applicationContext)
@@ -154,7 +152,6 @@ class MainActivity : AppCompatActivity(), RecyclerViewInterface {
     fun showListHeaders() {
         fioHeader.visibility = View.VISIBLE
         houseHeader.visibility = View.VISIBLE
-        flatHeader.visibility = View.VISIBLE
     }
 
     override fun onItemCLick(position: Int) {

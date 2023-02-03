@@ -9,9 +9,9 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginStart="8dp"
-        android:layout_marginTop="12dp"
+        android:layout_marginTop="4dp"
         android:layout_marginEnd="8dp"
-        android:layout_marginBottom="12dp"
+        android:layout_marginBottom="4dp"
         app:cardElevation="4dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
@@ -25,49 +25,31 @@
 
             <LinearLayout
                 android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:orientation="horizontal"
-                app:cardBackgroundColor="@color/grey">
+                android:layout_height="60dp"
+                android:orientation="horizontal">
 
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:layout_gravity="center"
-                    android:layout_weight="1"
-                    android:orientation="vertical">
-
-                    <TextView
-                        android:id="@+id/renter_street"
-                        android:layout_width="match_parent"
-                        android:layout_height="match_parent"
-                        android:layout_weight="1"
-                        android:gravity="center"
-                        android:text="street" />
-
-
-                </LinearLayout>
 
                 <TextView
-                    android:id="@+id/renter_flat"
+                    android:id="@+id/renter_street"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
                     android:layout_weight="1"
-                    android:gravity="center"
-                    android:text="flat"
-                    app:autoSizeMaxTextSize="20sp"
-                    app:autoSizeMinTextSize="8sp"
-                    app:autoSizeTextType="uniform" />
+                    android:gravity="start"
+                    android:paddingTop="10dp"
+                    android:text="street"
+                    android:textSize="20sp"/>
+
 
                 <TextView
                     android:id="@+id/renter_name"
                     android:layout_width="match_parent"
-                    android:layout_height="53dp"
+                    android:layout_height="match_parent"
                     android:layout_weight="1"
-                    android:gravity="center"
-                    android:textStyle="bold"
+                    android:gravity="end"
                     android:text="name"
-                    app:autoSizeMaxTextSize="15sp"
-                    app:autoSizeTextType="uniform" />
+                    android:paddingTop="5dp"
+                    android:textSize="25sp"
+                    />
 
 
             </LinearLayout>
@@ -80,66 +62,105 @@
                 android:gravity="end"
                 android:orientation="horizontal">
 
-                <TextView
-                    android:id="@+id/renter_house"
-                    android:layout_width="0dp"
+                <LinearLayout
+                    android:layout_width="match_parent"
                     android:layout_height="match_parent"
-                    android:gravity="start"
-                    android:layout_gravity="start"
-                    android:layout_marginStart="40dp"
+                    android:layout_weight="1">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="match_parent"
+                        android:gravity="start"
+                        android:padding="5dp"
+                        android:text="дом:" />
+
+
+                    <TextView
+                        android:id="@+id/renter_house"
+                        android:layout_width="wrap_content"
+                        android:layout_height="match_parent"
+                        android:layout_gravity="start"
+                        android:layout_weight="0.5"
+                        android:gravity="start"
+                        android:text="house"
+                        app:autoSizeMaxTextSize="20sp"
+                        app:autoSizeTextType="uniform" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="match_parent"
+                        android:gravity="start"
+                        android:padding="5dp"
+                        android:text="кв:" />
+
+                    <TextView
+                        android:id="@+id/renter_flat"
+                        android:layout_width="wrap_content"
+                        android:layout_height="match_parent"
+                        android:layout_weight="0.5"
+                        android:gravity="start"
+                        android:text="flat"
+                        app:autoSizeMaxTextSize="20sp"
+                        app:autoSizeMinTextSize="8sp"
+                        app:autoSizeTextType="uniform" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
                     android:layout_weight="1"
-                    android:text="house"
-                    app:autoSizeMaxTextSize="15sp"
-                    app:autoSizeTextType="uniform"
-                    />
+                    android:gravity="end">
 
-                <LinearLayout
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:background="@color/grey"
-                    android:padding="1dp">
-
-                    <TextView
+                    <LinearLayout
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:padding="5dp"
-                        android:text="д:" />
+                        android:background="@color/grey"
+                        android:orientation="horizontal"
+                        android:padding="1dp">
 
-                    <TextView
-                        android:id="@+id/daySuccess"
-                        android:layout_width="wrap_content"
-                        android:layout_height="match_parent"
-                        android:padding="5dp"
-                        android:text="TextView"
-                        android:textStyle="bold"
-                        android:visibility="visible"
-                        app:autoSizeTextType="uniform" />
-                </LinearLayout>
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:padding="5dp"
+                            android:text="д:" />
 
-                <LinearLayout
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:background="@color/grey"
-                    android:padding="1dp">
+                        <TextView
+                            android:id="@+id/daySuccess"
+                            android:layout_width="wrap_content"
+                            android:layout_height="match_parent"
+                            android:padding="5dp"
+                            android:text="TextView"
+                            android:textStyle="bold"
+                            android:visibility="visible"
+                            app:autoSizeTextType="uniform" />
+                    </LinearLayout>
 
-                    <TextView
+                    <LinearLayout
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:padding="5dp"
-                        android:text="н:" />
+                        android:background="@color/grey"
+                        android:orientation="horizontal"
+                        android:padding="1dp">
 
-                    <TextView
-                        android:id="@+id/nightSuccess"
-                        android:layout_width="wrap_content"
-                        android:layout_height="match_parent"
-                        android:padding="5dp"
-                        android:text="TextView"
-                        android:textStyle="bold"
-                        android:visibility="visible"
-                        app:autoSizeTextType="uniform" />
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:padding="5dp"
+                            android:text="н:" />
+
+                        <TextView
+                            android:id="@+id/nightSuccess"
+                            android:layout_width="wrap_content"
+                            android:layout_height="match_parent"
+                            android:padding="5dp"
+                            android:text="TextView"
+                            android:textStyle="bold"
+                            android:visibility="visible"
+                            app:autoSizeTextType="uniform" />
+                    </LinearLayout>
+
                 </LinearLayout>
+
             </LinearLayout>
         </LinearLayout>
 
