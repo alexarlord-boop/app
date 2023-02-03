@@ -23,36 +23,39 @@
             android:layout_height="match_parent"
             android:orientation="vertical">
 
-            <LinearLayout
+            <RelativeLayout
                 android:layout_width="match_parent"
-                android:layout_height="60dp"
+                android:layout_height="wrap_content"
                 android:orientation="horizontal">
 
 
                 <TextView
                     android:id="@+id/renter_street"
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:layout_weight="1"
-                    android:gravity="start"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
                     android:paddingTop="10dp"
-                    android:text="street"
-                    android:textSize="20sp"/>
+                    android:paddingStart="10dp"
+                    android:layout_alignParentTop="true"
+                    android:layout_alignParentStart="true"
+                    android:text="street" />
 
 
                 <TextView
                     android:id="@+id/renter_name"
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:layout_weight="1"
-                    android:gravity="end"
-                    android:text="name"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentTop="true"
+                    android:layout_alignParentEnd="true"
+                    android:layout_marginStart="100dp"
+                    android:layout_toEndOf="@+id/renter_street"
+                    android:gravity="start"
                     android:paddingTop="5dp"
-                    android:textSize="25sp"
-                    />
+                    android:paddingEnd="10dp"
+                    android:text="name"
+                    android:textSize="20sp" />
 
 
-            </LinearLayout>
+            </RelativeLayout>
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -62,48 +65,54 @@
                 android:gravity="end"
                 android:orientation="horizontal">
 
-                <LinearLayout
+                <RelativeLayout
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
                     android:layout_weight="1">
 
                     <TextView
+                        android:id="@+id/house_text"
                         android:layout_width="wrap_content"
-                        android:layout_height="match_parent"
-                        android:gravity="start"
+                        android:layout_height="wrap_content"
                         android:padding="5dp"
+                        android:layout_marginStart="10dp"
+                        android:layout_alignParentStart="true"
+                        android:layout_alignParentTop="true"
                         android:text="дом:" />
 
 
                     <TextView
                         android:id="@+id/renter_house"
                         android:layout_width="wrap_content"
-                        android:layout_height="match_parent"
-                        android:layout_gravity="start"
-                        android:layout_weight="0.5"
-                        android:gravity="start"
+                        android:layout_height="wrap_content"
+                        android:layout_alignParentTop="true"
+                        android:layout_toEndOf="@+id/house_text"
                         android:text="house"
+                        android:padding="5dp"
                         app:autoSizeMaxTextSize="20sp"
                         app:autoSizeTextType="uniform" />
 
                     <TextView
+                        android:id="@+id/flat_text"
                         android:layout_width="wrap_content"
-                        android:layout_height="match_parent"
-                        android:gravity="start"
+                        android:layout_height="wrap_content"
                         android:padding="5dp"
+                        android:layout_alignParentTop="true"
+                        android:layout_toEndOf="@id/renter_house"
                         android:text="кв:" />
 
                     <TextView
                         android:id="@+id/renter_flat"
                         android:layout_width="wrap_content"
-                        android:layout_height="match_parent"
-                        android:layout_weight="0.5"
-                        android:gravity="start"
+                        android:layout_height="wrap_content"
+                        android:layout_alignParentTop="true"
+                        android:layout_toEndOf="@+id/flat_text"
                         android:text="flat"
+                        android:padding="5dp"
                         app:autoSizeMaxTextSize="20sp"
                         app:autoSizeMinTextSize="8sp"
                         app:autoSizeTextType="uniform" />
-                </LinearLayout>
+                </RelativeLayout>
 
                 <LinearLayout
                     android:layout_width="match_parent"
