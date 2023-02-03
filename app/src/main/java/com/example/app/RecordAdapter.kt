@@ -77,7 +77,7 @@ class RecordAdapter(
 
         // Show successfully updated records AND redraws items,
         // which are not updated yet but are reusing viewHolders
-        if (records[position].ko_D > records[position].lastKo_D) {
+        if (records[position].ko_D >= records[position].lastKo_D) {
             viewHolder.daySuccessText.text = records[position].ko_D.toString().split(".")[0]
             showSuccesData(viewHolder.daySuccessText)
 

@@ -59,9 +59,9 @@ class recordActivity : AppCompatActivity() {
         saveBtn.setOnClickListener {
             val day = newDataDay.text.toString().trim()
             if ((day.isEmpty() || day.isBlank()) ||
-                day.toInt() <= lastCheckDateDay.text.toString().toInt() // ? может быть равно
+                day.toInt() < lastCheckDateDay.text.toString().toInt()
             ) {
-                newDataDay.error = "Значение должно быть больше предыдущего"
+                newDataDay.error = "Значение должно не меньше предыдущего"
             } else {
                 val night = newDataNight.text.toString()
                 val comments = newComments.text.toString()
