@@ -59,7 +59,7 @@ class recordActivity : AppCompatActivity() {
         saveBtn.setOnClickListener {
             val day = newDataDay.text.toString().trim()
             if ((day.isEmpty() || day.isBlank()) ||
-                day.toInt() < lastCheckDateDay.text.toString().toInt()
+                day.toDouble() < lastCheckDateDay.text.toString().toDouble()
             ) {
                 newDataDay.error = "Значение должно не меньше предыдущего"
             } else {
