@@ -43,7 +43,6 @@ class RecordAdapter(
 
             view.setOnClickListener(View.OnClickListener {
                 val pos = adapterPosition
-                Log.i("MyLog", "POSITION -- ${layoutPosition.toString()}")  // saving to a file
                 if (pos != RecyclerView.NO_POSITION) {
                     recyclerViewInterface.onItemCLick(pos)
                     clickAtPosition(pos)

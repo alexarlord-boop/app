@@ -72,8 +72,7 @@ class MainActivity : AppCompatActivity(), RecyclerViewInterface {
         flatHeader = findViewById(R.id.flat_header)
 
         // Setting the layout as linear layout for vertical orientation
-        val linearLayoutManager = LinearLayoutManager(applicationContext)
-        recyclerView.layoutManager = linearLayoutManager
+        recyclerView.layoutManager = LinearLayoutManager(applicationContext)
 
 
         ActivityCompat.requestPermissions(
@@ -131,8 +130,7 @@ class MainActivity : AppCompatActivity(), RecyclerViewInterface {
         try {
             fileRecords = workbookHandler.getRecordsFromFile()
 
-
-            // визуализация
+            // visualizing
             area.text = workbookHandler.getArea()
 
             // Sending reference and data to Adapter
@@ -140,10 +138,12 @@ class MainActivity : AppCompatActivity(), RecyclerViewInterface {
                 clickedRecordId = it.positionInView
             }
 
-            // Setting Adapter to RecyclerView
-            recyclerView.adapter = adapter
-            recyclerView.layoutManager = LinearLayoutManager(this)
-            recyclerView.scrollToPosition(clickedRecordId)  //   scroll to particular list item (get from a file)
+            // Modifying RecyclerView
+            recyclerView.apply {
+                this.adapter = adapter
+                this.layoutManager = LinearLayoutManager(applicationContext)
+                this.scrollToPosition(clickedRecordId)
+            }
             showListHeaders()
         } catch (ex: Exception) {
             Toast.makeText(this, "Выберите подходящий формат", Toast.LENGTH_SHORT).show()
