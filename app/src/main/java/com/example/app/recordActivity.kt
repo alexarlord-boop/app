@@ -61,7 +61,7 @@ class recordActivity : AppCompatActivity() {
             if ((day.isEmpty() || day.isBlank()) ||
                 day.toDouble() < lastCheckDateDay.text.toString().toDouble()
             ) {
-                newDataDay.error = "Значение должно не меньше предыдущего"
+                newDataDay.error = "Значение должно быть не меньше предыдущего"
             } else {
                 val night = newDataNight.text.toString()
                 val comments = newComments.text.toString()
