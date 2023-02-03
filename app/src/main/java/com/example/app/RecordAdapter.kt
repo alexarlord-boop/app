@@ -75,11 +75,14 @@ class RecordAdapter(
         viewHolder.house.text = records[position].houseNumber
         viewHolder.flat.text = records[position].flatNumber.toString().split(".")[0]
 
+
+        // Show successfully updated records AND redraws items,
+        // which are not updated yet but are reusing viewHolders
         if (records[position].ko_D > records[position].lastKo_D) {
             viewHolder.daySuccessText.text = records[position].ko_D.toString().split(".")[0]
-            viewHolder.nightSuccessText.text = records[position].ko_N.toString().split(".")[0]
-
             showSuccesData(viewHolder.daySuccessText)
+
+            viewHolder.nightSuccessText.text = records[position].ko_N.toString().split(".")[0]
             showSuccesData(viewHolder.nightSuccessText)
         } else {
             hideData(viewHolder.daySuccessText)
