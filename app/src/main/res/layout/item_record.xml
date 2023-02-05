@@ -89,6 +89,7 @@
                         android:layout_toEndOf="@+id/house_text"
                         android:text="house"
                         android:padding="5dp"
+                        android:textStyle="bold"
                         app:autoSizeMaxTextSize="20sp"
                         app:autoSizeTextType="uniform" />
 
@@ -97,6 +98,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:padding="5dp"
+                        android:layout_marginStart="10dp"
                         android:layout_alignParentTop="true"
                         android:layout_toEndOf="@id/renter_house"
                         android:text="кв:" />
@@ -109,6 +111,7 @@
                         android:layout_toEndOf="@+id/flat_text"
                         android:text="flat"
                         android:padding="5dp"
+                        android:textStyle="bold"
                         app:autoSizeMaxTextSize="20sp"
                         app:autoSizeMinTextSize="8sp"
                         app:autoSizeTextType="uniform" />
