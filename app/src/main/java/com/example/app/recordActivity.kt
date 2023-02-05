@@ -73,6 +73,7 @@ class recordActivity : AppCompatActivity() {
 
                     workbookHandler?.updateRowData(position, it)
                     Toast.makeText(this, "Сохранено", Toast.LENGTH_SHORT).show()
+                    onBackPressed()
                 }
             }
         }
