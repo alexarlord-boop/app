@@ -3,7 +3,6 @@ package com.example.app
 import android.Manifest
 import android.content.Intent
 import android.content.pm.PackageManager
-import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.os.Environment
@@ -105,7 +104,7 @@ class MainActivity : AppCompatActivity(), RecyclerViewInterface {
     /* Business Logic Section */
 
     @RequiresApi(Build.VERSION_CODES.R) // android 29+
-    fun selectFile(view: View) {
+    fun selectFile() {
         Log.i("MyLog", Environment.isExternalStorageManager().toString())
 
         intent = Intent(Intent.ACTION_OPEN_DOCUMENT, MediaStore.Downloads.EXTERNAL_CONTENT_URI)
@@ -155,7 +154,7 @@ class MainActivity : AppCompatActivity(), RecyclerViewInterface {
     }
 
     override fun onItemCLick(position: Int) {
-        intent = Intent(this, recordActivity::class.java)
+        intent = Intent(this, RecordActivity::class.java)
         val clickedRecord = fileRecords[position]
         intent.putExtra("position", position)
         intent.putExtra("record", clickedRecord)

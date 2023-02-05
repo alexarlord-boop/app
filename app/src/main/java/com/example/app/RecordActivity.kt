@@ -5,19 +5,14 @@ import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
 import android.view.MotionEvent
-import android.view.View
 import android.view.inputmethod.InputMethodManager
 import android.widget.Button
 import android.widget.EditText
 import android.widget.TextView
 import android.widget.Toast
 import com.google.android.material.textfield.TextInputEditText
-import java.time.LocalDate
-import java.time.format.DateTimeFormatter
-import java.util.Date
-import kotlin.time.Duration.Companion.days
 
-class recordActivity : AppCompatActivity() {
+class RecordActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_record)
@@ -42,7 +37,7 @@ class recordActivity : AppCompatActivity() {
         passedRecord?.let {
             name.text = it.name
             puType.text = it.puType
-            puNumber.text = it.puNumber.toString()
+            puNumber.text = it.puNumber
             lastCheckDate.text = workbookHandler?.convertDateToFormattedString(it.lastKoDate)
             lastCheckDateDay.text = it.lastKo_D.toString().beforeZeroOrBlank()
             lastCheckDateNight.text = it.lastKo_N.toString().beforeZeroOrBlank()
@@ -79,9 +74,8 @@ class recordActivity : AppCompatActivity() {
         }
     }
 
-    fun String.beforeZeroOrBlank(): String {
-        val before = this.split(".")[0]
-        return before
+    private fun String.beforeZeroOrBlank(): String {
+        return split(".")[0]
     }
 
     override fun dispatchTouchEvent(ev: MotionEvent?): Boolean {
