@@ -104,7 +104,7 @@ class MainActivity : AppCompatActivity(), RecyclerViewInterface {
     /* Business Logic Section */
 
     @RequiresApi(Build.VERSION_CODES.R) // android 29+
-    fun selectFile() {
+    fun selectFile(view: View) {
         Log.i("MyLog", Environment.isExternalStorageManager().toString())
 
         intent = Intent(Intent.ACTION_OPEN_DOCUMENT, MediaStore.Downloads.EXTERNAL_CONTENT_URI)
