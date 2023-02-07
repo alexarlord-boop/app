@@ -22,10 +22,10 @@
 
         <TextView
             android:id="@+id/record_name"
-            style="@style/RecordInfo"
             android:layout_width="wrap_content"
             android:layout_height="match_parent"
             android:layout_weight="1"
+            android:textSize="18sp"
             android:gravity="center"
             tools:text="name" />
 
@@ -75,7 +75,7 @@
         style="@style/RecordRowBackground"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="100dp"
+        android:layout_marginTop="70dp"
         android:orientation="horizontal"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
@@ -86,51 +86,53 @@
 
         <TextView
             android:id="@+id/record_last_check"
-            style="@style/RecordInfo"
             android:layout_width="wrap_content"
             android:layout_height="match_parent"
             android:layout_weight="1"
             android:gravity="center"
+            android:textSize="20sp"
             tools:text="date" />
 
         <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:layout_weight="1">
+            android:layout_weight="1"
+            android:orientation="horizontal">
 
             <LinearLayout
                 android:layout_width="wrap_content"
-                android:layout_height="match_parent"
-                android:orientation="vertical"
-                android:layout_weight="1">
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical">
 
                 <TextView
-                    style="@style/RecordMiniHeader"
                     android:id="@+id/lkoDay"
+                    style="@style/RecordMiniHeader"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:gravity="center"
+                    android:padding="5dp"
                     android:text="@string/dayTitle" />
 
                 <TextView
-                    style="@style/RecordMiniHeader"
-
                     android:id="@+id/lkoNight"
+
+                    style="@style/RecordMiniHeader"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:gravity="center"
+                    android:padding="5dp"
                     android:text="@string/nightTitle" />
 
             </LinearLayout>
 
             <LinearLayout
                 android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:layout_weight="1">
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:orientation="vertical">
 
                 <TextView
                     android:id="@+id/record_last_check_day"
@@ -139,6 +141,7 @@
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:gravity="center"
+                    android:padding="5dp"
                     tools:text="day value" />
 
                 <TextView
@@ -148,6 +151,7 @@
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:gravity="center"
+                    android:padding="5dp"
                     tools:text="night value" />
             </LinearLayout>
 
@@ -175,7 +179,7 @@
         style="@style/RecordRowBackground"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="100dp"
+        android:layout_marginTop="70dp"
         android:layout_weight="1"
         android:gravity="center"
         android:orientation="horizontal"
@@ -194,9 +198,9 @@
             android:orientation="vertical">
 
             <TextView
-                style="@style/RecordMiniHeader"
-
                 android:id="@+id/ckoDay"
+
+                style="@style/RecordMiniHeader"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
@@ -204,9 +208,9 @@
                 android:text="@string/dayTitle" />
 
             <TextView
-                style="@style/RecordMiniHeader"
-
                 android:id="@+id/ckoNight"
+
+                style="@style/RecordMiniHeader"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
@@ -263,7 +267,7 @@
         android:layout_width="match_parent"
         android:layout_height="70dp"
         android:layout_marginStart="10dp"
-        android:layout_marginTop="100dp"
+        android:layout_marginTop="70dp"
         android:layout_marginEnd="10dp"
         android:gravity="start"
         android:hint="введите комментарий"
@@ -282,6 +286,7 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/textInputEditText" />
+        app:layout_constraintTop_toBottomOf="@+id/textInputEditText"
+        app:layout_constraintVertical_bias="0.0" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
