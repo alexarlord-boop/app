@@ -3,7 +3,6 @@ package com.example.app
 import android.Manifest
 import android.content.Intent
 import android.content.pm.PackageManager
-import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.os.Environment
@@ -22,7 +21,9 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import java.util.*
 
-class MainActivity : AppCompatActivity() {
+const val LAST_FILE_OPENED = "lastFileOpened"
+
+class MainActivity : AppCompatActivity(), RecyclerViewInterface {
     lateinit var launcher: ActivityResultLauncher<Intent>
 
     lateinit var fileRecords: MutableList<RecordDto>
@@ -31,10 +32,10 @@ class MainActivity : AppCompatActivity() {
 
     lateinit var btnSelectFile: Button
     lateinit var area: TextView
-    lateinit var streetName: TextView
     lateinit var fioHeader: TextView
+    var filename: String? = null
+    var clickedRecordId = -1
     lateinit var houseHeader: TextView
-    lateinit var flatHeader: TextView
     lateinit var recyclerView: RecyclerView
 
     @RequiresApi(Build.VERSION_CODES.Q)
@@ -42,12 +43,19 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
+        if (savedInstanceState != null) {
+            filename = savedInstanceState.getString(LAST_FILE_OPENED)
+            reloadData()
+        }
+
+
         launcher =
             registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
                 if (result.resultCode == RESULT_OK) {
-                    val uri = Uri.parse(result.data?.data?.path)
-                    Log.d("MyLog", uri.toString())
-                    result.data?.data?.path?.let { visualiseDataFromXlsFile(it) }
+                    result.data?.data?.path?.let {
+                        filename = it.split("/").last()
+                        reloadData()
+                    }
                 }
             }
 
@@ -57,17 +65,12 @@ class MainActivity : AppCompatActivity() {
         // Getting view elements
         btnSelectFile = findViewById(R.id.btn_select)
         area = findViewById(R.id.hood_area)
-        streetName = findViewById(R.id.street)
         fioHeader = findViewById(R.id.fio_header)
         houseHeader = findViewById(R.id.house_header)
-        flatHeader = findViewById(R.id.flat_header)
 
         // Setting the layout as linear layout for vertical orientation
-        val linearLayoutManager = LinearLayoutManager(applicationContext)
-        recyclerView.layoutManager = linearLayoutManager
+        recyclerView.layoutManager = LinearLayoutManager(applicationContext)
 
-
-//        workbookHandler = WorkBookHandler(applicationContext)
 
         ActivityCompat.requestPermissions(
             this, arrayOf(
@@ -79,6 +82,24 @@ class MainActivity : AppCompatActivity() {
 
     }
 
+    override fun onResume() {
+        super.onResume()
+        reloadData()
+    }
+
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+        outState.putString(LAST_FILE_OPENED, filename)
+    }
+
+    fun reloadData() {
+        filename?.let {
+            workbookHandler = WorkBookHandler(it)
+            workbookHandler.readWorkBookFromFile()
+            visualiseDataFromXlsFile()
+            Log.i("MyLog", "RELOADED")
+        }
+    }
 
     /* Business Logic Section */
 
@@ -97,39 +118,32 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    /*
-        обработка запросов
-    */
-
 
     /*
         читаем данные из выбранного .xls файла и отображаем списком
     */
-    private fun visualiseDataFromXlsFile(filePath: String) {
+    private fun visualiseDataFromXlsFile() {
 
-        val fileName = filePath.split("/").last()
-        Log.i("MyLog", fileName)
         try {
-            workbookHandler = WorkBookHandler(this, fileName)
-            workbookHandler.readWorkBookFromFile()
             fileRecords = workbookHandler.getRecordsFromFile()
 
-            // визуализация
-            area.text = workbookHandler.area
-            streetName.text = workbookHandler.streetName
+            // visualizing
+            area.text = workbookHandler.getArea()
 
             // Sending reference and data to Adapter
-            val adapter = RecordAdapter(fileRecords)
+            val adapter = RecordAdapter(fileRecords, this) {
+                clickedRecordId = it.positionInView
+            }
 
-            // Setting Adapter to RecyclerView
-            recyclerView.setAdapter(adapter);
-            recyclerView.layoutManager = LinearLayoutManager(this)
+            // Modifying RecyclerView
+            recyclerView.apply {
+                this.adapter = adapter
+                this.layoutManager = LinearLayoutManager(applicationContext)
+                this.scrollToPosition(clickedRecordId)
+            }
             showListHeaders()
-
-            Toast.makeText(this, "Загружаем данные из $fileName", Toast.LENGTH_LONG).show()
-
         } catch (ex: Exception) {
-            Toast.makeText(this, "Ошибка", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, "Выберите подходящий формат", Toast.LENGTH_SHORT).show()
             println(ex.message)
         }
     }
@@ -137,7 +151,15 @@ class MainActivity : AppCompatActivity() {
     fun showListHeaders() {
         fioHeader.visibility = View.VISIBLE
         houseHeader.visibility = View.VISIBLE
-        flatHeader.visibility = View.VISIBLE
+    }
+
+    override fun onItemCLick(position: Int) {
+        intent = Intent(this, RecordActivity::class.java)
+        val clickedRecord = fileRecords[position]
+        intent.putExtra("position", position)
+        intent.putExtra("record", clickedRecord)
+        intent.putExtra("workbookHandler", workbookHandler)
+        startActivity(intent)
     }
 
 }

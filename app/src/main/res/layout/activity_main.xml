@@ -25,66 +25,36 @@
     <LinearLayout
         android:id="@+id/header"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginBottom="10dp"
+        android:layout_height="30dp"
         android:orientation="horizontal"
+        android:gravity="center"
+        android:elevation="10dp"
+        android:background="@color/grey"
         app:layout_constraintBottom_toTopOf="@+id/linearLayout"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent">
 
-        <androidx.constraintlayout.widget.ConstraintLayout
+        <TextView
+            android:id="@+id/house_header"
             android:layout_width="match_parent"
-            android:layout_height="match_parent">
+            android:layout_height="20dp"
+            android:layout_weight="0.7"
+            android:gravity="center"
+            android:text="Улица, дом, кв"
+            android:visibility="invisible"
+            app:autoSizeMaxTextSize="20sp"
+            app:autoSizeMinTextSize="10sp"
+            app:autoSizeTextType="uniform" />
 
-            <TextView
-                android:id="@+id/fio_header"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="68dp"
-                android:text="ФИО"
-                android:visibility="invisible"
-                app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintEnd_toStartOf="@+id/house_header"
-                app:layout_constraintHorizontal_bias="0.0"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="parent"
-                app:layout_constraintVertical_bias="0.517" />
 
-            <TextView
-                android:id="@+id/flat_header"
-                android:layout_width="22dp"
-                android:layout_height="20dp"
-                android:layout_marginEnd="35dp"
-                android:width="71dp"
-                android:gravity="center"
-                android:text="кв"
-                android:visibility="invisible"
-                app:autoSizeMaxTextSize="20sp"
-                app:autoSizeMinTextSize="10sp"
-                app:autoSizeTextType="uniform"
-                app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintHorizontal_bias="1.0"
-                app:layout_constraintStart_toEndOf="@+id/house_header"
-                app:layout_constraintTop_toTopOf="parent"
-                app:layout_constraintVertical_bias="0.0" />
-
-            <TextView
-                android:id="@+id/house_header"
-                android:layout_width="30dp"
-                android:layout_height="20dp"
-                android:gravity="center"
-                android:text="дом"
-                android:visibility="invisible"
-                app:autoSizeMaxTextSize="20sp"
-                app:autoSizeMinTextSize="10sp"
-                app:autoSizeTextType="uniform"
-                app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintHorizontal_bias="0.583"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="parent" />
-        </androidx.constraintlayout.widget.ConstraintLayout>
+        <TextView
+            android:id="@+id/fio_header"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_weight="0.6"
+            android:gravity="center"
+            android:text="ФИО"
+            android:visibility="invisible" />
 
     </LinearLayout>
 
@@ -122,35 +92,22 @@
         app:layout_constraintHorizontal_bias="0.23"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
+
         app:layout_constraintVertical_bias="0.666">
 
         <TextView
             android:id="@+id/hood_area"
-            android:layout_width="135dp"
-            android:layout_height="22dp"
-            android:layout_marginTop="8dp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
             android:textStyle="bold"
-            app:autoSizeTextType="uniform"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintHorizontal_bias="0.0"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            tools:text="Батецкий" />
-
-        <TextView
-            android:id="@+id/street"
-            android:layout_width="136dp"
-            android:layout_height="25dp"
-            android:layout_marginTop="5dp"
-            android:layout_marginBottom="10dp"
-            android:gravity="left"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintHorizontal_bias="0.0"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/hood_area"
-            app:layout_constraintVertical_bias="0.625"
-            tools:text="Дубецкая улица" />
+            app:layout_constraintTop_toTopOf="parent"
+            android:textSize="20sp"
+            tools:text="" />
+
     </androidx.constraintlayout.widget.ConstraintLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -8,72 +8,176 @@
     <androidx.cardview.widget.CardView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        android:layout_marginTop="4dp"
+        android:layout_marginEnd="8dp"
+        android:layout_marginBottom="4dp"
+        app:cardElevation="4dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        android:layout_marginEnd="8dp"
-        android:layout_marginStart="8dp"
-        android:layout_marginTop="12dp"
-        android:layout_marginBottom="12dp"
-        app:cardBackgroundColor="@color/grey"
-        app:cardElevation="4dp"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent">
 
-        <androidx.constraintlayout.widget.ConstraintLayout
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:scaleY="1.2">
+            android:orientation="vertical">
 
-            <TextView
-                android:id="@+id/renter_name"
-                android:layout_width="150dp"
-                android:layout_height="53dp"
-                android:gravity="center"
-                android:text="name"
-                app:autoSizeMaxTextSize="20sp"
-                app:autoSizeMinTextSize="10sp"
-                app:autoSizeTextType="uniform"
-                app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintEnd_toStartOf="@+id/renter_house"
-                app:layout_constraintHorizontal_bias="0.0"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="parent"
-                app:layout_constraintVertical_bias="0.0" />
+            <RelativeLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
 
-            <TextView
-                android:id="@+id/renter_house"
-                android:layout_width="59dp"
-                android:layout_height="51dp"
-                android:gravity="center"
-                android:text="house"
-                app:autoSizeMaxTextSize="20sp"
-                app:autoSizeMinTextSize="10sp"
-                app:autoSizeTextType="uniform"
 
-                app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintHorizontal_bias="0.595"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="parent"
-                app:layout_constraintVertical_bias="0.0" />
+                <TextView
+                    android:id="@+id/renter_street"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:paddingTop="10dp"
+                    android:paddingStart="10dp"
+                    android:layout_alignParentTop="true"
+                    android:layout_alignParentStart="true"
+                    android:text="street" />
 
-            <TextView
-                android:id="@+id/renter_flat"
-                android:layout_width="71dp"
-                android:layout_height="52dp"
-                android:layout_marginStart="56dp"
-                android:gravity="center"
-                android:text="flat"
-                android:textStyle="bold"
-                app:autoSizeMaxTextSize="20sp"
-                app:autoSizeMinTextSize="10sp"
-                app:autoSizeTextType="uniform"
-                app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toEndOf="@+id/renter_house"
-                app:layout_constraintTop_toTopOf="parent"
-                app:layout_constraintVertical_bias="0.0" />
 
-        </androidx.constraintlayout.widget.ConstraintLayout>
+                <TextView
+                    android:id="@+id/renter_name"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentTop="true"
+                    android:layout_alignParentEnd="true"
+                    android:layout_marginStart="100dp"
+                    android:layout_toEndOf="@+id/renter_street"
+                    android:gravity="start"
+                    android:paddingTop="5dp"
+                    android:paddingEnd="10dp"
+                    android:text="name"
+                    android:textSize="20sp" />
+
+
+            </RelativeLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_gravity="end"
+                android:elevation="6dp"
+                android:gravity="end"
+                android:orientation="horizontal">
+
+                <RelativeLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1">
+
+                    <TextView
+                        android:id="@+id/house_text"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:padding="5dp"
+                        android:layout_marginStart="10dp"
+                        android:layout_alignParentStart="true"
+                        android:layout_alignParentTop="true"
+                        android:text="дом:" />
+
+
+                    <TextView
+                        android:id="@+id/renter_house"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_alignParentTop="true"
+                        android:layout_toEndOf="@+id/house_text"
+                        android:text="house"
+                        android:padding="5dp"
+                        android:textStyle="bold"
+                        app:autoSizeMaxTextSize="20sp"
+                        app:autoSizeTextType="uniform" />
+
+                    <TextView
+                        android:id="@+id/flat_text"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:padding="5dp"
+                        android:layout_marginStart="10dp"
+                        android:layout_alignParentTop="true"
+                        android:layout_toEndOf="@id/renter_house"
+                        android:text="кв:" />
+
+                    <TextView
+                        android:id="@+id/renter_flat"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_alignParentTop="true"
+                        android:layout_toEndOf="@+id/flat_text"
+                        android:text="flat"
+                        android:padding="5dp"
+                        android:textStyle="bold"
+                        app:autoSizeMaxTextSize="20sp"
+                        app:autoSizeMinTextSize="8sp"
+                        app:autoSizeTextType="uniform" />
+                </RelativeLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    android:gravity="end">
+
+                    <LinearLayout
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:background="@color/grey"
+                        android:orientation="horizontal"
+                        android:padding="1dp">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:padding="5dp"
+                            android:text="д:" />
+
+                        <TextView
+                            android:id="@+id/daySuccess"
+                            android:layout_width="wrap_content"
+                            android:layout_height="match_parent"
+                            android:padding="5dp"
+                            android:text="TextView"
+                            android:textStyle="bold"
+                            android:visibility="visible"
+                            app:autoSizeTextType="uniform" />
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:background="@color/grey"
+                        android:orientation="horizontal"
+                        android:padding="1dp">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:padding="5dp"
+                            android:text="н:" />
+
+                        <TextView
+                            android:id="@+id/nightSuccess"
+                            android:layout_width="wrap_content"
+                            android:layout_height="match_parent"
+                            android:padding="5dp"
+                            android:text="TextView"
+                            android:textStyle="bold"
+                            android:visibility="visible"
+                            app:autoSizeTextType="uniform" />
+                    </LinearLayout>
+
+                </LinearLayout>
+
+            </LinearLayout>
+        </LinearLayout>
+
+
     </androidx.cardview.widget.CardView>
+
+
 </androidx.constraintlayout.widget.ConstraintLayout>
