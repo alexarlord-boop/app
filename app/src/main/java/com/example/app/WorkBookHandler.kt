@@ -1,6 +1,5 @@
 package com.example.app
 
-import android.os.Environment
 import android.os.Parcelable
 import android.util.Log
 import kotlinx.android.parcel.Parcelize
@@ -8,11 +7,8 @@ import org.apache.poi.ss.usermodel.*
 import java.io.File
 import java.io.FileInputStream
 import java.io.FileOutputStream
-import java.text.SimpleDateFormat
-import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
-import java.util.*
 
 
 /* This class helps manage an excel file
