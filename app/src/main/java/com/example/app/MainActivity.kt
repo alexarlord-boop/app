@@ -35,6 +35,7 @@ class MainActivity : AppCompatActivity(), RecyclerViewInterface, AdapterView.OnI
     lateinit var fioHeader: TextView
     var filename = "storage/emulated/0/download/control.xls"
     var clickedRecordId = -1
+    var clickedControllerId = -1
     lateinit var houseHeader: TextView
 
     lateinit var recyclerView: RecyclerView
@@ -107,10 +108,8 @@ class MainActivity : AppCompatActivity(), RecyclerViewInterface, AdapterView.OnI
     fun selectFile(view: View) {
         Log.i("MyLog", Environment.isExternalStorageManager().toString())
 
-
         try {
             reloadData()
-            Toast.makeText(this, "Файл загружен", Toast.LENGTH_SHORT).show()
         } catch (ex: Exception) {
             println(ex.stackTrace)
         }
@@ -173,7 +172,7 @@ class MainActivity : AppCompatActivity(), RecyclerViewInterface, AdapterView.OnI
     }
 
     override fun onNothingSelected(parent: AdapterView<*>?) {
-
+        Log.i("MyLog", "DEFAULT ITEM")
     }
 
 }
