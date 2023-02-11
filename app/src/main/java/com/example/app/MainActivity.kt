@@ -23,17 +23,15 @@ import java.util.*
 
 const val LAST_FILE_OPENED = "lastFileOpened"
 
-class MainActivity : AppCompatActivity(), RecyclerViewInterface, AdapterView.OnItemSelectedListener {
-    lateinit var launcher: ActivityResultLauncher<Intent>
+class MainActivity : AppCompatActivity(), RecyclerViewInterface,
+    AdapterView.OnItemSelectedListener {
 
-    lateinit var fileRecords: MutableList<RecordDto>
-
-    lateinit var workbookHandler: WorkBookHandler
 
     lateinit var btnSelectFile: Button
     lateinit var area: TextView
     lateinit var fioHeader: TextView
     var filename = "storage/emulated/0/download/control.xls"
+    var workbookHandler: WorkBookHandler = WorkBookHandler(filename)
     var clickedRecordId = -1
     var clickedControllerId = -1
     lateinit var houseHeader: TextView
@@ -93,20 +91,20 @@ class MainActivity : AppCompatActivity(), RecyclerViewInterface, AdapterView.OnI
         }
     }
 
-    fun reloadData() {
+    private fun reloadData() {
         filename.let {
             val file = it.split('/').last()
             try {
                 workbookHandler = WorkBookHandler(it)
                 workbookHandler.readWorkBookFromFile()
-                fileRecords = workbookHandler.getRecordsFromFile()
-                visualiseData(fileRecords)
+                visualiseData(workbookHandler.records)
                 Toast.makeText(this, "Загружено из: $file", Toast.LENGTH_SHORT).show()
-            } catch (ex: java.lang.Exception) {
+            } catch (ex: FileNotFoundException) {
                 visualiseData(mutableListOf())
+                workbookHandler.records.clear()
+
                 println(ex.stackTrace.toString())
-                fileRecords.clear()
-                Toast.makeText(this, "Не удалось получить данные из $file", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, "Файл не найден", Toast.LENGTH_SHORT).show()
             }
             Log.i("MyLog", "RELOADED")
         }
@@ -116,13 +114,7 @@ class MainActivity : AppCompatActivity(), RecyclerViewInterface, AdapterView.OnI
 
     @RequiresApi(Build.VERSION_CODES.R) // android 29+
     fun selectFile(view: View) {
-        Log.i("MyLog", Environment.isExternalStorageManager().toString())
-
-        try {
-            reloadData()
-        } catch (ex: Exception) {
-            println(ex.stackTrace)
-        }
+        reloadData()
     }
 
 
@@ -149,26 +141,26 @@ class MainActivity : AppCompatActivity(), RecyclerViewInterface, AdapterView.OnI
             }
             showListHeaders()
         } catch (ex: Exception) {
-            Toast.makeText(this, "Выберите подходящий формат", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, "${ex.message}", Toast.LENGTH_SHORT).show()
             println(ex.message)
         }
     }
 
-    fun showListHeaders() {
+    private fun showListHeaders() {
         fioHeader.visibility = View.VISIBLE
         houseHeader.visibility = View.VISIBLE
     }
 
     override fun onItemCLick(position: Int) {
         intent = Intent(this, RecordActivity::class.java)
-        val clickedRecord = fileRecords[position]
+        val clickedRecord = workbookHandler.records[position]
         intent.putExtra("position", position)
         intent.putExtra("record", clickedRecord)
         intent.putExtra("workbookHandler", workbookHandler)
         startActivity(intent)
     }
 
-    fun updateFileName(filename: String, id: Int): String {
+    private fun updateFileName(filename: String, id: Int): String {
         return filename.split("/").toMutableList().also {
             it[it.lastIndex] = "control${id}.xls"
         }.joinToString("/")
