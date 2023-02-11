@@ -157,8 +157,16 @@ class MainActivity : AppCompatActivity(), RecyclerViewInterface, AdapterView.OnI
         startActivity(intent)
     }
 
+    fun updateFileName(filename: String, id: Int): String {
+        return filename.split("/").toMutableList().also {
+            it[it.lastIndex] = "control${id}.xls"
+        }.joinToString("/")
+    }
+
     override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
-        Log.i("MyLog", "SELECTED ITEM: $position")
+        clickedControllerId = position + 1
+        filename = updateFileName(filename, position + 1)
+        Log.i("MyLog", "SELECTED ITEM: $clickedControllerId")
     }
 
     override fun onNothingSelected(parent: AdapterView<*>?) {
