@@ -9,9 +9,7 @@ import android.os.Environment
 import android.provider.MediaStore
 import android.util.Log
 import android.view.View
-import android.widget.Button
-import android.widget.TextView
-import android.widget.Toast
+import android.widget.*
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.RequiresApi
@@ -25,7 +23,7 @@ import java.util.*
 
 const val LAST_FILE_OPENED = "lastFileOpened"
 
-class MainActivity : AppCompatActivity(), RecyclerViewInterface {
+class MainActivity : AppCompatActivity(), RecyclerViewInterface, AdapterView.OnItemSelectedListener {
     lateinit var launcher: ActivityResultLauncher<Intent>
 
     lateinit var fileRecords: MutableList<RecordDto>
@@ -38,6 +36,7 @@ class MainActivity : AppCompatActivity(), RecyclerViewInterface {
     var filename = "storage/emulated/0/download/control.xls"
     var clickedRecordId = -1
     lateinit var houseHeader: TextView
+
     lateinit var recyclerView: RecyclerView
 
     @RequiresApi(Build.VERSION_CODES.Q)
@@ -57,6 +56,16 @@ class MainActivity : AppCompatActivity(), RecyclerViewInterface {
 
         // Setting the layout as linear layout for vertical orientation
         recyclerView.layoutManager = LinearLayoutManager(applicationContext)
+
+        // Setting controller selector
+        val spinner: Spinner = findViewById(R.id.controller_spinner)
+        spinner.onItemSelectedListener = this
+        ArrayAdapter.createFromResource(this, R.array.controller_array, android.R.layout.simple_spinner_item).also {
+            adapter -> // Specify the layout to use when the list of choices appears
+            adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+            // Apply the adapter to the spinner
+            spinner.adapter = adapter
+        }
 
 
         ActivityCompat.requestPermissions(
@@ -146,6 +155,14 @@ class MainActivity : AppCompatActivity(), RecyclerViewInterface {
         intent.putExtra("record", clickedRecord)
         intent.putExtra("workbookHandler", workbookHandler)
         startActivity(intent)
+    }
+
+    override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
+        Log.i("MyLog", "SELECTED ITEM: $position")
+    }
+
+    override fun onNothingSelected(parent: AdapterView<*>?) {
+
     }
 
 }
