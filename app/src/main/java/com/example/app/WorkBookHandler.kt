@@ -29,7 +29,7 @@ class WorkBookHandler
     var workbook = readWorkBookFromFile()
     var sheet = workbook.getSheetAt(0)
     val cellStyle = sheet.getRow(1).getCell(8).cellStyle
-    val columnsCount = 14
+    var records = getRecordsFromFile()
 
     /*
         превращает содержимое файла в объект workbook
