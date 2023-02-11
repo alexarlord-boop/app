@@ -25,7 +25,7 @@ class WorkBookHandler
 
 
     val FORMAT = "dd.MM.yyyy"
-    private val file: File = File("storage/emulated/0/download/control.xls")
+    private val file: File = File(fileName)
     var workbook = readWorkBookFromFile()
     var sheet = workbook.getSheetAt(0)
     val cellStyle = sheet.getRow(1).getCell(8).cellStyle
