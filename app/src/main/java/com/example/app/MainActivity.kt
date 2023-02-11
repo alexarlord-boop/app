@@ -95,9 +95,19 @@ class MainActivity : AppCompatActivity(), RecyclerViewInterface, AdapterView.OnI
 
     fun reloadData() {
         filename.let {
-            workbookHandler = WorkBookHandler(it)
-            workbookHandler.readWorkBookFromFile()
-            visualiseDataFromXlsFile()
+            val file = it.split('/').last()
+            try {
+                workbookHandler = WorkBookHandler(it)
+                workbookHandler.readWorkBookFromFile()
+                fileRecords = workbookHandler.getRecordsFromFile()
+                visualiseData(fileRecords)
+                Toast.makeText(this, "Загружено из: $file", Toast.LENGTH_SHORT).show()
+            } catch (ex: java.lang.Exception) {
+                visualiseData(mutableListOf())
+                println(ex.stackTrace.toString())
+                fileRecords.clear()
+                Toast.makeText(this, "Не удалось получить данные из $file", Toast.LENGTH_SHORT).show()
+            }
             Log.i("MyLog", "RELOADED")
         }
     }
@@ -119,10 +129,9 @@ class MainActivity : AppCompatActivity(), RecyclerViewInterface, AdapterView.OnI
     /*
         читаем данные из выбранного .xls файла и отображаем списком
     */
-    private fun visualiseDataFromXlsFile() {
+    private fun visualiseData(fileRecords: MutableList<RecordDto>) {
 
         try {
-            fileRecords = workbookHandler.getRecordsFromFile()
 
             // visualizing
             area.text = workbookHandler.getArea()
