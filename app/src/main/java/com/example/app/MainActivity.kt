@@ -9,9 +9,7 @@ import android.os.Environment
 import android.provider.MediaStore
 import android.util.Log
 import android.view.View
-import android.widget.Button
-import android.widget.TextView
-import android.widget.Toast
+import android.widget.*
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.RequiresApi
@@ -19,11 +17,13 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import java.io.FileInputStream
+import java.io.FileNotFoundException
 import java.util.*
 
 const val LAST_FILE_OPENED = "lastFileOpened"
 
-class MainActivity : AppCompatActivity(), RecyclerViewInterface {
+class MainActivity : AppCompatActivity(), RecyclerViewInterface, AdapterView.OnItemSelectedListener {
     lateinit var launcher: ActivityResultLauncher<Intent>
 
     lateinit var fileRecords: MutableList<RecordDto>
@@ -33,9 +33,10 @@ class MainActivity : AppCompatActivity(), RecyclerViewInterface {
     lateinit var btnSelectFile: Button
     lateinit var area: TextView
     lateinit var fioHeader: TextView
-    var filename: String? = null
+    var filename = "storage/emulated/0/download/control.xls"
     var clickedRecordId = -1
     lateinit var houseHeader: TextView
+
     lateinit var recyclerView: RecyclerView
 
     @RequiresApi(Build.VERSION_CODES.Q)
@@ -43,21 +44,6 @@ class MainActivity : AppCompatActivity(), RecyclerViewInterface {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        if (savedInstanceState != null) {
-            filename = savedInstanceState.getString(LAST_FILE_OPENED)
-            reloadData()
-        }
-
-
-        launcher =
-            registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
-                if (result.resultCode == RESULT_OK) {
-                    result.data?.data?.path?.let {
-                        filename = it.split("/").last()
-                        reloadData()
-                    }
-                }
-            }
 
         // Getting reference of recyclerView
         recyclerView = findViewById(R.id.list_records)
@@ -70,6 +56,16 @@ class MainActivity : AppCompatActivity(), RecyclerViewInterface {
 
         // Setting the layout as linear layout for vertical orientation
         recyclerView.layoutManager = LinearLayoutManager(applicationContext)
+
+        // Setting controller selector
+        val spinner: Spinner = findViewById(R.id.controller_spinner)
+        spinner.onItemSelectedListener = this
+        ArrayAdapter.createFromResource(this, R.array.controller_array, android.R.layout.simple_spinner_item).also {
+            adapter -> // Specify the layout to use when the list of choices appears
+            adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+            // Apply the adapter to the spinner
+            spinner.adapter = adapter
+        }
 
 
         ActivityCompat.requestPermissions(
@@ -84,16 +80,17 @@ class MainActivity : AppCompatActivity(), RecyclerViewInterface {
 
     override fun onResume() {
         super.onResume()
-        reloadData()
-    }
-
-    override fun onSaveInstanceState(outState: Bundle) {
-        super.onSaveInstanceState(outState)
-        outState.putString(LAST_FILE_OPENED, filename)
+        if (clickedRecordId != -1) {
+            try {
+                reloadData()
+            } catch (ex: Exception) {
+                println(ex.stackTrace)
+            }
+        }
     }
 
     fun reloadData() {
-        filename?.let {
+        filename.let {
             workbookHandler = WorkBookHandler(it)
             workbookHandler.readWorkBookFromFile()
             visualiseDataFromXlsFile()
@@ -107,14 +104,12 @@ class MainActivity : AppCompatActivity(), RecyclerViewInterface {
     fun selectFile(view: View) {
         Log.i("MyLog", Environment.isExternalStorageManager().toString())
 
-        intent = Intent(Intent.ACTION_OPEN_DOCUMENT, MediaStore.Downloads.EXTERNAL_CONTENT_URI)
-        intent.type = "*/*"
 
         try {
-            // создания запроса на выбор файла
-            launcher.launch(intent)
+            reloadData()
+            Toast.makeText(this, "Файл загружен", Toast.LENGTH_SHORT).show()
         } catch (ex: Exception) {
-            println(ex.message)
+            println(ex.stackTrace)
         }
     }
 
@@ -160,6 +155,14 @@ class MainActivity : AppCompatActivity(), RecyclerViewInterface {
         intent.putExtra("record", clickedRecord)
         intent.putExtra("workbookHandler", workbookHandler)
         startActivity(intent)
+    }
+
+    override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
+        Log.i("MyLog", "SELECTED ITEM: $position")
+    }
+
+    override fun onNothingSelected(parent: AdapterView<*>?) {
+
     }
 
 }

@@ -3,7 +3,7 @@
     <string name="add_record">add</string>
     <string name="download_file">upload</string>
     <string name="add_photo">Add photo</string>
-    <string name="pick_file">Файл</string>
+    <string name="pick_file">из файла</string>
     <string name="course_name">courseName</string>
     <string name="ko_header_1">Последний КО</string>
     <string name="ko_header_2">Текущий КО</string>
@@ -13,5 +13,13 @@
     <string name="dayTitle">День:</string>
     <string name="nightTitle">Ночь:</string>
     <string name="puTitle">Показания ПУ</string>
+
+    <string-array name="controller_array">
+        <item>1</item>
+        <item>2</item>
+        <item>3</item>
+        <item>4</item>
+        <item>5</item>
+    </string-array>
 
 </resources>

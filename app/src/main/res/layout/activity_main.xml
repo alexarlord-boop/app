@@ -6,6 +6,15 @@
     android:layout_height="match_parent"
     tools:context=".MainActivity">
 
+    <Spinner
+        android:id="@+id/controller_spinner"
+        android:layout_width="80dp"
+        android:layout_height="40dp"
+        android:layout_marginTop="10dp"
+        android:layout_marginEnd="20dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/btn_select" />
+
     <Button
         android:id="@+id/btn_select"
         android:layout_width="wrap_content"
@@ -20,7 +29,7 @@
         app:layout_constraintHorizontal_bias="0.978"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.058" />
+        app:layout_constraintVertical_bias="0.01999998" />
 
     <LinearLayout
         android:id="@+id/header"
@@ -109,5 +118,16 @@
             tools:text="" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
+
+    <TextView
+        android:id="@+id/textView"
+        android:layout_width="wrap_content"
+        android:layout_height="40dp"
+        android:layout_marginEnd="5dp"
+        android:gravity="center"
+        android:text="Контролёр:"
+        android:textSize="15sp"
+        app:layout_constraintBottom_toBottomOf="@+id/controller_spinner"
+        app:layout_constraintEnd_toStartOf="@+id/controller_spinner" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

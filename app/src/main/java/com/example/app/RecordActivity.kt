@@ -53,12 +53,11 @@ class RecordActivity : AppCompatActivity() {
 
         saveBtn.setOnClickListener {
             val day = newDataDay.text.toString().trim()
-            if ((day.isEmpty() || day.isBlank()) ||
-                day.toDouble() < lastCheckDateDay.text.toString().toDouble()
-            ) {
-                newDataDay.error = "Значение должно быть не меньше предыдущего"
-            } else {
-                val night = newDataNight.text.toString()
+            val night = newDataNight.text.toString().trim()
+            val inputDay = checkInput(lastCheckDateDay.text.toString(), day)
+            val inputNight = checkInput(lastCheckDateNight.text.toString(), night)
+
+            if (inputDay && inputNight) {
                 val comments = newComments.text.toString()
 
                 passedRecord?.also {
@@ -70,8 +69,20 @@ class RecordActivity : AppCompatActivity() {
                     Toast.makeText(this, "Сохранено", Toast.LENGTH_SHORT).show()
                     onBackPressed()
                 }
+            } else {
+                if (!inputDay) {
+                    newDataDay.error = "Значение должно быть не меньше предыдущего"
+                }
+                if (!inputNight) {
+                    newDataNight.error = "Значение должно быть не меньше предыдущего"
+                }
             }
         }
+    }
+
+    fun checkInput(oldValue: String, newValue: String): Boolean {
+        return (newValue.isNotEmpty() && newValue.isNotBlank()) &&
+                newValue.toDouble() >= oldValue.toDouble()
     }
 
     private fun String.beforeZeroOrBlank(): String {
