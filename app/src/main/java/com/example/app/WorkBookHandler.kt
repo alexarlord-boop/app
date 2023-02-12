@@ -6,6 +6,7 @@ import kotlinx.android.parcel.Parcelize
 import org.apache.poi.ss.usermodel.*
 import java.io.File
 import java.io.FileInputStream
+import java.io.FileNotFoundException
 import java.io.FileOutputStream
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
@@ -22,18 +23,30 @@ class WorkBookHandler
 
     val FORMAT = "dd.MM.yyyy"
     private val file: File = File(fileName)
-    var workbook = readWorkBookFromFile()
-    var sheet = workbook.getSheetAt(0)
-    val cellStyle = sheet.getRow(1).getCell(8).cellStyle
-    var records = getRecordsFromFile()
+    lateinit var workbook: Workbook
+    lateinit var sheet: Sheet
+    lateinit var cellStyle: CellStyle
+    lateinit var records: MutableList<RecordDto>
+    var area = ""
+
+    init {
+        try {
+            workbook = readWorkBookFromFile()
+            sheet = workbook.getSheetAt(0)
+            cellStyle = sheet.getRow(1).getCell(8).cellStyle
+            records = getRecordsFromFile()
+            area =  workbook.getSheetAt(0).getRow(1).getCell(0).stringCellValue
+        } catch (ex: FileNotFoundException) {
+            Log.e("MyLog", "${ex.message}")
+        }
+    }
 
     /*
         превращает содержимое файла в объект workbook
     */
     fun readWorkBookFromFile(): Workbook {
         FileInputStream(file).use {
-            val workbook = WorkbookFactory.create(it)
-            return workbook
+            return WorkbookFactory.create(it)
         }
     }
 
@@ -51,6 +64,12 @@ class WorkBookHandler
         }
 
         return records
+    }
+
+    fun clearRecords() {
+        if (this::records.isInitialized) {
+            records.clear()
+        }
     }
 
     fun Row.isEmpty(): Boolean {
@@ -116,9 +135,6 @@ class WorkBookHandler
         return workbook.getSheetAt(0).getRow(1).getCell(1).stringCellValue
     }
 
-    fun getArea(): String {
-        return workbook.getSheetAt(0).getRow(1).getCell(0).stringCellValue
-    }
 
     fun updateRowData(position: Int, recordDto: RecordDto) {
         dataToRow(position + 1, recordDto)
