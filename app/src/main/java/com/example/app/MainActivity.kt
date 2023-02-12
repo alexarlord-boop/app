@@ -81,7 +81,7 @@ class MainActivity : AppCompatActivity(), RecyclerViewInterface,
             try {
                 reloadData()
             } catch (ex: Exception) {
-                println(ex.stackTrace)
+                Log.e("MyLog", "${ex.message}")
             }
         }
     }
