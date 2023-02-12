@@ -26,7 +26,7 @@ class MainActivity : AppCompatActivity(), RecyclerViewInterface,
     lateinit var area: TextView
     lateinit var fioHeader: TextView
     var filename = "storage/emulated/0/download/control.xls"
-    var workbookHandler: WorkBookHandler = WorkBookHandler(filename)
+    lateinit var workbookHandler: WorkBookHandler
     var clickedRecordId = -1
     var clickedControllerId = -1
     lateinit var houseHeader: TextView
@@ -38,6 +38,7 @@ class MainActivity : AppCompatActivity(), RecyclerViewInterface,
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
+        filename = updateFileName(filename, clickedRecordId)
 
         // Getting reference of recyclerView
         recyclerView = findViewById(R.id.list_records)
@@ -87,6 +88,7 @@ class MainActivity : AppCompatActivity(), RecyclerViewInterface,
     }
 
     private fun reloadData() {
+        workbookHandler = WorkBookHandler(filename)
         filename.let {
             val file = it.split('/').last()
             try {
@@ -96,9 +98,8 @@ class MainActivity : AppCompatActivity(), RecyclerViewInterface,
                 Toast.makeText(this, "Загружено из: $file", Toast.LENGTH_SHORT).show()
             } catch (ex: FileNotFoundException) {
                 visualiseData(mutableListOf())
-                workbookHandler.records.clear()
+                workbookHandler.clearRecords()
 
-                println(ex.stackTrace.toString())
                 Toast.makeText(this, "Файл не найден", Toast.LENGTH_SHORT).show()
             }
             Log.i("MyLog", "RELOADED")
@@ -118,27 +119,22 @@ class MainActivity : AppCompatActivity(), RecyclerViewInterface,
     */
     private fun visualiseData(fileRecords: MutableList<RecordDto>) {
 
-        try {
 
-            // visualizing
-            area.text = workbookHandler.getArea()
+        // visualizing
+        area.text = workbookHandler.area
 
-            // Sending reference and data to Adapter
-            val adapter = RecordAdapter(fileRecords, this) {
-                clickedRecordId = it.positionInView
-            }
-
-            // Modifying RecyclerView
-            recyclerView.apply {
-                this.adapter = adapter
-                this.layoutManager = LinearLayoutManager(applicationContext)
-                this.scrollToPosition(clickedRecordId)
-            }
-            showListHeaders()
-        } catch (ex: Exception) {
-            Toast.makeText(this, "${ex.message}", Toast.LENGTH_SHORT).show()
-            println(ex.message)
+        // Sending reference and data to Adapter
+        val adapter = RecordAdapter(fileRecords, this) {
+            clickedRecordId = it.positionInView
         }
+
+        // Modifying RecyclerView
+        recyclerView.apply {
+            this.adapter = adapter
+            this.layoutManager = LinearLayoutManager(applicationContext)
+            this.scrollToPosition(clickedRecordId)
+        }
+        showListHeaders()
     }
 
     private fun showListHeaders() {
