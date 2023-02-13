@@ -5,36 +5,30 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
-import android.os.Environment
-import android.provider.MediaStore
 import android.util.Log
 import android.view.View
 import android.widget.*
-import androidx.activity.result.ActivityResultLauncher
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import java.io.FileInputStream
 import java.io.FileNotFoundException
 import java.util.*
 
 const val LAST_FILE_OPENED = "lastFileOpened"
 
-class MainActivity : AppCompatActivity(), RecyclerViewInterface, AdapterView.OnItemSelectedListener {
-    lateinit var launcher: ActivityResultLauncher<Intent>
+class MainActivity : AppCompatActivity(), RecyclerViewInterface,
+    AdapterView.OnItemSelectedListener {
 
-    lateinit var fileRecords: MutableList<RecordDto>
-
-    lateinit var workbookHandler: WorkBookHandler
 
     lateinit var btnSelectFile: Button
     lateinit var area: TextView
     lateinit var fioHeader: TextView
     var filename = "storage/emulated/0/download/control.xls"
+    lateinit var workbookHandler: WorkBookHandler
     var clickedRecordId = -1
+    var clickedControllerId = -1
     lateinit var houseHeader: TextView
 
     lateinit var recyclerView: RecyclerView
@@ -44,6 +38,7 @@ class MainActivity : AppCompatActivity(), RecyclerViewInterface, AdapterView.OnI
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
+        filename = updateFileName(filename, clickedRecordId)
 
         // Getting reference of recyclerView
         recyclerView = findViewById(R.id.list_records)
@@ -60,8 +55,11 @@ class MainActivity : AppCompatActivity(), RecyclerViewInterface, AdapterView.OnI
         // Setting controller selector
         val spinner: Spinner = findViewById(R.id.controller_spinner)
         spinner.onItemSelectedListener = this
-        ArrayAdapter.createFromResource(this, R.array.controller_array, android.R.layout.simple_spinner_item).also {
-            adapter -> // Specify the layout to use when the list of choices appears
+        ArrayAdapter.createFromResource(
+            this,
+            R.array.controller_array,
+            android.R.layout.simple_spinner_item
+        ).also { adapter -> // Specify the layout to use when the list of choices appears
             adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
             // Apply the adapter to the spinner
             spinner.adapter = adapter
@@ -84,16 +82,26 @@ class MainActivity : AppCompatActivity(), RecyclerViewInterface, AdapterView.OnI
             try {
                 reloadData()
             } catch (ex: Exception) {
-                println(ex.stackTrace)
+                Log.e("MyLog", "${ex.message}")
             }
         }
     }
 
-    fun reloadData() {
+    private fun reloadData() {
+        workbookHandler = WorkBookHandler(filename)
         filename.let {
-            workbookHandler = WorkBookHandler(it)
-            workbookHandler.readWorkBookFromFile()
-            visualiseDataFromXlsFile()
+            val file = it.split('/').last()
+            try {
+                workbookHandler = WorkBookHandler(it)
+                workbookHandler.readWorkBookFromFile()
+                visualiseData(workbookHandler.records)
+                Toast.makeText(this, "Загружено из: $file", Toast.LENGTH_SHORT).show()
+            } catch (ex: FileNotFoundException) {
+                visualiseData(mutableListOf())
+                workbookHandler.clearRecords()
+
+                Toast.makeText(this, "Файл не найден", Toast.LENGTH_SHORT).show()
+            }
             Log.i("MyLog", "RELOADED")
         }
     }
@@ -102,67 +110,61 @@ class MainActivity : AppCompatActivity(), RecyclerViewInterface, AdapterView.OnI
 
     @RequiresApi(Build.VERSION_CODES.R) // android 29+
     fun selectFile(view: View) {
-        Log.i("MyLog", Environment.isExternalStorageManager().toString())
-
-
-        try {
-            reloadData()
-            Toast.makeText(this, "Файл загружен", Toast.LENGTH_SHORT).show()
-        } catch (ex: Exception) {
-            println(ex.stackTrace)
-        }
+        reloadData()
     }
 
 
     /*
         читаем данные из выбранного .xls файла и отображаем списком
     */
-    private fun visualiseDataFromXlsFile() {
+    private fun visualiseData(fileRecords: MutableList<RecordDto>) {
 
-        try {
-            fileRecords = workbookHandler.getRecordsFromFile()
 
-            // visualizing
-            area.text = workbookHandler.getArea()
+        // visualizing
+        area.text = workbookHandler.area
 
-            // Sending reference and data to Adapter
-            val adapter = RecordAdapter(fileRecords, this) {
-                clickedRecordId = it.positionInView
-            }
-
-            // Modifying RecyclerView
-            recyclerView.apply {
-                this.adapter = adapter
-                this.layoutManager = LinearLayoutManager(applicationContext)
-                this.scrollToPosition(clickedRecordId)
-            }
-            showListHeaders()
-        } catch (ex: Exception) {
-            Toast.makeText(this, "Выберите подходящий формат", Toast.LENGTH_SHORT).show()
-            println(ex.message)
+        // Sending reference and data to Adapter
+        val adapter = RecordAdapter(fileRecords, this) {
+            clickedRecordId = it.positionInView
         }
+
+        // Modifying RecyclerView
+        recyclerView.apply {
+            this.adapter = adapter
+            this.layoutManager = LinearLayoutManager(applicationContext)
+            this.scrollToPosition(clickedRecordId)
+        }
+        showListHeaders()
     }
 
-    fun showListHeaders() {
+    private fun showListHeaders() {
         fioHeader.visibility = View.VISIBLE
         houseHeader.visibility = View.VISIBLE
     }
 
     override fun onItemCLick(position: Int) {
         intent = Intent(this, RecordActivity::class.java)
-        val clickedRecord = fileRecords[position]
+        val clickedRecord = workbookHandler.records[position]
         intent.putExtra("position", position)
         intent.putExtra("record", clickedRecord)
         intent.putExtra("workbookHandler", workbookHandler)
         startActivity(intent)
     }
 
+    private fun updateFileName(filename: String, id: Int): String {
+        return filename.split("/").toMutableList().also {
+            it[it.lastIndex] = "control${id}.xls"
+        }.joinToString("/")
+    }
+
     override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
-        Log.i("MyLog", "SELECTED ITEM: $position")
+        clickedControllerId = position + 1
+        filename = updateFileName(filename, position + 1)
+        Log.i("MyLog", "SELECTED ITEM: $clickedControllerId")
     }
 
     override fun onNothingSelected(parent: AdapterView<*>?) {
-
+        Log.i("MyLog", "DEFAULT ITEM")
     }
 
 }

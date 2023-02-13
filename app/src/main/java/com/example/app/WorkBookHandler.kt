@@ -1,18 +1,15 @@
 package com.example.app
 
-import android.os.Environment
 import android.os.Parcelable
 import android.util.Log
 import kotlinx.android.parcel.Parcelize
 import org.apache.poi.ss.usermodel.*
 import java.io.File
 import java.io.FileInputStream
+import java.io.FileNotFoundException
 import java.io.FileOutputStream
-import java.text.SimpleDateFormat
-import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
-import java.util.*
 
 
 /* This class helps manage an excel file
@@ -25,19 +22,31 @@ class WorkBookHandler
 
 
     val FORMAT = "dd.MM.yyyy"
-    private val file: File = File("storage/emulated/0/download/control.xls")
-    var workbook = readWorkBookFromFile()
-    var sheet = workbook.getSheetAt(0)
-    val cellStyle = sheet.getRow(1).getCell(8).cellStyle
-    val columnsCount = 14
+    private val file: File = File(fileName)
+    lateinit var workbook: Workbook
+    lateinit var sheet: Sheet
+    lateinit var cellStyle: CellStyle
+    lateinit var records: MutableList<RecordDto>
+    var area = ""
+
+    init {
+        try {
+            workbook = readWorkBookFromFile()
+            sheet = workbook.getSheetAt(0)
+            cellStyle = sheet.getRow(1).getCell(8).cellStyle
+            records = getRecordsFromFile()
+            area =  workbook.getSheetAt(0).getRow(1).getCell(0).stringCellValue
+        } catch (ex: FileNotFoundException) {
+            Log.e("MyLog", "${ex.message}")
+        }
+    }
 
     /*
         превращает содержимое файла в объект workbook
     */
     fun readWorkBookFromFile(): Workbook {
         FileInputStream(file).use {
-            val workbook = WorkbookFactory.create(it)
-            return workbook
+            return WorkbookFactory.create(it)
         }
     }
 
@@ -55,6 +64,12 @@ class WorkBookHandler
         }
 
         return records
+    }
+
+    fun clearRecords() {
+        if (this::records.isInitialized) {
+            records.clear()
+        }
     }
 
     fun Row.isEmpty(): Boolean {
@@ -120,9 +135,6 @@ class WorkBookHandler
         return workbook.getSheetAt(0).getRow(1).getCell(1).stringCellValue
     }
 
-    fun getArea(): String {
-        return workbook.getSheetAt(0).getRow(1).getCell(0).stringCellValue
-    }
 
     fun updateRowData(position: Int, recordDto: RecordDto) {
         dataToRow(position + 1, recordDto)

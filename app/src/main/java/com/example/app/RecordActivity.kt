@@ -22,7 +22,7 @@ class RecordActivity : AppCompatActivity() {
         Log.i("MyLog", passedRecord.toString())
 
         val workbookHandler = intent.getParcelableExtra<WorkBookHandler>("workbookHandler")
-        Log.i("MyLog", "${workbookHandler?.getArea()}")
+        Log.i("MyLog", "${workbookHandler?.area}")
 
         val name: TextView = findViewById(R.id.record_name)
         val puType: TextView = findViewById(R.id.record_pu_type)
