@@ -2,6 +2,10 @@ package com.example.app
 
 import android.os.Parcelable
 import android.util.Log
+import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.State
+import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableStateOf
 import kotlinx.android.parcel.Parcelize
 import org.apache.poi.ss.usermodel.*
 import java.io.File
@@ -26,15 +30,18 @@ class WorkBookHandler
     lateinit var workbook: Workbook
     lateinit var sheet: Sheet
     lateinit var cellStyle: CellStyle
-    lateinit var records: MutableList<RecordDto>
+//    lateinit var records: MutableList<RecordDto>
     var area = ""
+
+    private val _listOfRecords: MutableList<RecordDto> = mutableStateListOf()
+    val listOfRecords: List<RecordDto> = _listOfRecords
 
     init {
         try {
             workbook = readWorkBookFromFile()
             sheet = workbook.getSheetAt(0)
             cellStyle = sheet.getRow(1).getCell(8).cellStyle
-            records = getRecordsFromFile()
+//            records = getRecordsFromFile()
             area =  workbook.getSheetAt(0).getRow(1).getCell(0).stringCellValue
         } catch (ex: FileNotFoundException) {
             Log.e("MyLog", "${ex.message}")
@@ -53,7 +60,7 @@ class WorkBookHandler
     /*
         разбирает лист на объекты-записи
     */
-    fun getRecordsFromFile(): MutableList<RecordDto> {
+    fun getRecordsFromFile() {
         val sheet = workbook.getSheetAt(0)
         val records = mutableListOf<RecordDto>()
         val lastId = sheet.lastRowNum
@@ -63,14 +70,14 @@ class WorkBookHandler
             if (!row.isEmpty()) records.add(parseRow(row, position - 1)) else continue
         }
 
-        return records
+        _listOfRecords.addAll(records)
     }
 
-    fun clearRecords() {
-        if (this::records.isInitialized) {
-            records.clear()
-        }
-    }
+//    fun clearRecords() {
+//        if (this::records.isInitialized) {
+//            records.clear()
+//        }
+//    }
 
     fun Row.isEmpty(): Boolean {
         return this.getCell(0).stringCellValue.isBlank()
