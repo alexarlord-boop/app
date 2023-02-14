@@ -14,6 +14,8 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.Clear
 
 import androidx.compose.runtime.*
 import androidx.compose.runtime.livedata.observeAsState
@@ -21,6 +23,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.LiveData
@@ -184,15 +188,15 @@ fun RecordItem(id: Int, record: RecordDto) {
         modifier = Modifier
             .clickable(onClick = {})
             .border(2.dp, Color.LightGray)
-            .shadow(9.dp)
+            .shadow(5.dp)
     ) {
         Column(modifier = Modifier.padding(padding)) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Text(text = record.street, fontSize = MaterialTheme.typography.h5.fontSize)
-                Text(text = record.name, fontSize = MaterialTheme.typography.h5.fontSize)
+                Text(text = record.street, fontSize = MaterialTheme.typography.h6.fontSize)
+                Text(text = record.name, fontSize = MaterialTheme.typography.h6 .fontSize, fontStyle = MaterialTheme.typography.h6.fontStyle)
             }
             Spacer(modifier = Modifier.height(5.dp))
             Row(
@@ -200,10 +204,11 @@ fun RecordItem(id: Int, record: RecordDto) {
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Row(modifier = Modifier.weight(5f), horizontalArrangement = Arrangement.Start) {
-                    Text(text = record.houseNumber, fontSize = MaterialTheme.typography.h5.fontSize)
+                    Text(modifier = Modifier.weight(5F), text = record.houseNumber.split(".")[0],
+                        fontSize = MaterialTheme.typography.h5.fontSize)
                     Spacer(modifier = Modifier.width(15.dp))
-                    Text(
-                        text = record.flatNumber.toString(),
+                    Text(modifier = Modifier.weight(5F),
+                        text = record.flatNumber.toString().split(".")[0],
                         fontSize = MaterialTheme.typography.h5.fontSize
                     )
                 }
@@ -211,10 +216,11 @@ fun RecordItem(id: Int, record: RecordDto) {
                     modifier = Modifier.weight(5f),
                     horizontalArrangement = Arrangement.SpaceEvenly
                 ) {
-                    Text(text = record.houseNumber, fontSize = MaterialTheme.typography.h5.fontSize)
+                    Text(text = record.ko_D .toString().split(".")[0],
+                        fontSize = MaterialTheme.typography.h5.fontSize)
 
                     Text(
-                        text = record.flatNumber.toString(),
+                        text = record.ko_N.toString().split(".")[0],
                         fontSize = MaterialTheme.typography.h5.fontSize
                     )
                 }
@@ -225,13 +231,13 @@ fun RecordItem(id: Int, record: RecordDto) {
     Spacer(modifier = Modifier.height(margin))
 }
 
-@Preview
+//@Preview
 @Composable
 fun ShowMainScreen() {
     MainScreen(workBookHandler = WorkBookHandler())
 }
 
-//@Preview
+@Preview
 @Composable
 fun ShowRecord() {
 
