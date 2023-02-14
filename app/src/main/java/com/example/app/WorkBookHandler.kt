@@ -21,63 +21,63 @@ import java.time.format.DateTimeFormatter
 *  CRUD methods
 *  ---  */
 @Parcelize
-class WorkBookHandler
-    (val fileName: String) : Parcelable {
+class WorkBookHandler : Parcelable {
 
 
     val FORMAT = "dd.MM.yyyy"
-    private val file: File = File(fileName)
-    lateinit var workbook: Workbook
-    lateinit var sheet: Sheet
-    lateinit var cellStyle: CellStyle
-//    lateinit var records: MutableList<RecordDto>
+    var workbook: Workbook? = null
+    var sheet: Sheet? = null
+    var cellStyle: CellStyle? = null
+
+    //    lateinit var records: MutableList<RecordDto>
     var area = ""
 
     private val _listOfRecords: MutableList<RecordDto> = mutableStateListOf()
     val listOfRecords: List<RecordDto> = _listOfRecords
 
-    init {
+
+    fun initHandler() {
+        sheet = workbook?.getSheetAt(0)
+        cellStyle = sheet?.getRow(1)?.getCell(8)?.cellStyle
+        area = workbook?.getSheetAt(0)?.getRow(1)?.getCell(0)?.stringCellValue.toString()
+    }
+
+
+
+    private fun readWorkBookFromFile(filename: String): Workbook? {
         try {
-            workbook = readWorkBookFromFile()
-            sheet = workbook.getSheetAt(0)
-            cellStyle = sheet.getRow(1).getCell(8).cellStyle
-//            records = getRecordsFromFile()
-            area =  workbook.getSheetAt(0).getRow(1).getCell(0).stringCellValue
+            val file = File(filename)
+            FileInputStream(file).use {
+                return WorkbookFactory.create(it)
+            }
         } catch (ex: FileNotFoundException) {
             Log.e("MyLog", "${ex.message}")
+            throw ex
         }
     }
 
-    /*
-        превращает содержимое файла в объект workbook
-    */
-    fun readWorkBookFromFile(): Workbook {
-        FileInputStream(file).use {
-            return WorkbookFactory.create(it)
-        }
-    }
+    fun getRecordsFromFile(filename: String) {
+        try {
+            workbook = readWorkBookFromFile(filename)
+            initHandler()
+            workbook?.let {
+                val sheet = it.getSheetAt(0)
+                val records = mutableListOf<RecordDto>()
+                val lastId = sheet?.lastRowNum
 
-    /*
-        разбирает лист на объекты-записи
-    */
-    fun getRecordsFromFile() {
-        val sheet = workbook.getSheetAt(0)
-        val records = mutableListOf<RecordDto>()
-        val lastId = sheet.lastRowNum
+                for (position in 1..lastId!!) {  // skipping headers in row 0
+                    val row = sheet.getRow(position)
+                    if (!row.isEmpty()) records.add(parseRow(row, position - 1)) else continue
+                }
 
-        for (position in 1..lastId) {  // skipping headers in row 0
-            val row = sheet.getRow(position)
-            if (!row.isEmpty()) records.add(parseRow(row, position - 1)) else continue
+                _listOfRecords.addAll(records)
+            }
+        } catch (ex: FileNotFoundException) {
+            throw ex
         }
 
-        _listOfRecords.addAll(records)
     }
 
-//    fun clearRecords() {
-//        if (this::records.isInitialized) {
-//            records.clear()
-//        }
-//    }
 
     fun Row.isEmpty(): Boolean {
         return this.getCell(0).stringCellValue.isBlank()
@@ -105,41 +105,39 @@ class WorkBookHandler
 
     }
 
-
     fun convertDateToFormattedString(date: LocalDateTime): String {
         val dateTimeFormatter = DateTimeFormatter.ofPattern(FORMAT)
         return date.format(dateTimeFormatter)
     }
 
-
     fun dataToRow(position: Int, recordDto: RecordDto) {
-        val row = sheet.createRow(position)
-        row.createCell(0).setCellValue(recordDto.area)
-        row.createCell(1).setCellValue(recordDto.street)
-        row.createCell(2).setCellValue(recordDto.houseNumber)
-        row.createCell(3).setCellValue(recordDto.flatNumber)
-        row.createCell(4).setCellValue(recordDto.account)
-        row.createCell(5).setCellValue(recordDto.name)
-        row.createCell(6).setCellValue(recordDto.puNumber)
-        row.createCell(7).setCellValue(recordDto.puType)
+        val row = sheet?.createRow(position)
+        row?.let {
+            row.createCell(0).setCellValue(recordDto.area)
+            row.createCell(1).setCellValue(recordDto.street)
+            row.createCell(2).setCellValue(recordDto.houseNumber)
+            row.createCell(3).setCellValue(recordDto.flatNumber)
+            row.createCell(4).setCellValue(recordDto.account)
+            row.createCell(5).setCellValue(recordDto.name)
+            row.createCell(6).setCellValue(recordDto.puNumber)
+            row.createCell(7).setCellValue(recordDto.puType)
 
-        // passing same date value
+            // passing same date value
 
-        val cell = row.createCell(8)
-        cell.setCellValue(recordDto.lastKoDate)
-        cell.cellStyle = cellStyle
+            val cell = row.createCell(8)
+            cell.setCellValue(recordDto.lastKoDate)
+            cell.cellStyle = cellStyle
 
-        row.createCell(9).setCellValue(recordDto.lastKo_D)
-        row.createCell(10).setCellValue(recordDto.lastKo_N)
-        row.createCell(11).setCellValue(recordDto.ko_D)
-        row.createCell(12).setCellValue(recordDto.ko_N)
-        row.createCell(13).setCellValue(recordDto.comments)
-        row.createCell(14).setCellValue(recordDto.ID)
-        saveWorkBookToFile()
-    }
+            row.createCell(9).setCellValue(recordDto.lastKo_D)
+            row.createCell(10).setCellValue(recordDto.lastKo_N)
+            row.createCell(11).setCellValue(recordDto.ko_D)
+            row.createCell(12).setCellValue(recordDto.ko_N)
+            row.createCell(13).setCellValue(recordDto.comments)
+            row.createCell(14).setCellValue(recordDto.ID)
 
-    fun getStreet(): String {
-        return workbook.getSheetAt(0).getRow(1).getCell(1).stringCellValue
+        }
+
+
     }
 
 
@@ -147,18 +145,18 @@ class WorkBookHandler
         dataToRow(position + 1, recordDto)
     }
 
-    private fun saveWorkBookToFile() {
+     fun saveWorkBookToFile(filename: String) {
         try {
+            val file = File(filename)
             if (!file.exists()) {
                 file.createNewFile()
             }
-            FileOutputStream(file).use { fileOut -> workbook.write(fileOut) }
+            FileOutputStream(file).use { fileOut -> workbook?.write(fileOut) }
         } catch (ex: Exception) {
-            Log.e("MyLog", ex.stackTraceToString())
+            Log.e("MyLog", ex.message.toString())
         }
     }
 
-
-    fun uploadFileToServer() {}
+    fun getRecordsFromServer() {}
 
 }

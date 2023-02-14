@@ -1,46 +1,43 @@
 package com.example.app
 
 import android.os.Bundle
-import android.os.PersistableBundle
 import android.util.Log
 import android.widget.Button
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.compose.setContent
 import androidx.appcompat.app.AppCompatActivity
-import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.*
 
-import androidx.compose.material.ExtendedFloatingActionButton
-import androidx.compose.material.MaterialTheme
-import androidx.compose.material.Surface
-import androidx.compose.material.Text
 import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.ViewModel
 import androidx.recyclerview.widget.RecyclerView
 import kotlinx.android.parcel.RawValue
 import java.io.File
 import java.io.FileNotFoundException
+import java.nio.channels.Selector
 import java.time.LocalDateTime
 
 class MainActivityScreen : AppCompatActivity() {
     lateinit var btnSelectFile: Button
     lateinit var area: TextView
     lateinit var fioHeader: TextView
-    var filename = "storage/emulated/0/download/control1.xls"
-    var workbookHandler = WorkBookHandler(filename)
+    var workbookHandler = WorkBookHandler()
     var clickedRecordId = -1
     var clickedControllerId = -1
     lateinit var houseHeader: TextView
@@ -57,63 +54,125 @@ class MainActivityScreen : AppCompatActivity() {
     }
 
 
-    fun visualiseData(records: MutableList<RecordDto>) {
-        Toast.makeText(this, "${records.toString()}", Toast.LENGTH_SHORT).show()
+}
+
+class MainViewModel : ViewModel() {
+
+    private val _fileId: MutableLiveData<String> = MutableLiveData("1")
+    val fileId: LiveData<String> = _fileId
+
+    private val _filename: MutableLiveData<String> = MutableLiveData("storage/emulated/0/download/control1.xls")
+    val filename: LiveData<String> = _filename
+
+    fun fileChange() {
+        _filename.value = filename.value?.split("/")?.toMutableList()?.also {
+            it[it.lastIndex] = "control${_fileId.value}.xls"
+        }?.joinToString("/")
+    }
+
+    fun onIdChange(newId: String) {
+        _fileId.value = newId
+        fileChange()
+    }
+}
+
+
+@Composable
+fun MainScreen(workBookHandler: WorkBookHandler, viewModel: MainViewModel = MainViewModel()) {
+    val records = workBookHandler.listOfRecords
+
+
+    Column() {
+        Spacer(modifier = Modifier.height(50.dp))
+        Column(
+            modifier = Modifier
+                .weight(2F)
+                .fillMaxWidth()
+                .height(100.dp)
+                .padding(10.dp)
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                FileBtn("Из файла", workBookHandler = workBookHandler, viewModel = viewModel)
+                FileBtn("С сервера", workBookHandler = workBookHandler, viewModel = viewModel)
+                Selector(viewModel)
+            }
+        }
+
+
+        LazyColumn(
+            modifier = Modifier
+                .weight(10F)
+                .padding(10.dp)
+        ) {
+            itemsIndexed(records) { id, record ->
+                RecordItem(id, record)
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterialApi::class)
+@Composable
+fun Selector(viewModel: MainViewModel) {
+    val options = listOf("1", "2", "3", "4", "5")
+    var expanded by remember { mutableStateOf(false) }
+    var selectedOptionText by remember { mutableStateOf(options[0]) }
+
+    ExposedDropdownMenuBox(
+        expanded = true, onExpandedChange = {
+            expanded = !expanded
+        }, modifier = Modifier
+            .width(100.dp)
+            .padding(10.dp)
+            .border(width = 1.dp, color = Color.Black, shape = RoundedCornerShape(25.dp))
+    ) {
+
+        ExtendedFloatingActionButton(text = { Text(selectedOptionText) },
+            modifier = Modifier.fillMaxWidth(),
+            backgroundColor = Color.White,
+            onClick = { /*TODO*/ })
+
+        ExposedDropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
+            options.forEach { optionText ->
+                DropdownMenuItem(onClick = {
+                    selectedOptionText = optionText
+                    viewModel.onIdChange(optionText)
+                    expanded = false
+                }) {
+                    Text(text = optionText)
+                }
+            }
+        }
     }
 }
 
 @Composable
-fun FileBtn(onClick: () -> Unit) {
+fun FileBtn(
+    title: String,
+    viewModel: MainViewModel,
+    workBookHandler: WorkBookHandler
+) {
+
+    val context = LocalContext.current
+    val fileId by viewModel.fileId.observeAsState("1")
+    val filename by viewModel.filename.observeAsState("storage/emulated/0/download/control1.xls")
     ExtendedFloatingActionButton(
+        modifier = Modifier.padding(10.dp),
         backgroundColor = Color.LightGray,
-        onClick = { onClick() },
-        text = { Text("Из файла") }
+        onClick = {
+
+            try {
+                Log.i("MyLog", filename)
+                workBookHandler.getRecordsFromFile(filename)
+            } catch (ex: FileNotFoundException) {
+                Toast.makeText(context, "Нет файла!", Toast.LENGTH_SHORT).show()
+            }
+        },
+        text = { Text(title) }
     )
-}
-
-@Composable
-fun MainScreen(workbookHandler: WorkBookHandler) {
-    val records = workbookHandler.listOfRecords
-
-Column() {
-
-
-    Row(
-        modifier = Modifier
-            .weight(1F)
-//            .fillMaxWidth()
-            .height(100.dp)
-            .padding(10.dp),
-        horizontalArrangement = Arrangement.End
-    ) {
-        FileBtn(workbookHandler::getRecordsFromFile)
-    }
-
-
-    LazyColumn(
-        modifier = Modifier
-            .weight(10F)
-            .padding(10.dp)
-    ) {
-        itemsIndexed(records) { id, record ->
-            RecordItem(id, record)
-        }
-    }
-}
-}
-
-@Composable
-fun RecordList(records: List<RecordDto>) {
-
-    LazyColumn(
-        modifier = Modifier
-            .fillMaxHeight()
-            .padding(10.dp)
-    ) {
-        itemsIndexed(records) { id, record ->
-            RecordItem(id, record)
-        }
-    }
 }
 
 @Composable
@@ -167,6 +226,12 @@ fun RecordItem(id: Int, record: RecordDto) {
 }
 
 @Preview
+@Composable
+fun ShowMainScreen() {
+    MainScreen(workBookHandler = WorkBookHandler())
+}
+
+//@Preview
 @Composable
 fun ShowRecord() {
 
