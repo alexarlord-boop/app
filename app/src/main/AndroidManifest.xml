@@ -27,7 +27,7 @@
             android:name=".RecordActivity"
             android:exported="false" />
         <activity
-            android:name=".MainActivity"
+            android:name=".MainActivityScreen"
             android:exported="true"
             android:windowSoftInputMode="stateHidden">
             <intent-filter>
