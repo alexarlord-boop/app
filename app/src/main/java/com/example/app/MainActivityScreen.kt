@@ -88,7 +88,7 @@ class MainViewModel : ViewModel() {
 @Composable
 fun MainScreen(workBookHandler: WorkBookHandler, viewModel: MainViewModel = MainViewModel()) {
     val records = workBookHandler.listOfRecords
-
+    val lastClickedRecord = viewModel.position.observeAsState(0)
 
     Column {
         Spacer(modifier = Modifier.height(50.dp))
@@ -122,20 +122,21 @@ fun MainScreen(workBookHandler: WorkBookHandler, viewModel: MainViewModel = Main
         val listState = rememberLazyListState()
         // Remember a CoroutineScope to be able to launch
         val coroutineScope = rememberCoroutineScope()
-        val lastClickedRecord = viewModel.position.observeAsState(0)
 
-        Button (
+
+        Button(modifier = Modifier.padding(10.dp, 0.dp, 0.dp, 0.dp),
             onClick = {
                 coroutineScope.launch {
                     // Animate scroll to the 10th item
                     listState.animateScrollToItem(index = lastClickedRecord.value)
                 }
             }
-        ){
-            Text("последнее посещение")
+        ) {
+            Text(if (lastClickedRecord.value == 0) "наверх" else "последнее посещение")
         }
 
-        LazyColumn(state = listState,
+        LazyColumn(
+            state = listState,
             modifier = Modifier
                 .weight(10F)
                 .padding(10.dp)
@@ -173,7 +174,6 @@ fun Selector(viewModel: MainViewModel) {
                 DropdownMenuItem(onClick = {
                     selectedOptionText = optionText
                     viewModel.onIdChange(optionText)
-                    viewModel.onPositionChange(0)
                     expanded = false
                 }) {
                     Text(text = optionText)
@@ -198,6 +198,7 @@ fun FileBtn(
         onClick = {
             try {
                 onClick(filename)
+                viewModel.onPositionChange(0)
             } catch (ex: FileNotFoundException) {
                 Toast.makeText(context, "Нет файла!", Toast.LENGTH_SHORT).show()
             }
