@@ -2,7 +2,6 @@ package com.example.app
 
 import android.os.Bundle
 import android.util.Log
-import android.widget.Button
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.compose.setContent
@@ -21,13 +20,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import java.io.FileNotFoundException
-import java.time.LocalDateTime
 
 class MainActivityScreen : AppCompatActivity() {
     lateinit var area: TextView
@@ -198,7 +195,11 @@ fun RecordItem(id: Int, record: RecordDto, viewModel: MainViewModel) {
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Text(text = record.street, fontSize = MaterialTheme.typography.h6.fontSize)
-                Text(text = record.name, fontSize = MaterialTheme.typography.h6 .fontSize, fontStyle = MaterialTheme.typography.h6.fontStyle)
+                Text(
+                    text = record.name,
+                    fontSize = MaterialTheme.typography.h6.fontSize,
+                    fontStyle = MaterialTheme.typography.h6.fontStyle
+                )
             }
             Spacer(modifier = Modifier.height(5.dp))
             Row(
@@ -206,10 +207,13 @@ fun RecordItem(id: Int, record: RecordDto, viewModel: MainViewModel) {
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Row(modifier = Modifier.weight(5f), horizontalArrangement = Arrangement.Start) {
-                    Text(modifier = Modifier.weight(5F), text = record.houseNumber.split(".")[0],
-                        fontSize = MaterialTheme.typography.h5.fontSize)
+                    Text(
+                        modifier = Modifier.weight(5F), text = record.houseNumber.split(".")[0],
+                        fontSize = MaterialTheme.typography.h5.fontSize
+                    )
                     Spacer(modifier = Modifier.width(15.dp))
-                    Text(modifier = Modifier.weight(5F),
+                    Text(
+                        modifier = Modifier.weight(5F),
                         text = record.flatNumber.toString().split(".")[0],
                         fontSize = MaterialTheme.typography.h5.fontSize
                     )
@@ -218,8 +222,10 @@ fun RecordItem(id: Int, record: RecordDto, viewModel: MainViewModel) {
                     modifier = Modifier.weight(5f),
                     horizontalArrangement = Arrangement.SpaceEvenly
                 ) {
-                    Text(text = record.ko_D .toString().split(".")[0],
-                        fontSize = MaterialTheme.typography.h5.fontSize)
+                    Text(
+                        text = record.ko_D.toString().split(".")[0],
+                        fontSize = MaterialTheme.typography.h5.fontSize
+                    )
 
                     Text(
                         text = record.ko_N.toString().split(".")[0],
@@ -239,29 +245,29 @@ fun ShowMainScreen() {
     MainScreen(workBookHandler = WorkBookHandler())
 }
 
-@Preview
-@Composable
-fun ShowRecord() {
-
-    val record = RecordDto(
-        "Батецкий",
-        "Звездная",
-        "43в",
-        12.0,
-        1234.0,
-        "Иванова М.Ф.",
-        "1234567890",
-        "12234Ь2344-ывваЦУК 1234",
-        LocalDateTime.now(),
-        12345.0,
-        12345.0,
-        0.0,
-        0.0,
-        "не живут",
-        34567.0,
-        -1
-    )
-    RecordItem(id = 1, record = record)
-}
+//@Preview
+//@Composable
+//fun ShowRecord() {
+//
+//    val record = RecordDto(
+//        "Батецкий",
+//        "Звездная",
+//        "43в",
+//        12.0,
+//        1234.0,
+//        "Иванова М.Ф.",
+//        "1234567890",
+//        "12234Ь2344-ывваЦУК 1234",
+//        LocalDateTime.now(),
+//        12345.0,
+//        12345.0,
+//        0.0,
+//        0.0,
+//        "не живут",
+//        34567.0,
+//        -1
+//    )
+//    RecordItem(id = 1, record = record)
+//}
 
 
