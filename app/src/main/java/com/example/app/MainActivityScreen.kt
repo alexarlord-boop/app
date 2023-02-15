@@ -93,8 +93,18 @@ fun MainScreen(workBookHandler: WorkBookHandler, viewModel: MainViewModel = Main
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                FileBtn("Из файла", onClick = workBookHandler::getRecordsFromFile, srcPath = viewModel.filename.value.toString(), viewModel = viewModel)
-                FileBtn("С сервера", onClick = workBookHandler::getRecordsFromServer, srcPath = "", viewModel = viewModel)
+                FileBtn(
+                    "Из файла",
+                    onClick = workBookHandler::getRecordsFromFile,
+                    srcPath = viewModel.filename.value.toString(),
+                    viewModel = viewModel
+                )
+                FileBtn(
+                    "С сервера",
+                    onClick = workBookHandler::getRecordsFromServer,
+                    srcPath = "",
+                    viewModel = viewModel
+                )
                 Selector(viewModel)
             }
         }
@@ -157,7 +167,6 @@ fun FileBtn(
 ) {
 
     val context = LocalContext.current
-    val fileId by viewModel.fileId.observeAsState("1")
     val filename by viewModel.filename.observeAsState("storage/emulated/0/download/control1.xls")
     val recordId by viewModel.clickedRecordId.observeAsState(-1)
     ExtendedFloatingActionButton(
