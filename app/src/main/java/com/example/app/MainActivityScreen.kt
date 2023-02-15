@@ -54,8 +54,16 @@ class MainViewModel : ViewModel() {
     private val _fileId: MutableLiveData<String> = MutableLiveData("1")
     val fileId: LiveData<String> = _fileId
 
-    private val _filename: MutableLiveData<String> = MutableLiveData("storage/emulated/0/download/control1.xls")
+    private var _clickedRecordId: MutableLiveData<Int> = MutableLiveData(-1)
+    var clickedRecordId: LiveData<Int> = _clickedRecordId
+
+    private val _filename: MutableLiveData<String> =
+        MutableLiveData("storage/emulated/0/download/control1.xls")
     val filename: LiveData<String> = _filename
+
+    fun onRecordIdChange(newRecordId: Int) {
+        _clickedRecordId.value = newRecordId
+    }
 
     fun fileChange() {
         _filename.value = filename.value?.split("/")?.toMutableList()?.also {
@@ -133,6 +141,7 @@ fun Selector(viewModel: MainViewModel) {
                 DropdownMenuItem(onClick = {
                     selectedOptionText = optionText
                     viewModel.onIdChange(optionText)
+                    viewModel.onRecordIdChange(-1)
                     expanded = false
                 }) {
                     Text(text = optionText)
@@ -153,6 +162,7 @@ fun FileBtn(
     val context = LocalContext.current
     val fileId by viewModel.fileId.observeAsState("1")
     val filename by viewModel.filename.observeAsState("storage/emulated/0/download/control1.xls")
+    val recordId by viewModel.clickedRecordId.observeAsState(-1)
     ExtendedFloatingActionButton(
         modifier = Modifier.padding(10.dp),
         backgroundColor = Color.LightGray,
@@ -170,13 +180,15 @@ fun FileBtn(
 }
 
 @Composable
-fun RecordItem(id: Int, record: RecordDto) {
+fun RecordItem(id: Int, record: RecordDto, viewModel: MainViewModel) {
     val padding = 5.dp
     val margin = 10.dp
     Surface(
 
         modifier = Modifier
-            .clickable(onClick = {})
+            .clickable(onClick = {
+                viewModel.onRecordIdChange(id)
+            })
             .border(2.dp, Color.LightGray)
             .shadow(5.dp)
     ) {
