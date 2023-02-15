@@ -14,8 +14,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.Clear
 
 import androidx.compose.runtime.*
 import androidx.compose.runtime.livedata.observeAsState
@@ -23,27 +21,18 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
-import androidx.recyclerview.widget.RecyclerView
-import kotlinx.android.parcel.RawValue
-import java.io.File
 import java.io.FileNotFoundException
-import java.nio.channels.Selector
 import java.time.LocalDateTime
 
 class MainActivityScreen : AppCompatActivity() {
-    lateinit var btnSelectFile: Button
     lateinit var area: TextView
     lateinit var fioHeader: TextView
     var workbookHandler = WorkBookHandler()
-    var clickedRecordId = -1
-    var clickedControllerId = -1
     lateinit var houseHeader: TextView
 
 
@@ -99,8 +88,8 @@ fun MainScreen(workBookHandler: WorkBookHandler, viewModel: MainViewModel = Main
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                FileBtn("Из файла", workBookHandler = workBookHandler, viewModel = viewModel)
-                FileBtn("С сервера", workBookHandler = workBookHandler, viewModel = viewModel)
+                FileBtn("Из файла", onClick = workBookHandler::getRecordsFromFile, srcPath = viewModel.filename.value.toString(), viewModel = viewModel)
+                FileBtn("С сервера", onClick = workBookHandler::getRecordsFromServer, srcPath = "", viewModel = viewModel)
                 Selector(viewModel)
             }
         }
@@ -112,7 +101,7 @@ fun MainScreen(workBookHandler: WorkBookHandler, viewModel: MainViewModel = Main
                 .padding(10.dp)
         ) {
             itemsIndexed(records) { id, record ->
-                RecordItem(id, record)
+                RecordItem(id, record, viewModel)
             }
         }
     }
@@ -157,7 +146,8 @@ fun Selector(viewModel: MainViewModel) {
 fun FileBtn(
     title: String,
     viewModel: MainViewModel,
-    workBookHandler: WorkBookHandler
+    onClick: (String) -> Unit,
+    srcPath: String
 ) {
 
     val context = LocalContext.current
@@ -166,16 +156,16 @@ fun FileBtn(
     ExtendedFloatingActionButton(
         modifier = Modifier.padding(10.dp),
         backgroundColor = Color.LightGray,
+        text = { Text(title) },
         onClick = {
-
+            Log.i("MyLog", "POSITION: ${recordId}")
             try {
                 Log.i("MyLog", filename)
-                workBookHandler.getRecordsFromFile(filename)
+                onClick(srcPath)
             } catch (ex: FileNotFoundException) {
                 Toast.makeText(context, "Нет файла!", Toast.LENGTH_SHORT).show()
             }
-        },
-        text = { Text(title) }
+        }
     )
 }
 
