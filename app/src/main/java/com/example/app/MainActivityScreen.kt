@@ -8,9 +8,12 @@ import androidx.activity.compose.setContent
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
 
@@ -19,12 +22,19 @@ import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.LayoutCoordinates
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.layout.positionInParent
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import kotlinx.coroutines.launch
 import java.io.FileNotFoundException
+import kotlin.math.roundToInt
 
 class MainActivityScreen : AppCompatActivity() {
     lateinit var area: TextView
@@ -51,15 +61,15 @@ class MainViewModel : ViewModel() {
     private val _fileId: MutableLiveData<String> = MutableLiveData("1")
     val fileId: LiveData<String> = _fileId
 
-    private var _clickedRecordId: MutableLiveData<Int> = MutableLiveData(-1)
-    var clickedRecordId: LiveData<Int> = _clickedRecordId
+    private var _position: MutableLiveData<Int> = MutableLiveData(0)
+    var position: LiveData<Int> = _position
 
     private val _filename: MutableLiveData<String> =
         MutableLiveData("storage/emulated/0/download/control1.xls")
     val filename: LiveData<String> = _filename
 
-    fun onRecordIdChange(newRecordId: Int) {
-        _clickedRecordId.value = newRecordId
+    fun onPositionChange(newPosition: Int) {
+        _position.value = newPosition
     }
 
     fun fileChange() {
@@ -80,7 +90,7 @@ fun MainScreen(workBookHandler: WorkBookHandler, viewModel: MainViewModel = Main
     val records = workBookHandler.listOfRecords
 
 
-    Column() {
+    Column {
         Spacer(modifier = Modifier.height(50.dp))
         Column(
             modifier = Modifier
@@ -96,21 +106,36 @@ fun MainScreen(workBookHandler: WorkBookHandler, viewModel: MainViewModel = Main
                 FileBtn(
                     "Из файла",
                     onClick = workBookHandler::getRecordsFromFile,
-                    srcPath = viewModel.filename.value.toString(),
+
                     viewModel = viewModel
                 )
                 FileBtn(
                     "С сервера",
                     onClick = workBookHandler::getRecordsFromServer,
-                    srcPath = "",
+
                     viewModel = viewModel
                 )
                 Selector(viewModel)
             }
         }
 
+        val listState = rememberLazyListState()
+        // Remember a CoroutineScope to be able to launch
+        val coroutineScope = rememberCoroutineScope()
+        val lastClickedRecord = viewModel.position.observeAsState(0)
 
-        LazyColumn(
+        Button (
+            onClick = {
+                coroutineScope.launch {
+                    // Animate scroll to the 10th item
+                    listState.animateScrollToItem(index = lastClickedRecord.value)
+                }
+            }
+        ){
+            Text("последнее посещение")
+        }
+
+        LazyColumn(state = listState,
             modifier = Modifier
                 .weight(10F)
                 .padding(10.dp)
@@ -148,7 +173,7 @@ fun Selector(viewModel: MainViewModel) {
                 DropdownMenuItem(onClick = {
                     selectedOptionText = optionText
                     viewModel.onIdChange(optionText)
-                    viewModel.onRecordIdChange(-1)
+                    viewModel.onPositionChange(0)
                     expanded = false
                 }) {
                     Text(text = optionText)
@@ -163,21 +188,16 @@ fun FileBtn(
     title: String,
     viewModel: MainViewModel,
     onClick: (String) -> Unit,
-    srcPath: String
 ) {
-
-    val context = LocalContext.current
     val filename by viewModel.filename.observeAsState("storage/emulated/0/download/control1.xls")
-    val recordId by viewModel.clickedRecordId.observeAsState(-1)
+    val context = LocalContext.current
     ExtendedFloatingActionButton(
         modifier = Modifier.padding(10.dp),
         backgroundColor = Color.LightGray,
         text = { Text(title) },
         onClick = {
-            Log.i("MyLog", "POSITION: ${recordId}")
             try {
-                Log.i("MyLog", filename)
-                onClick(srcPath)
+                onClick(filename)
             } catch (ex: FileNotFoundException) {
                 Toast.makeText(context, "Нет файла!", Toast.LENGTH_SHORT).show()
             }
@@ -192,9 +212,7 @@ fun RecordItem(id: Int, record: RecordDto, viewModel: MainViewModel) {
     Surface(
 
         modifier = Modifier
-            .clickable(onClick = {
-                viewModel.onRecordIdChange(id)
-            })
+            .clickable(onClick = { viewModel.onPositionChange(id) })
             .border(2.dp, Color.LightGray)
             .shadow(5.dp)
     ) {
@@ -248,7 +266,7 @@ fun RecordItem(id: Int, record: RecordDto, viewModel: MainViewModel) {
     Spacer(modifier = Modifier.height(margin))
 }
 
-//@Preview
+@Preview
 @Composable
 fun ShowMainScreen() {
     MainScreen(workBookHandler = WorkBookHandler())

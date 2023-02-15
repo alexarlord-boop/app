@@ -157,6 +157,6 @@ class WorkBookHandler : Parcelable {
         }
     }
 
-    fun getRecordsFromServer() {}
+    fun getRecordsFromServer(connection: String) {}
 
 }
