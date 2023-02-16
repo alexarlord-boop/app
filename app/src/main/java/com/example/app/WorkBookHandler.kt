@@ -6,6 +6,9 @@ import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.ViewModel
 import kotlinx.android.parcel.Parcelize
 import org.apache.poi.ss.usermodel.*
 import java.io.File
@@ -20,8 +23,8 @@ import java.time.format.DateTimeFormatter
 *  You can download from server, modify in local storage and upload to server unique excel file
 *  CRUD methods
 *  ---  */
-@Parcelize
-class WorkBookHandler : Parcelable {
+
+class WorkBookHandler : ViewModel() {
 
 
     val FORMAT = "dd.MM.yyyy"
@@ -32,8 +35,12 @@ class WorkBookHandler : Parcelable {
     //    lateinit var records: MutableList<RecordDto>
     var area = ""
 
-    private val _listOfRecords: MutableList<RecordDto> = mutableStateListOf()
-    val listOfRecords: List<RecordDto> = _listOfRecords
+    private val _listOfRecords: MutableLiveData<List<RecordDto>> = MutableLiveData()
+    val listOfRecords: LiveData<List<RecordDto>> = _listOfRecords
+
+    fun onRecordListChange(newRecords: List<RecordDto>) {
+        _listOfRecords.value = newRecords
+    }
 
 
     fun initHandler() {
@@ -41,7 +48,6 @@ class WorkBookHandler : Parcelable {
         cellStyle = sheet?.getRow(1)?.getCell(8)?.cellStyle
         area = workbook?.getSheetAt(0)?.getRow(1)?.getCell(0)?.stringCellValue.toString()
     }
-
 
 
     private fun readWorkBookFromFile(filename: String): Workbook? {
@@ -70,7 +76,7 @@ class WorkBookHandler : Parcelable {
                     if (!row.isEmpty()) records.add(parseRow(row, position - 1)) else continue
                 }
 
-                _listOfRecords.addAll(records)
+                onRecordListChange(records)
             }
         } catch (ex: FileNotFoundException) {
             throw ex
@@ -145,7 +151,7 @@ class WorkBookHandler : Parcelable {
         dataToRow(position + 1, recordDto)
     }
 
-     fun saveWorkBookToFile(filename: String) {
+    fun saveWorkBookToFile(filename: String) {
         try {
             val file = File(filename)
             if (!file.exists()) {
