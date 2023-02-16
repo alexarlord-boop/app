@@ -90,6 +90,9 @@ fun MainScreen(workBookHandler: WorkBookHandler, viewModel: MainViewModel = Main
     val records = workBookHandler.listOfRecords
     val lastClickedRecord = viewModel.position.observeAsState(0)
 
+    val listState = rememberLazyListState()
+    val coroutineScope = rememberCoroutineScope()
+
     Column {
 
         Surface(
@@ -147,6 +150,38 @@ fun MainScreen(workBookHandler: WorkBookHandler, viewModel: MainViewModel = Main
                 RecordItem(id, record, viewModel)
             }
         }
+        val showButton by remember { derivedStateOf { listState.firstVisibleItemIndex > 0 } }
+        val showLastButton by remember { derivedStateOf { lastClickedRecord.value > 0 } }
+        AnimatedVisibility(
+            visible = showButton,
+            enter = fadeIn(),
+            exit = fadeOut(),
+        ) {
+            Row{
+                Button(modifier = Modifier.padding(10.dp, 0.dp, 0.dp, 0.dp),
+                    onClick = {
+                        coroutineScope.launch {
+                            // Animate scroll to the 10th item
+                            listState.animateScrollToItem(index = 0)
+                        }
+                    }
+                ) {
+                    Text("наверх")
+                }
+                AnimatedVisibility(visible = showLastButton) {
+                    Button(modifier = Modifier.padding(10.dp, 0.dp, 0.dp, 0.dp),
+                        onClick = {
+                            coroutineScope.launch {
+                                // Animate scroll to the 10th item
+                                listState.animateScrollToItem(index = lastClickedRecord.value)
+                            }
+                        }
+                    ) {
+                        Text("последняя запись")
+                    }
+                }
+            }
+        }
     }
 }
 
@@ -200,7 +235,6 @@ fun FileBtn(
         onClick = {
             try {
                 onClick(filename)
-                viewModel.onPositionChange(0)
             } catch (ex: FileNotFoundException) {
                 Toast.makeText(context, "Нет файла!", Toast.LENGTH_SHORT).show()
             }
@@ -212,12 +246,23 @@ fun FileBtn(
 fun RecordItem(id: Int, record: RecordDto, viewModel: MainViewModel) {
     val padding = 5.dp
     val margin = 10.dp
+    val context = LocalContext.current
+    val filename = viewModel.filename.observeAsState("storage/emulated/0/download/control1.xls")
+
     Surface(
 
         modifier = Modifier
-            .clickable(onClick = { viewModel.onPositionChange(id) })
+            .clickable(onClick = {
+                viewModel.onPositionChange(id)
+
+                val intent = Intent(context, RecordActivity::class.java)
+                intent.putExtra("filename", filename.value)
+                intent.putExtra("position", id)
+                intent.putExtra("recordData", record)
+                context.startActivity(intent)
+            })
             .border(2.dp, Color.LightGray)
-            .shadow(5.dp)
+            .shadow(2.dp)
     ) {
         Column(modifier = Modifier.padding(padding)) {
             Row(
