@@ -16,8 +16,12 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowUpward
+import androidx.compose.material.icons.filled.MoveUp
 
 import androidx.compose.runtime.*
 import androidx.compose.runtime.livedata.observeAsState
@@ -25,6 +29,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
@@ -86,7 +91,7 @@ class MainViewModel : ViewModel() {
 
 @Composable
 fun MainScreen(workBookHandler: WorkBookHandler, viewModel: MainViewModel = MainViewModel()) {
-    val records = workBookHandler.listOfRecords
+    val records = workBookHandler.listOfRecords.observeAsState(emptyList())
     val lastClickedRecord = viewModel.position.observeAsState(0)
 
     val listState = rememberLazyListState()
@@ -131,7 +136,7 @@ fun MainScreen(workBookHandler: WorkBookHandler, viewModel: MainViewModel = Main
                     verticalArrangement = Arrangement.Bottom
                 ) {
                     Text(
-                        text = if (records.size != 0) records[0].area else "Район",
+                        text = if (records.value.isNotEmpty()) records.value[0].area else "Район",
                         fontSize = MaterialTheme.typography.h5.fontSize,
                         fontWeight = FontWeight(200)
                     )
@@ -145,7 +150,7 @@ fun MainScreen(workBookHandler: WorkBookHandler, viewModel: MainViewModel = Main
                 .weight(10F)
                 .padding(10.dp)
         ) {
-            itemsIndexed(records) { id, record ->
+            itemsIndexed(records.value) { id, record ->
                 RecordItem(id, record, viewModel)
             }
         }
@@ -156,19 +161,20 @@ fun MainScreen(workBookHandler: WorkBookHandler, viewModel: MainViewModel = Main
             enter = fadeIn(),
             exit = fadeOut(),
         ) {
-            Row{
-                Button(modifier = Modifier.padding(10.dp, 0.dp, 0.dp, 0.dp),
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
+                Button(modifier = Modifier.padding(10.dp, 0.dp, 10.dp, 0.dp),
+                    shape = CircleShape,
                     onClick = {
                         coroutineScope.launch {
-                            // Animate scroll to the 10th item
                             listState.animateScrollToItem(index = 0)
                         }
                     }
                 ) {
-                    Text("наверх")
+                    Icon(Icons.Default.ArrowUpward, contentDescription = null)
                 }
                 AnimatedVisibility(visible = showLastButton) {
-                    Button(modifier = Modifier.padding(10.dp, 0.dp, 0.dp, 0.dp),
+                    Button(modifier = Modifier.padding(10.dp, 0.dp, 10.dp, 0.dp),
+                        shape = CircleShape,
                         onClick = {
                             coroutineScope.launch {
                                 // Animate scroll to the 10th item
@@ -176,7 +182,7 @@ fun MainScreen(workBookHandler: WorkBookHandler, viewModel: MainViewModel = Main
                             }
                         }
                     ) {
-                        Text("последняя запись")
+                        Icon(Icons.Default.MoveUp, contentDescription = null)
                     }
                 }
             }
@@ -313,10 +319,31 @@ fun RecordItem(id: Int, record: RecordDto, viewModel: MainViewModel) {
     Spacer(modifier = Modifier.height(margin))
 }
 
-@Preview
+//@Preview
 @Composable
 fun ShowMainScreen() {
     MainScreen(workBookHandler = WorkBookHandler())
+}
+
+@Composable
+fun UpButton() {
+    Button(modifier = Modifier.padding(10.dp, 0.dp, 10.dp, 0.dp),
+        shape = CircleShape,
+        onClick = {
+//            coroutineScope.launch {
+//                // Animate scroll to the 10th item
+//                listState.animateScrollToItem(index = 0)
+//            }
+        }
+    ) {
+        Icon(Icons.Default.ArrowUpward, contentDescription = null)
+    }
+}
+
+@Preview
+@Composable
+fun showUpButton() {
+    UpButton()
 }
 
 //@Preview
