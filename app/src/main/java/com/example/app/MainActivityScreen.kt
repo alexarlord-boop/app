@@ -91,48 +91,50 @@ fun MainScreen(workBookHandler: WorkBookHandler, viewModel: MainViewModel = Main
     val lastClickedRecord = viewModel.position.observeAsState(0)
 
     Column {
-        Spacer(modifier = Modifier.height(50.dp))
-        Column(
+
+        Surface(
             modifier = Modifier
-                .weight(2F)
-                .fillMaxWidth()
-                .height(100.dp)
-                .padding(10.dp)
+                .height(250.dp)
+                .shadow(5.dp)
         ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
+            Column(
+                modifier = Modifier
+                    .weight(2F)
+                    .fillMaxWidth()
+
+                    .padding(10.dp)
             ) {
-                FileBtn(
-                    "Из файла",
-                    onClick = workBookHandler::getRecordsFromFile,
+                Spacer(modifier = Modifier.height(50.dp))
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    FileBtn(
+                        "Из файла",
+                        onClick = workBookHandler::getRecordsFromFile,
 
-                    viewModel = viewModel
-                )
-                FileBtn(
-                    "С сервера",
-                    onClick = workBookHandler::getRecordsFromServer,
+                        viewModel = viewModel
+                    )
+                    FileBtn(
+                        "С сервера",
+                        onClick = workBookHandler::getRecordsFromServer,
 
-                    viewModel = viewModel
-                )
-                Selector(viewModel)
-            }
-        }
+                        viewModel = viewModel
+                    )
+                    Selector(viewModel)
+                }
 
-        val listState = rememberLazyListState()
-        // Remember a CoroutineScope to be able to launch
-        val coroutineScope = rememberCoroutineScope()
-
-
-        Button(modifier = Modifier.padding(10.dp, 0.dp, 0.dp, 0.dp),
-            onClick = {
-                coroutineScope.launch {
-                    // Animate scroll to the 10th item
-                    listState.animateScrollToItem(index = lastClickedRecord.value)
+                Column(
+                    modifier = Modifier.fillMaxHeight(),
+                    verticalArrangement = Arrangement.Bottom
+                ) {
+                    Text(
+                        text = if (records.size != 0) records[0].area else "Район",
+                        fontSize = MaterialTheme.typography.h5.fontSize,
+                        fontWeight = FontWeight(200)
+                    )
                 }
             }
-        ) {
-            Text(if (lastClickedRecord.value == 0) "наверх" else "последнее посещение")
         }
 
         LazyColumn(
