@@ -79,6 +79,7 @@ class WorkBookHandler : ViewModel() {
                 onRecordListChange(records)
             }
         } catch (ex: FileNotFoundException) {
+            onRecordListChange(emptyList())
             throw ex
         }
 
