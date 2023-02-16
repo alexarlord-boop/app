@@ -39,6 +39,7 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import kotlinx.coroutines.launch
 import java.io.FileNotFoundException
+import java.time.LocalDateTime
 
 class MainActivityScreen : AppCompatActivity() {
     lateinit var area: TextView
@@ -266,7 +267,7 @@ fun RecordItem(id: Int, record: RecordDto, viewModel: MainViewModel) {
                 intent.putExtra("recordData", record)
                 context.startActivity(intent)
             })
-            .border(2.dp, Color.LightGray)
+//            .border(2.dp, Color.LightGray)
             .shadow(2.dp)
     ) {
         Column(modifier = Modifier.padding(padding)) {
@@ -274,42 +275,60 @@ fun RecordItem(id: Int, record: RecordDto, viewModel: MainViewModel) {
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Text(text = record.street, fontSize = MaterialTheme.typography.h6.fontSize)
+                Text(text = record.street.split(" ")[0],
+                    fontSize = MaterialTheme.typography.h6.fontSize,
+                    fontWeight = FontWeight(300))
                 Text(
                     text = record.name,
                     fontSize = MaterialTheme.typography.h6.fontSize,
-                    fontStyle = MaterialTheme.typography.h6.fontStyle
+                    fontWeight = FontWeight(500)
                 )
             }
             Spacer(modifier = Modifier.height(5.dp))
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
+                horizontalArrangement = Arrangement.Start
             ) {
-                Row(modifier = Modifier.weight(5f), horizontalArrangement = Arrangement.Start) {
-                    Text(
-                        modifier = Modifier.weight(5F), text = record.houseNumber.split(".")[0],
-                        fontSize = MaterialTheme.typography.h5.fontSize
+                Row(modifier = Modifier, horizontalArrangement = Arrangement.Start) {
+                    Text(modifier = Modifier, text = "д: ",
+                        fontSize = MaterialTheme.typography.h6.fontSize,
+                        fontWeight = FontWeight(300)
                     )
-                    Spacer(modifier = Modifier.width(15.dp))
                     Text(
-                        modifier = Modifier.weight(5F),
+                        modifier = Modifier, text = record.houseNumber.split(".")[0],
+                        fontSize = MaterialTheme.typography.h6.fontSize
+                    )
+                    Spacer(modifier = Modifier.width(5.dp))
+                    Text(modifier = Modifier, text = "кв: ",
+                        fontSize = MaterialTheme.typography.h6.fontSize,
+                        fontWeight = FontWeight(300)
+                    )
+                    Text(
+                        modifier = Modifier,
                         text = record.flatNumber.toString().split(".")[0],
-                        fontSize = MaterialTheme.typography.h5.fontSize
+                        fontSize = MaterialTheme.typography.h6.fontSize
                     )
                 }
                 Row(
                     modifier = Modifier.weight(5f),
-                    horizontalArrangement = Arrangement.SpaceEvenly
+                    horizontalArrangement = Arrangement.End
                 ) {
+                    Text(modifier = Modifier, text = "день: ",
+                        fontSize = MaterialTheme.typography.h6.fontSize,
+                        fontWeight = FontWeight(300)
+                    )
                     Text(
                         text = record.ko_D.toString().split(".")[0],
-                        fontSize = MaterialTheme.typography.h5.fontSize
+                        fontSize = MaterialTheme.typography.h6.fontSize
                     )
-
+                    Spacer(modifier = Modifier.width(5.dp))
+                    Text(modifier = Modifier, text = "ночь: ",
+                        fontSize = MaterialTheme.typography.h6.fontSize,
+                        fontWeight = FontWeight(300)
+                    )
                     Text(
                         text = record.ko_N.toString().split(".")[0],
-                        fontSize = MaterialTheme.typography.h5.fontSize
+                        fontSize = MaterialTheme.typography.h6.fontSize
                     )
                 }
 
@@ -340,35 +359,35 @@ fun UpButton() {
     }
 }
 
-@Preview
+//@Preview
 @Composable
 fun showUpButton() {
     UpButton()
 }
 
-//@Preview
-//@Composable
-//fun ShowRecord() {
-//
-//    val record = RecordDto(
-//        "Батецкий",
-//        "Звездная",
-//        "43в",
-//        12.0,
-//        1234.0,
-//        "Иванова М.Ф.",
-//        "1234567890",
-//        "12234Ь2344-ывваЦУК 1234",
-//        LocalDateTime.now(),
-//        12345.0,
-//        12345.0,
-//        0.0,
-//        0.0,
-//        "не живут",
-//        34567.0,
-//        -1
-//    )
-//    RecordItem(id = 1, record = record)
-//}
+@Preview
+@Composable
+fun ShowRecord() {
+
+    val record = RecordDto(
+        "Батецкий",
+        "Звездная",
+        "43в",
+        12.0,
+        1234.0,
+        "Иванова М.Ф.",
+        "1234567890",
+        "12234Ь2344-ывваЦУК 1234",
+        LocalDateTime.now(),
+        12345.0,
+        12345.0,
+        0.0,
+        0.0,
+        "не живут",
+        34567.0,
+        -1
+    )
+    RecordItem(id = 1, record = record, MainViewModel())
+}
 
 
