@@ -31,15 +31,18 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import com.google.gson.Gson
 import kotlinx.coroutines.launch
 import java.io.FileNotFoundException
 import java.time.LocalDateTime
+
 
 class MainActivityScreen : AppCompatActivity() {
     lateinit var area: TextView
@@ -89,6 +92,31 @@ class MainViewModel : ViewModel() {
     }
 }
 
+@Preview
+@Composable
+fun showMain() {
+    val record = RecordDto(
+        "Район Интересный",
+        "Сонная",
+        "2",
+        1.0,
+        1234.0,
+        "Обломов И.И.",
+        "1234567890",
+        "12234Ь2344-ывваЦУК 1234",
+        LocalDateTime.now(),
+        12345.0,
+        12345.0,
+        0.0,
+        0.0,
+        "отдыхают",
+        34567.0,
+        -1
+    )
+    val workBookHandler = WorkBookHandler()
+    workBookHandler.onRecordListChange(List(10){ index -> record})
+    MainScreen(workBookHandler = workBookHandler, MainViewModel())
+}
 
 @Composable
 fun MainScreen(workBookHandler: WorkBookHandler, viewModel: MainViewModel = MainViewModel()) {
@@ -264,7 +292,6 @@ fun RecordItem(id: Int, record: RecordDto, viewModel: MainViewModel) {
                 val intent = Intent(context, RecordActivity::class.java)
                 intent.putExtra("filename", filename.value)
                 intent.putExtra("position", id)
-                intent.putExtra("recordData", record)
                 context.startActivity(intent)
             })
 //            .border(2.dp, Color.LightGray)
@@ -298,7 +325,7 @@ fun RecordItem(id: Int, record: RecordDto, viewModel: MainViewModel) {
                         modifier = Modifier, text = record.houseNumber.split(".")[0],
                         fontSize = MaterialTheme.typography.h6.fontSize
                     )
-                    Spacer(modifier = Modifier.width(5.dp))
+                    Spacer(modifier = Modifier.width(10.dp))
                     Text(modifier = Modifier, text = "кв: ",
                         fontSize = MaterialTheme.typography.h6.fontSize,
                         fontWeight = FontWeight(300)
@@ -311,21 +338,16 @@ fun RecordItem(id: Int, record: RecordDto, viewModel: MainViewModel) {
                 }
                 Row(
                     modifier = Modifier.weight(5f),
-                    horizontalArrangement = Arrangement.End
+                    horizontalArrangement = Arrangement.End,
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text(modifier = Modifier, text = "день: ",
-                        fontSize = MaterialTheme.typography.h6.fontSize,
-                        fontWeight = FontWeight(300)
-                    )
+                    Icon(painter = painterResource(id = R.drawable.baseline_dark_mode_24), contentDescription = "")
                     Text(
                         text = record.ko_D.toString().split(".")[0],
                         fontSize = MaterialTheme.typography.h6.fontSize
                     )
-                    Spacer(modifier = Modifier.width(5.dp))
-                    Text(modifier = Modifier, text = "ночь: ",
-                        fontSize = MaterialTheme.typography.h6.fontSize,
-                        fontWeight = FontWeight(300)
-                    )
+                    Spacer(modifier = Modifier.width(10.dp))
+                    Icon(painter = painterResource(id = R.drawable.baseline_dark_mode_24), contentDescription = "")
                     Text(
                         text = record.ko_N.toString().split(".")[0],
                         fontSize = MaterialTheme.typography.h6.fontSize
@@ -365,7 +387,7 @@ fun showUpButton() {
     UpButton()
 }
 
-@Preview
+//@Preview
 @Composable
 fun ShowRecord() {
 
