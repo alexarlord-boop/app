@@ -18,11 +18,15 @@ class RecordActivity : AppCompatActivity() {
         setContentView(R.layout.activity_record)
 
         val position = intent.getIntExtra("position", -1)
-        val passedRecord = intent.getParcelableExtra<RecordDto>("record")
-        Log.i("MyLog", passedRecord.toString())
+        val filename = intent. getStringExtra("filename")!!
+        val lastDate = intent.getStringExtra("lastDate")!!
+        val gson = Gson()
+        val passedRecord = gson.fromJson( intent.getStringExtra("recordData"), RecordDto::class.java)
 
-        val workbookHandler = intent.getParcelableExtra<WorkBookHandler>("workbookHandler")
-        Log.i("MyLog", "${workbookHandler?.area}")
+
+        val workbookHandler = WorkBookHandler()
+        workbookHandler.getRecordsFromFile(filename)
+        passedRecord.lastKoDate = workbookHandler.convertStringToDate(lastDate)
 
         val name: TextView = findViewById(R.id.record_name)
         val puType: TextView = findViewById(R.id.record_pu_type)
