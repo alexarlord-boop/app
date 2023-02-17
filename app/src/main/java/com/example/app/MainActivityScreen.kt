@@ -164,15 +164,15 @@ fun MainScreen(workBookHandler: WorkBookHandler, viewModel: MainViewModel = Main
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    AlertDialog()
+                    AlertDialog(viewModel)
 
-                    if (sourceOption.equals(0)) {
+                    if (sourceOption.value.id == 0) {
                         FileBtn(
                             "Из файла",
                             onClick = workBookHandler::getRecordsFromFile,
                             viewModel = viewModel
                         )
-                    } else if (sourceOption.equals(1)) {
+                    } else if (sourceOption.value.id == 1) {
                         FileBtn(
                             "С сервера",
                             onClick = workBookHandler::getRecordsFromServer,
@@ -243,6 +243,66 @@ fun MainScreen(workBookHandler: WorkBookHandler, viewModel: MainViewModel = Main
     }
 }
 
+@Composable
+fun AlertDialog(viewModel: MainViewModel){
+    MaterialTheme {
+        Column {
+            val openDialog = remember { mutableStateOf(false)  }
+
+            Button(shape = RoundedCornerShape(10.dp),
+                onClick = {
+                openDialog.value = true
+            }) {
+                Text("Иcточник")
+            }
+
+            if (openDialog.value) {
+//            if (true) {
+
+                AlertDialog(
+                    onDismissRequest = {
+                        // Dismiss the dialog when the user clicks outside the dialog or on the back
+                        // button. If you want to disable that functionality, simply use an empty
+                        // onCloseRequest.
+                        openDialog.value = false
+                    },
+                    title = {
+                        Text(text = "Источник данных")
+                    },
+                    text = {
+                        Text("Выберите, откуда ходите получить записи обхода")
+                    },
+                    confirmButton = {
+                        Button(
+
+                            onClick = {
+                                openDialog.value = false
+                                viewModel.onSourceOptionChange(MainViewModel.SourceOption.FILE)
+                            }) {
+                            Text("Зарузить из файла")
+                        }
+                    },
+                    dismissButton = {
+                        Button(
+
+                            onClick = {
+                                openDialog.value = false
+                                viewModel.onSourceOptionChange(MainViewModel.SourceOption.SERVER)
+                            }) {
+                            Text("Скачать с сервера")
+                        }
+                    }
+                )
+            }
+        }
+
+    }
+}
+//@Preview
+@Composable
+fun ShowDialog(){
+    AlertDialog(MainViewModel())
+}
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
 fun Selector(viewModel: MainViewModel) {
