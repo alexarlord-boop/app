@@ -44,6 +44,7 @@ import org.apache.poi.EmptyFileException
 import java.io.FileNotFoundException
 import java.time.LocalDateTime
 
+var FILE_NAME = ""
 
 class MainActivityScreen : AppCompatActivity() {
     lateinit var area: TextView
@@ -59,6 +60,13 @@ class MainActivityScreen : AppCompatActivity() {
 
             MainScreen(workbookHandler)
 
+        }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        if (FILE_NAME.isNotEmpty()) {
+            workbookHandler.getRecordsFromFile(FILE_NAME)
         }
     }
 
