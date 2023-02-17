@@ -16,6 +16,7 @@ import java.io.File
 import java.io.FileInputStream
 import java.io.FileNotFoundException
 import java.io.FileOutputStream
+import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
@@ -44,7 +45,7 @@ class WorkBookHandler : ViewModel() {
     }
 
 
-    fun initHandler() {
+    private fun initHandler() {
         sheet = workbook?.getSheetAt(0)
         cellStyle = sheet?.getRow(1)?.getCell(8)?.cellStyle
         area = workbook?.getSheetAt(0)?.getRow(1)?.getCell(0)?.stringCellValue.toString()
@@ -97,7 +98,7 @@ class WorkBookHandler : ViewModel() {
     }
 
 
-    fun Row.isEmpty(): Boolean {
+    private fun Row.isEmpty(): Boolean {
         return this.getCell(0).stringCellValue.isBlank()
     }
 
@@ -128,6 +129,11 @@ class WorkBookHandler : ViewModel() {
         return date.format(dateTimeFormatter)
     }
 
+    fun convertStringToDate(date: String): LocalDateTime {
+        val dateTimeFormatter = DateTimeFormatter.ofPattern(FORMAT)
+        return LocalDate.parse(date, dateTimeFormatter).atStartOfDay()
+    }
+
     fun dataToRow(position: Int, recordDto: RecordDto) {
         val row = sheet?.createRow(position)
         row?.let {
@@ -152,15 +158,15 @@ class WorkBookHandler : ViewModel() {
             row.createCell(12).setCellValue(recordDto.ko_N)
             row.createCell(13).setCellValue(recordDto.comments)
             row.createCell(14).setCellValue(recordDto.ID)
-
         }
 
 
     }
 
 
-    fun updateRowData(position: Int, recordDto: RecordDto) {
+    fun updateRowData(position: Int, recordDto: RecordDto, filename: String) {
         dataToRow(position + 1, recordDto)
+        saveWorkBookToFile(filename)
     }
 
     fun saveWorkBookToFile(filename: String) {
