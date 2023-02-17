@@ -1,6 +1,7 @@
 package com.example.app
 
 import android.content.Context
+import android.os.Build
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
@@ -10,9 +11,12 @@ import android.widget.Button
 import android.widget.EditText
 import android.widget.TextView
 import android.widget.Toast
+import androidx.annotation.RequiresApi
 import com.google.android.material.textfield.TextInputEditText
+import com.google.gson.Gson
 
 class RecordActivity : AppCompatActivity() {
+    @RequiresApi(Build.VERSION_CODES.TIRAMISU) // !!!!!!!
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_record)
