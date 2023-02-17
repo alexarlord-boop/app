@@ -40,6 +40,7 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import com.google.gson.Gson
 import kotlinx.coroutines.launch
+import org.apache.poi.EmptyFileException
 import java.io.FileNotFoundException
 import java.time.LocalDateTime
 
@@ -269,7 +270,11 @@ fun FileBtn(
         onClick = {
             try {
                 onClick(filename)
-            } catch (ex: FileNotFoundException) {
+            }
+            catch (ex: EmptyFileException) {
+                Toast.makeText(context, "Пустой файл!", Toast.LENGTH_SHORT).show()
+            }
+            catch (ex: FileNotFoundException) {
                 Toast.makeText(context, "Нет файла!", Toast.LENGTH_SHORT).show()
             }
         }

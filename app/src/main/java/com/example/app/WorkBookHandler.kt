@@ -10,6 +10,7 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import kotlinx.android.parcel.Parcelize
+import org.apache.poi.EmptyFileException
 import org.apache.poi.ss.usermodel.*
 import java.io.File
 import java.io.FileInputStream
@@ -56,7 +57,12 @@ class WorkBookHandler : ViewModel() {
             FileInputStream(file).use {
                 return WorkbookFactory.create(it)
             }
-        } catch (ex: FileNotFoundException) {
+        }
+        catch (ex: EmptyFileException){
+            Log.e("MyLog", "${ex.message}")
+            throw ex
+        }
+        catch (ex: FileNotFoundException) {
             Log.e("MyLog", "${ex.message}")
             throw ex
         }
@@ -78,7 +84,12 @@ class WorkBookHandler : ViewModel() {
 
                 onRecordListChange(records)
             }
-        } catch (ex: FileNotFoundException) {
+        }
+        catch (ex: EmptyFileException) {
+            onRecordListChange(emptyList())
+            throw ex
+        }
+        catch (ex: FileNotFoundException) {
             onRecordListChange(emptyList())
             throw ex
         }
