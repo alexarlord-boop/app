@@ -50,11 +50,9 @@ class MainActivityScreen : AppCompatActivity() {
     lateinit var area: TextView
     lateinit var fioHeader: TextView
     var workbookHandler = WorkBookHandler()
-    lateinit var houseHeader: TextView
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
-
         super.onCreate(savedInstanceState)
         setContent {
 
@@ -72,8 +70,15 @@ class MainActivityScreen : AppCompatActivity() {
 
 
 }
-
 class MainViewModel : ViewModel() {
+    enum class SourceOption(val id: Int) {
+        NONE(-1),
+        FILE(0),
+        SERVER(1)
+    }
+
+    private val _sourceOption: MutableLiveData<SourceOption> = MutableLiveData(SourceOption.NONE)
+    val sourceOption: LiveData<SourceOption> = _sourceOption
 
     private val _fileId: MutableLiveData<String> = MutableLiveData("1")
     val fileId: LiveData<String> = _fileId
@@ -84,6 +89,10 @@ class MainViewModel : ViewModel() {
     private val _filename: MutableLiveData<String> =
         MutableLiveData("storage/emulated/0/download/control1.xls")
     val filename: LiveData<String> = _filename
+
+    fun onSourceOptionChange(newSrcOption: SourceOption) {
+        _sourceOption.value = newSrcOption
+    }
 
     fun onPositionChange(newPosition: Int) {
         _position.value = newPosition
@@ -129,6 +138,7 @@ fun showMain() {
 
 @Composable
 fun MainScreen(workBookHandler: WorkBookHandler, viewModel: MainViewModel = MainViewModel()) {
+    val sourceOption = viewModel.sourceOption.observeAsState(MainViewModel.SourceOption.NONE)
     val records = workBookHandler.listOfRecords.observeAsState(emptyList())
     val lastClickedRecord = viewModel.position.observeAsState(0)
 
@@ -154,18 +164,23 @@ fun MainScreen(workBookHandler: WorkBookHandler, viewModel: MainViewModel = Main
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    FileBtn(
-                        "Из файла",
-                        onClick = workBookHandler::getRecordsFromFile,
+                    AlertDialog()
 
-                        viewModel = viewModel
-                    )
-                    FileBtn(
-                        "С сервера",
-                        onClick = workBookHandler::getRecordsFromServer,
+                    if (sourceOption.equals(0)) {
+                        FileBtn(
+                            "Из файла",
+                            onClick = workBookHandler::getRecordsFromFile,
+                            viewModel = viewModel
+                        )
+                    } else if (sourceOption.equals(1)) {
+                        FileBtn(
+                            "С сервера",
+                            onClick = workBookHandler::getRecordsFromServer,
+                            viewModel = viewModel
+                        )
+                    }
 
-                        viewModel = viewModel
-                    )
+
                     Selector(viewModel)
                 }
 
@@ -278,6 +293,7 @@ fun FileBtn(
         onClick = {
             try {
                 onClick(filename)
+                FILE_NAME = filename
             }
             catch (ex: EmptyFileException) {
                 Toast.makeText(context, "Пустой файл!", Toast.LENGTH_SHORT).show()
@@ -305,6 +321,12 @@ fun RecordItem(id: Int, record: RecordDto, viewModel: MainViewModel) {
                 val intent = Intent(context, RecordActivity::class.java)
                 intent.putExtra("filename", filename.value)
                 intent.putExtra("position", id)
+                intent.putExtra(
+                    "lastDate",
+                    WorkBookHandler().convertDateToFormattedString(record.lastKoDate)
+                )
+                val gson = Gson()
+                intent.putExtra("recordData", gson.toJson(record))
                 context.startActivity(intent)
             })
 //            .border(2.dp, Color.LightGray)
