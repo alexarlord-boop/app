@@ -42,7 +42,7 @@ class RecordActivity : AppCompatActivity() {
             name.text = it.name
             puType.text = it.puType
             puNumber.text = it.puNumber
-            lastCheckDate.text = workbookHandler?.convertDateToFormattedString(it.lastKoDate)
+            lastCheckDate.text = workbookHandler.convertDateToFormattedString(it.lastKoDate)
             lastCheckDateDay.text = it.lastKo_D.toString().beforeZeroOrBlank()
             lastCheckDateNight.text = it.lastKo_N.toString().beforeZeroOrBlank()
 
@@ -69,7 +69,7 @@ class RecordActivity : AppCompatActivity() {
                     it.ko_N = if (night != "") night.toDouble() else 0.0
                     it.comments = comments
 
-                    workbookHandler?.updateRowData(position, it)
+                    workbookHandler.updateRowData(position, it, filename)
                     Toast.makeText(this, "Сохранено", Toast.LENGTH_SHORT).show()
                     onBackPressed()
                 }
