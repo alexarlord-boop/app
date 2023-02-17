@@ -162,7 +162,8 @@ fun MainScreen(workBookHandler: WorkBookHandler, viewModel: MainViewModel = Main
                 Spacer(modifier = Modifier.height(50.dp))
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
                     AlertDialog(viewModel)
 
