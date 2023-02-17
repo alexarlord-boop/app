@@ -149,7 +149,7 @@ fun MainScreen(workBookHandler: WorkBookHandler, viewModel: MainViewModel = Main
 
         Surface(
             modifier = Modifier
-                .height(250.dp)
+                .height(200.dp)
                 .shadow(5.dp)
         ) {
             Column(
@@ -258,7 +258,6 @@ fun AlertDialog(viewModel: MainViewModel){
             }
 
             if (openDialog.value) {
-//            if (true) {
 
                 AlertDialog(
                     onDismissRequest = {
@@ -437,7 +436,7 @@ fun RecordItem(id: Int, record: RecordDto, viewModel: MainViewModel) {
                     horizontalArrangement = Arrangement.End,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Icon(painter = painterResource(id = R.drawable.baseline_dark_mode_24), contentDescription = "")
+                    Icon(painter = painterResource(id = R.drawable.baseline_light_mode_24), contentDescription = "")
                     Text(
                         text = record.ko_D.toString().split(".")[0],
                         fontSize = MaterialTheme.typography.h6.fontSize
