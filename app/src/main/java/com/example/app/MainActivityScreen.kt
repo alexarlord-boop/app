@@ -133,8 +133,8 @@ fun showMain() {
         LocalDateTime.now(),
         12345.0,
         12345.0,
-        0.0,
-        0.0,
+        10.0,
+        220.0,
         "отдыхают",
         34567.0,
         -1
@@ -452,13 +452,17 @@ fun RecordItem(id: Int, record: RecordDto, viewModel: MainViewModel) {
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Icon(painter = painterResource(id = R.drawable.baseline_light_mode_24), contentDescription = "")
+                    val fieldValue = record.ko_D
+                    val color = Color(0,200,0)
                     Text(
-                        text = record.ko_D.toString().split(".")[0],
-                        fontSize = MaterialTheme.typography.h6.fontSize
+                        text = fieldValue.toString().split(".")[0],
+                        fontSize = MaterialTheme.typography.h6.fontSize,
+                        color = if (fieldValue > 0) color else Color.Black
                     )
                     Spacer(modifier = Modifier.width(10.dp))
                     Icon(painter = painterResource(id = R.drawable.baseline_dark_mode_24), contentDescription = "")
                     Text(
+                        color = if (fieldValue > 0) color else Color.Black,
                         text = record.ko_N.toString().split(".")[0],
                         fontSize = MaterialTheme.typography.h6.fontSize
                     )
