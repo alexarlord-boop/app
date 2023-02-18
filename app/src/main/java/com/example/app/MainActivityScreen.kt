@@ -387,7 +387,7 @@ fun RecordItem(id: Int, record: RecordDto, viewModel: MainViewModel) {
     val context = LocalContext.current
     val filename = viewModel.filename.observeAsState("storage/emulated/0/download/control1.xls")
 
-    Surface(
+    Card(
 
         modifier = Modifier
             .clickable(onClick = {
@@ -403,9 +403,8 @@ fun RecordItem(id: Int, record: RecordDto, viewModel: MainViewModel) {
                 val gson = Gson()
                 intent.putExtra("recordData", gson.toJson(record))
                 context.startActivity(intent)
-            })
-//            .border(2.dp, Color.LightGray)
-            .shadow(2.dp)
+            }),
+        elevation = 3.dp
     ) {
         Column(modifier = Modifier.padding(padding)) {
             Row(
