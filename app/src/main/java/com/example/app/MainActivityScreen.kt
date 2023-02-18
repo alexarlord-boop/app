@@ -45,18 +45,21 @@ import java.io.FileNotFoundException
 import java.time.LocalDateTime
 
 var FILE_NAME = ""
+var SOURCE_OPTION = MainViewModel.SourceOption.NONE
+var LAST_LIST_POSITION = -1
 
 class MainActivityScreen : AppCompatActivity() {
     lateinit var area: TextView
     lateinit var fioHeader: TextView
     var workbookHandler = WorkBookHandler()
+    var viewModel: MainViewModel = MainViewModel()
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
 
-            MainScreen(workbookHandler)
+            MainScreen(workbookHandler, viewModel)
 
         }
     }
@@ -66,6 +69,7 @@ class MainActivityScreen : AppCompatActivity() {
         if (FILE_NAME.isNotEmpty()) {
             workbookHandler.getRecordsFromFile(FILE_NAME)
         }
+        viewModel.onSourceOptionChange(SOURCE_OPTION)
     }
 
 
@@ -92,16 +96,19 @@ class MainViewModel : ViewModel() {
 
     fun onSourceOptionChange(newSrcOption: SourceOption) {
         _sourceOption.value = newSrcOption
+        SOURCE_OPTION = newSrcOption
     }
 
     fun onPositionChange(newPosition: Int) {
         _position.value = newPosition
+        LAST_LIST_POSITION = newPosition
     }
 
     fun fileChange() {
         _filename.value = filename.value?.split("/")?.toMutableList()?.also {
             it[it.lastIndex] = "control${_fileId.value}.xls"
         }?.joinToString("/")
+        FILE_NAME = filename.value.toString()
     }
 
     fun onIdChange(newId: String) {
@@ -137,10 +144,10 @@ fun showMain() {
 }
 
 @Composable
-fun MainScreen(workBookHandler: WorkBookHandler, viewModel: MainViewModel = MainViewModel()) {
-    val sourceOption = viewModel.sourceOption.observeAsState(MainViewModel.SourceOption.NONE)
+fun MainScreen(workBookHandler: WorkBookHandler, viewModel: MainViewModel) {
+    val sourceOption = viewModel.sourceOption.observeAsState(SOURCE_OPTION)
     val records = workBookHandler.listOfRecords.observeAsState(emptyList())
-    val lastClickedRecord = viewModel.position.observeAsState(0)
+    val lastClicked = viewModel.position.observeAsState(LAST_LIST_POSITION)
 
     val listState = rememberLazyListState()
     val coroutineScope = rememberCoroutineScope()
@@ -209,7 +216,7 @@ fun MainScreen(workBookHandler: WorkBookHandler, viewModel: MainViewModel = Main
             }
         }
         val showButton by remember { derivedStateOf { listState.firstVisibleItemIndex > 0 } }
-        val showLastButton by remember { derivedStateOf { lastClickedRecord.value > 0 } }
+        val showLastButton by remember { derivedStateOf { lastClicked.value > 0 } }
         AnimatedVisibility(
             visible = showButton,
             enter = fadeIn(),
@@ -232,7 +239,7 @@ fun MainScreen(workBookHandler: WorkBookHandler, viewModel: MainViewModel = Main
                         onClick = {
                             coroutineScope.launch {
                                 // Animate scroll to the 10th item
-                                listState.animateScrollToItem(index = lastClickedRecord.value)
+                                listState.animateScrollToItem(index = LAST_LIST_POSITION)
                             }
                         }
                     ) {
@@ -458,7 +465,7 @@ fun RecordItem(id: Int, record: RecordDto, viewModel: MainViewModel) {
 //@Preview
 @Composable
 fun ShowMainScreen() {
-    MainScreen(workBookHandler = WorkBookHandler())
+    MainScreen(workBookHandler = WorkBookHandler(), viewModel = MainViewModel())
 }
 
 @Composable
