@@ -219,22 +219,27 @@ fun MainScreen(workBookHandler: WorkBookHandler, viewModel: MainViewModel) {
         val showButton by remember { derivedStateOf { listState.firstVisibleItemIndex > 0 } }
         val showLastButton by remember { derivedStateOf { lastClicked.value > 0 } }
         AnimatedVisibility(
-            visible = showLastButton,
+            visible = showLastButton || showButton,
             enter = fadeIn(),
             exit = fadeOut(),
         ) {
+
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
-                Button(modifier = Modifier.padding(10.dp, 0.dp, 10.dp, 0.dp),
-                    shape = CircleShape,
-                    onClick = {
-                        coroutineScope.launch {
-                            // Animate scroll to the 10th item
-                            listState.animateScrollToItem(index = LAST_LIST_POSITION)
+                AnimatedVisibility(visible = showLastButton, enter = fadeIn(),
+                    exit = fadeOut(),) {
+                    Button(modifier = Modifier.padding(10.dp, 0.dp, 10.dp, 0.dp),
+                        shape = CircleShape,
+                        onClick = {
+                            coroutineScope.launch {
+                                // Animate scroll to the 10th item
+                                listState.animateScrollToItem(index = LAST_LIST_POSITION)
+                            }
                         }
+                    ) {
+                        Icon(Icons.Default.MoveUp, contentDescription = null)
                     }
-                ) {
-                    Icon(Icons.Default.MoveUp, contentDescription = null)
                 }
+
                 AnimatedVisibility(visible = showButton) {
                     Button(modifier = Modifier.padding(10.dp, 0.dp, 10.dp, 0.dp),
                         shape = CircleShape,
