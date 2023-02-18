@@ -451,15 +451,18 @@ fun RecordItem(id: Int, record: RecordDto, viewModel: MainViewModel) {
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Icon(painter = painterResource(id = R.drawable.baseline_light_mode_24), contentDescription = "")
-                    val fieldValue = record.ko_D
                     val color = Color(0,200,0)
+                    var fieldValue = record.ko_D
                     Text(
                         text = fieldValue.toString().split(".")[0],
                         fontSize = MaterialTheme.typography.h6.fontSize,
                         color = if (fieldValue > 0) color else Color.Black
                     )
+
                     Spacer(modifier = Modifier.width(10.dp))
+
                     Icon(painter = painterResource(id = R.drawable.baseline_dark_mode_24), contentDescription = "")
+                    fieldValue = record.ko_N
                     Text(
                         color = if (fieldValue > 0) color else Color.Black,
                         text = record.ko_N.toString().split(".")[0],
