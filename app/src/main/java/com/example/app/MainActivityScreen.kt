@@ -459,6 +459,7 @@ fun RecordItem(id: Int, record: RecordDto, viewModel: MainViewModel) {
                     Text(
                         text = fieldValue.toString().split(".")[0],
                         fontSize = MaterialTheme.typography.h6.fontSize,
+                        fontWeight = FontWeight(600),
                         color = if (fieldValue > 0) color else Color.Black
                     )
 
@@ -469,7 +470,8 @@ fun RecordItem(id: Int, record: RecordDto, viewModel: MainViewModel) {
                     Text(
                         color = if (fieldValue > 0) color else Color.Black,
                         text = record.ko_N.toString().split(".")[0],
-                        fontSize = MaterialTheme.typography.h6.fontSize
+                        fontSize = MaterialTheme.typography.h6.fontSize,
+                        fontWeight = FontWeight(600),
                     )
                 }
 
