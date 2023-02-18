@@ -46,7 +46,7 @@ import java.time.LocalDateTime
 
 var FILE_NAME = ""
 var SOURCE_OPTION = MainViewModel.SourceOption.NONE
-var LAST_LIST_POSITION = -1
+var LAST_LIST_POSITION = 0
 
 class MainActivityScreen : AppCompatActivity() {
     lateinit var area: TextView
@@ -218,7 +218,7 @@ fun MainScreen(workBookHandler: WorkBookHandler, viewModel: MainViewModel) {
         val showButton by remember { derivedStateOf { listState.firstVisibleItemIndex > 0 } }
         val showLastButton by remember { derivedStateOf { lastClicked.value > 0 } }
         AnimatedVisibility(
-            visible = showButton,
+            visible = showLastButton,
             enter = fadeIn(),
             exit = fadeOut(),
         ) {
@@ -227,23 +227,23 @@ fun MainScreen(workBookHandler: WorkBookHandler, viewModel: MainViewModel) {
                     shape = CircleShape,
                     onClick = {
                         coroutineScope.launch {
-                            listState.animateScrollToItem(index = 0)
+                            // Animate scroll to the 10th item
+                            listState.animateScrollToItem(index = LAST_LIST_POSITION)
                         }
                     }
                 ) {
-                    Icon(Icons.Default.ArrowUpward, contentDescription = null)
+                    Icon(Icons.Default.MoveUp, contentDescription = null)
                 }
-                AnimatedVisibility(visible = showLastButton) {
+                AnimatedVisibility(visible = showButton) {
                     Button(modifier = Modifier.padding(10.dp, 0.dp, 10.dp, 0.dp),
                         shape = CircleShape,
                         onClick = {
                             coroutineScope.launch {
-                                // Animate scroll to the 10th item
-                                listState.animateScrollToItem(index = LAST_LIST_POSITION)
+                                listState.animateScrollToItem(index = 0)
                             }
                         }
                     ) {
-                        Icon(Icons.Default.MoveUp, contentDescription = null)
+                        Icon(Icons.Default.ArrowUpward, contentDescription = null)
                     }
                 }
             }
