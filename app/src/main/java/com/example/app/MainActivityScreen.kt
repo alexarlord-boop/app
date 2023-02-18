@@ -10,6 +10,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -353,10 +354,9 @@ fun FileBtn(
 ) {
     val filename by viewModel.filename.observeAsState("storage/emulated/0/download/control1.xls")
     val context = LocalContext.current
-    ExtendedFloatingActionButton(
+    Button(
         modifier = Modifier.padding(10.dp),
-        backgroundColor = Color.LightGray,
-        text = { Text(title) },
+        shape = RoundedCornerShape(10.dp),
         onClick = {
             try {
                 onClick(filename)
@@ -369,7 +369,9 @@ fun FileBtn(
                 Toast.makeText(context, "Нет файла!", Toast.LENGTH_SHORT).show()
             }
         }
-    )
+    ) {
+        Text(title)
+    }
 }
 
 @Composable
