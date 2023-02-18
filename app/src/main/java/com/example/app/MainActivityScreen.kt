@@ -327,9 +327,9 @@ fun Selector(viewModel: MainViewModel) {
         expanded = true, onExpandedChange = {
             expanded = !expanded
         }, modifier = Modifier
-            .width(100.dp)
-            .padding(10.dp)
-            .border(width = 1.dp, color = Color.Black, shape = RoundedCornerShape(25.dp))
+            .width(80.dp)
+            .padding(5.dp)
+            .border(width = 2.dp, color = Color(R.color.purple_500), shape = RoundedCornerShape(15.dp))
     ) {
 
         ExtendedFloatingActionButton(text = { Text(selectedOptionText) },
