@@ -372,6 +372,7 @@ fun FileBtn(
             }
             catch (ex: FileNotFoundException) {
                 Toast.makeText(context, "Нет файла!", Toast.LENGTH_SHORT).show()
+                viewModel.onPositionChange(0)
             }
         }
     ) {
