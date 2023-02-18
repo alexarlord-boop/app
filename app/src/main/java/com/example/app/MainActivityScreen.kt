@@ -386,6 +386,8 @@ fun RecordItem(id: Int, record: RecordDto, viewModel: MainViewModel) {
     val margin = 10.dp
     val context = LocalContext.current
     val filename = viewModel.filename.observeAsState("storage/emulated/0/download/control1.xls")
+    val lastPosition = viewModel.position.observeAsState(-1)
+    val selected = id == lastPosition.value
 
     Card(
 
@@ -404,6 +406,7 @@ fun RecordItem(id: Int, record: RecordDto, viewModel: MainViewModel) {
                 intent.putExtra("recordData", gson.toJson(record))
                 context.startActivity(intent)
             }),
+        backgroundColor = if (selected) Color.LightGray else Color.White,
         elevation = 3.dp
     ) {
         Column(modifier = Modifier.padding(padding)) {
