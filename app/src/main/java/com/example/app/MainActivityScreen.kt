@@ -189,8 +189,10 @@ fun MainScreen(workBookHandler: WorkBookHandler, viewModel: MainViewModel) {
                         )
                     }
 
-
-                    Selector(viewModel)
+                    val showSelector by remember { derivedStateOf { sourceOption.value.id > -1 } }
+                    AnimatedVisibility(visible = showSelector) {
+                        Selector(viewModel)
+                    }
                 }
 
                 Column(
@@ -329,7 +331,11 @@ fun Selector(viewModel: MainViewModel) {
         }, modifier = Modifier
             .width(80.dp)
             .padding(5.dp)
-            .border(width = 2.dp, color = Color(R.color.purple_500), shape = RoundedCornerShape(15.dp))
+            .border(
+                width = 2.dp,
+                color = Color(R.color.purple_500),
+                shape = RoundedCornerShape(15.dp)
+            )
     ) {
 
         ExtendedFloatingActionButton(text = { Text(selectedOptionText) },
