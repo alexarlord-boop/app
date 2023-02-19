@@ -416,7 +416,7 @@ fun RecordItem(id: Int, record: RecordDto, viewModel: MainViewModel) {
                 intent.putExtra("recordData", gson.toJson(record))
                 context.startActivity(intent)
             }),
-        backgroundColor = if (selected) Color.LightGray else Color.White,
+        backgroundColor = if (selected) Color(0xFFEEECEC) else Color.White,
         elevation = 3.dp
     ) {
         Column(modifier = Modifier.padding(padding)) {
