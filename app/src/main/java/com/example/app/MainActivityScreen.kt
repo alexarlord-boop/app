@@ -47,7 +47,7 @@ import java.time.LocalDateTime
 
 var FILE_NAME = ""
 var SOURCE_OPTION = MainViewModel.SourceOption.NONE
-var LAST_LIST_POSITION = 0
+var LAST_LIST_POSITION = -1
 
 class MainActivityScreen : AppCompatActivity() {
     lateinit var area: TextView
@@ -88,7 +88,7 @@ class MainViewModel : ViewModel() {
     private val _fileId: MutableLiveData<String> = MutableLiveData("1")
     val fileId: LiveData<String> = _fileId
 
-    private var _position: MutableLiveData<Int> = MutableLiveData(0)
+    private var _position: MutableLiveData<Int> = MutableLiveData(-1)
     var position: LiveData<Int> = _position
 
     private val _filename: MutableLiveData<String> =
@@ -378,7 +378,7 @@ fun FileBtn(
             }
             catch (ex: FileNotFoundException) {
                 Toast.makeText(context, "Нет файла!", Toast.LENGTH_SHORT).show()
-                viewModel.onPositionChange(0)
+                viewModel.onPositionChange(-1)
             }
         }
     ) {
