@@ -10,6 +10,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -118,7 +119,7 @@ class MainViewModel : ViewModel() {
     }
 }
 
-@Preview
+//@Preview
 @Composable
 fun showMain() {
     val record = RecordDto(
@@ -318,6 +319,12 @@ fun AlertDialog(viewModel: MainViewModel){
 fun ShowDialog(){
     AlertDialog(MainViewModel())
 }
+
+@Preview
+@Composable
+fun showSelector() {
+    Selector(viewModel = MainViewModel())
+}
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
 fun Selector(viewModel: MainViewModel) {
@@ -330,18 +337,15 @@ fun Selector(viewModel: MainViewModel) {
             expanded = !expanded
         }, modifier = Modifier
             .width(80.dp)
-            .padding(5.dp)
-            .border(
-                width = 2.dp,
-                color = Color(R.color.purple_500),
-                shape = RoundedCornerShape(15.dp)
-            )
     ) {
 
-        ExtendedFloatingActionButton(text = { Text(selectedOptionText) },
+        Button(
             modifier = Modifier.fillMaxWidth(),
-            backgroundColor = Color.White,
-            onClick = { /*TODO*/ })
+            border = BorderStroke(1.dp, color = Color.Black,),
+            colors = ButtonDefaults.buttonColors(backgroundColor = Color.White),
+            onClick = { /*TODO*/ }) {
+            Text(selectedOptionText)
+        }
 
         ExposedDropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
             options.forEach { optionText ->
