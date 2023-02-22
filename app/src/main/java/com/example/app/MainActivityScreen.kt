@@ -286,7 +286,7 @@ fun AlertDialog(viewModel: MainViewModel){
                         Text(text = "Источник данных")
                     },
                     text = {
-                        Text("Выберите, откуда ходите получить записи обхода")
+                        Text("")
                     },
                     confirmButton = {
                         Button(
