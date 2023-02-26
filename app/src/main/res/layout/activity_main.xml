@@ -115,7 +115,7 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"
             android:textSize="20sp"
-            tools:text="" />
+            tools:text="Район" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 

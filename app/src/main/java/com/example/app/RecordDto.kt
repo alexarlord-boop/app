@@ -10,8 +10,7 @@ import java.util.Date
 */
 // TODO: -refactor data types of cells
 
-@Parcelize
-class RecordDto(
+data class RecordDto(
     val area: String,
     val street: String,
     val houseNumber: String,
@@ -29,7 +28,7 @@ class RecordDto(
     val ID: Double,
 
     val positionInView: Int
-) : Parcelable {
+) {
 
     override fun toString(): String {
         return "$area | $houseNumber | $name"
