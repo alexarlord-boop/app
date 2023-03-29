@@ -1,6 +1,7 @@
 package com.example.app
 
 import android.content.Context
+import android.os.Build
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
@@ -10,19 +11,26 @@ import android.widget.Button
 import android.widget.EditText
 import android.widget.TextView
 import android.widget.Toast
+import androidx.annotation.RequiresApi
 import com.google.android.material.textfield.TextInputEditText
+import com.google.gson.Gson
 
 class RecordActivity : AppCompatActivity() {
+    @RequiresApi(Build.VERSION_CODES.TIRAMISU) // !!!!!!!
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_record)
 
         val position = intent.getIntExtra("position", -1)
-        val passedRecord = intent.getParcelableExtra<RecordDto>("record")
-        Log.i("MyLog", passedRecord.toString())
+        val filename = intent. getStringExtra("filename")!!
+        val lastDate = intent.getStringExtra("lastDate")!!
+        val gson = Gson()
+        val passedRecord = gson.fromJson( intent.getStringExtra("recordData"), RecordDto::class.java)
 
-        val workbookHandler = intent.getParcelableExtra<WorkBookHandler>("workbookHandler")
-        Log.i("MyLog", "${workbookHandler?.area}")
+
+        val workbookHandler = WorkBookHandler()
+        workbookHandler.getRecordsFromFile(filename)
+        passedRecord.lastKoDate = workbookHandler.convertStringToDate(lastDate)
 
         val name: TextView = findViewById(R.id.record_name)
         val puType: TextView = findViewById(R.id.record_pu_type)
@@ -38,7 +46,7 @@ class RecordActivity : AppCompatActivity() {
             name.text = it.name
             puType.text = it.puType
             puNumber.text = it.puNumber
-            lastCheckDate.text = workbookHandler?.convertDateToFormattedString(it.lastKoDate)
+            lastCheckDate.text = workbookHandler.convertDateToFormattedString(it.lastKoDate)
             lastCheckDateDay.text = it.lastKo_D.toString().beforeZeroOrBlank()
             lastCheckDateNight.text = it.lastKo_N.toString().beforeZeroOrBlank()
 
@@ -65,7 +73,7 @@ class RecordActivity : AppCompatActivity() {
                     it.ko_N = if (night != "") night.toDouble() else 0.0
                     it.comments = comments
 
-                    workbookHandler?.updateRowData(position, it)
+                    workbookHandler.updateRowData(position, it, filename)
                     Toast.makeText(this, "Сохранено", Toast.LENGTH_SHORT).show()
                     onBackPressed()
                 }
