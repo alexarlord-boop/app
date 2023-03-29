@@ -215,7 +215,7 @@ fun MainScreen(workBookHandler: WorkBookHandler, viewModel: MainViewModel) {
                 .weight(10F)
                 .padding(10.dp)
         ) {
-            itemsIndexed(records.value) { id, record ->
+            itemsIndexed(records.value.sortedBy { it.houseNumber.split("/")[0].filter { it.isDigit() }.toInt() }) { id, record ->
                 RecordItem(id, record, viewModel)
             }
         }
