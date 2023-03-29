@@ -1,15 +1,9 @@
 package com.example.app
 
-import android.os.Parcelable
 import android.util.Log
-import androidx.compose.runtime.MutableState
-import androidx.compose.runtime.State
-import androidx.compose.runtime.mutableStateListOf
-import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
-import kotlinx.android.parcel.Parcelize
 import org.apache.poi.EmptyFileException
 import org.apache.poi.ss.usermodel.*
 import java.io.File
@@ -103,23 +97,30 @@ class WorkBookHandler : ViewModel() {
     }
 
     fun parseRow(row: Row, position: Int): RecordDto {
+
+        val houseFromSource =  row.getCell(2).stringCellValue.trim()
+        val numberToPass = houseFromSource.ifEmpty { "0" }
+
         return RecordDto(
-            row.getCell(0).stringCellValue.trim(),
-            row.getCell(1).stringCellValue.trim(),
-            row.getCell(2).stringCellValue.trim(),
-            row.getCell(3).numericCellValue,
-            row.getCell(4).numericCellValue,
-            row.getCell(5).stringCellValue.trim(),
-            row.getCell(6).stringCellValue.trim(),
-            row.getCell(7).stringCellValue.trim(),
-            row.getCell(8).localDateTimeCellValue,
-            row.getCell(9).numericCellValue,
-            row.getCell(10).numericCellValue,
-            row.getCell(11).numericCellValue,
-            row.getCell(12).numericCellValue,
-            row.getCell(13).stringCellValue.trim(),
-            row.getCell(14).numericCellValue,
-            position
+            area = row.getCell(0).stringCellValue.trim(),
+            street = row.getCell(1).stringCellValue.trim(),
+
+            // setting empty house number to 0
+            houseNumber = numberToPass,
+
+            flatNumber = row.getCell(3).numericCellValue,
+            account = row.getCell(4).numericCellValue,
+            name = row.getCell(5).stringCellValue.trim(),
+            puNumber = row.getCell(6).stringCellValue.trim(),
+            puType = row.getCell(7).stringCellValue.trim(),
+            lastKoDate = row.getCell(8).localDateTimeCellValue,
+            lastKo_D = row.getCell(9).numericCellValue,
+            lastKo_N = row.getCell(10).numericCellValue,
+            ko_D = row.getCell(11).numericCellValue,
+            ko_N = row.getCell(12).numericCellValue,
+            comments = row.getCell(13).stringCellValue.trim(),
+            ID = row.getCell(14).numericCellValue,
+            positionInView = position
         )
 
     }
