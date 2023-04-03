@@ -1,6 +1,15 @@
 package com.example.app
 
+import android.app.PendingIntent
+import android.content.Context
+import android.content.Intent
+import android.net.VpnService
+import android.os.ParcelFileDescriptor
 import android.util.Log
+import androidx.compose.runtime.remember
+import androidx.compose.ui.platform.LocalContext
+import androidx.core.app.ActivityCompat.startActivityForResult
+import androidx.core.app.NotificationCompat
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -182,6 +191,9 @@ class WorkBookHandler : ViewModel() {
         }
     }
 
-    fun getRecordsFromServer(connection: String) {}
+    fun getRecordsFromServer(string: String) {
+        // VPN
+
+    }
 
 }

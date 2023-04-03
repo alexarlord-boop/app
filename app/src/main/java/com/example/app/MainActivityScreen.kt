@@ -1,11 +1,20 @@
 package com.example.app
 
+import android.app.Activity
+import android.app.Activity.RESULT_OK
+import android.app.PendingIntent
+import android.content.Context
 import android.content.Intent
+import android.net.VpnService
+import android.os.Build
 import android.os.Bundle
+import android.os.ParcelFileDescriptor
 import android.util.Log
 import android.widget.TextView
 import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
@@ -37,6 +46,10 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.core.app.ActivityCompat.startActivityForResult
+import androidx.core.app.NotificationCompat
+import androidx.core.content.ContextCompat
+import androidx.core.content.ContextCompat.startForegroundService
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -45,6 +58,7 @@ import kotlinx.coroutines.launch
 import org.apache.poi.EmptyFileException
 import java.io.FileNotFoundException
 import java.time.LocalDateTime
+
 
 var FILE_NAME = ""
 var SOURCE_OPTION = MainViewModel.SourceOption.NONE
@@ -116,6 +130,43 @@ class MainViewModel : ViewModel() {
     fun onIdChange(newId: String) {
         _fileId.value = newId
         fileChange()
+    }
+}
+
+class MyVpnService : VpnService() {
+
+    private var vpnInterface: ParcelFileDescriptor? = null
+
+    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        // Start the VPN connection here
+        startVpn()
+        return START_STICKY
+    }
+
+    private fun startVpn() {
+        // Set up VPN parameters
+        val builder = Builder()
+            .setSession("MyVPNService")
+            .addAddress("10.0.0.2", 32)
+            .addDnsServer("8.8.8.8")
+            .addRoute("0.0.0.0", 0)
+        vpnInterface = builder.establish()
+
+        // Set up a notification to keep the VPN service running in the foreground
+        val notificationIntent = Intent(this, MainActivityScreen::class.java)
+        val pendingIntent = PendingIntent.getActivity(this, 0, notificationIntent, 0)
+        val notification = NotificationCompat.Builder(this, "MyVPNService")
+            .setContentTitle("My VPN Service")
+            .setContentText("Connected")
+            .setSmallIcon(R.drawable.ic_launcher_foreground)
+            .setContentIntent(pendingIntent)
+            .build()
+        startForeground(1, notification)
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        vpnInterface?.close()
     }
 }
 
@@ -262,6 +313,15 @@ fun MainScreen(workBookHandler: WorkBookHandler, viewModel: MainViewModel) {
 
 @Composable
 fun AlertDialog(viewModel: MainViewModel){
+    val context = LocalContext.current
+    val activityResultLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.StartActivityForResult()) { result ->
+        if (result.resultCode == Activity.RESULT_OK) {
+            val vpnIntent = Intent(context, MyVpnService::class.java)
+            startForegroundService(context, vpnIntent)
+        }
+    }
+
     MaterialTheme {
         Column {
             val openDialog = remember { mutableStateOf(false)  }
@@ -294,6 +354,9 @@ fun AlertDialog(viewModel: MainViewModel){
                             onClick = {
                                 openDialog.value = false
                                 viewModel.onSourceOptionChange(MainViewModel.SourceOption.FILE)
+
+
+
                             }) {
                             Text("Зарузить из файла")
                         }
@@ -304,6 +367,13 @@ fun AlertDialog(viewModel: MainViewModel){
                             onClick = {
                                 openDialog.value = false
                                 viewModel.onSourceOptionChange(MainViewModel.SourceOption.SERVER)
+                                val intent = VpnService.prepare(context)
+                                if (intent != null) {
+                                    activityResultLauncher.launch(intent)
+                                } else {
+                                    val vpnIntent = Intent(context, MyVpnService::class.java)
+                                    startForegroundService(context, vpnIntent)
+                                }
                             }) {
                             Text("Скачать с сервера")
                         }
@@ -311,9 +381,42 @@ fun AlertDialog(viewModel: MainViewModel){
                 )
             }
         }
-
     }
 }
+
+
+class MyVpn : VpnService() {
+
+    private var vpnInterface: ParcelFileDescriptor? = null
+
+    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        // Configure the VPN connection
+        val vpnBuilder = Builder()
+        vpnBuilder.setSession(getString(R.string.app_name))
+        vpnBuilder.setMtu(1500)
+        vpnBuilder.addAddress("10.0.0.2", 24)
+        vpnBuilder.addRoute("0.0.0.0", 0)
+        vpnBuilder.addDnsServer("8.8.8.8")
+        vpnBuilder.setBlocking(true)
+        vpnBuilder.setConfigureIntent(PendingIntent.getActivity(this, 0, Intent(this, MainActivityScreen::class.java), 0))
+
+        // Start the VPN connection
+        vpnInterface = vpnBuilder.establish()
+
+        return START_STICKY
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+
+        // Disconnect the VPN connection
+        vpnInterface?.close()
+        vpnInterface = null
+    }
+}
+
+
+
 //@Preview
 @Composable
 fun ShowDialog(){
