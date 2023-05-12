@@ -50,6 +50,9 @@ class WorkBookHandler : ViewModel() {
         _countOfServerRecords.value = newCount
     }
 
+    fun clearList() {
+        onRecordListChange(emptyList())
+    }
 
     private fun initHandler() {
         sheet = workbook?.getSheetAt(0)

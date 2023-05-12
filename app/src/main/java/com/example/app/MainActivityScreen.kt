@@ -6,6 +6,7 @@ import android.content.Intent
 import android.net.VpnService
 import android.os.Bundle
 import android.os.ParcelFileDescriptor
+import android.util.Log
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -51,7 +52,7 @@ import java.io.FileNotFoundException
 
 import java.time.LocalDateTime
 import kotlin.reflect.KFunction1
-
+import kotlin.reflect.KFunction2
 
 var FILE_NAME = ""
 var SOURCE_OPTION = MainViewModel.SourceOption.NONE
@@ -61,6 +62,7 @@ class MainActivityScreen : AppCompatActivity() {
     lateinit var area: TextView
     lateinit var fioHeader: TextView
     var workbookHandler = WorkBookHandler()
+    var serverHandler = ServerHandler()
     var viewModel: MainViewModel = MainViewModel()
 
 
@@ -68,21 +70,29 @@ class MainActivityScreen : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContent {
 
-            MainScreen(workbookHandler, viewModel)
+            MainScreen(workbookHandler, serverHandler, viewModel)
 
         }
     }
 
     override fun onResume() {
         super.onResume()
-        if (FILE_NAME.isNotEmpty()) {
-            workbookHandler.getRecordsFromFile(FILE_NAME)
+        when (SOURCE_OPTION.id) {
+            0 -> {
+                if (FILE_NAME.isNotEmpty()) {
+                    workbookHandler.getRecordsFromFile(FILE_NAME)
+                }
+                viewModel.onSourceOptionChange(SOURCE_OPTION)
+            }
+            1 -> {
+                return
+            }
         }
-        viewModel.onSourceOptionChange(SOURCE_OPTION)
     }
 
 
 }
+
 class MainViewModel : ViewModel() {
     enum class SourceOption(val id: Int) {
         NONE(-1),
@@ -102,7 +112,6 @@ class MainViewModel : ViewModel() {
     private val _filename: MutableLiveData<String> =
         MutableLiveData("storage/emulated/0/download/control1.xls")
     val filename: LiveData<String> = _filename
-
     fun onSourceOptionChange(newSrcOption: SourceOption) {
         _sourceOption.value = newSrcOption
         SOURCE_OPTION = newSrcOption
@@ -113,53 +122,26 @@ class MainViewModel : ViewModel() {
         LAST_LIST_POSITION = newPosition
     }
 
+//    fun fileChange() {
+//        _filename.value = filename.value?.split("/")?.toMutableList()?.also {
+//            it[it.lastIndex] = "control${_fileId.value}.xls"
+//        }?.joinToString("/")
+//        FILE_NAME = filename.value.toString()
+//    }
+
     fun fileChange() {
-        _filename.value = filename.value?.split("/")?.toMutableList()?.also {
-            it[it.lastIndex] = "control${_fileId.value}.xls"
-        }?.joinToString("/")
-        FILE_NAME = filename.value.toString()
+        filename.value?.let { name ->
+            val parts = name.split("/").toMutableList()
+            parts[parts.lastIndex] = "control$_fileId.xls"
+            _filename.value = parts.joinToString("/")
+            FILE_NAME = _filename.value ?: ""
+        }
     }
+
 
     fun onIdChange(newId: String) {
         _fileId.value = newId
         fileChange()
-    }
-}
-
-class MyVpnService : VpnService() {
-
-    private var vpnInterface: ParcelFileDescriptor? = null
-
-    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        // Start the VPN connection here
-        startVpn()
-        return START_STICKY
-    }
-
-    private fun startVpn() {
-        // Set up VPN parameters
-        val builder = Builder()
-            .setSession("MyVPNService")
-            .addAddress("10.0.0.2", 32)
-            .addDnsServer("8.8.8.8")
-            .addRoute("0.0.0.0", 0)
-        vpnInterface = builder.establish()
-
-        // Set up a notification to keep the VPN service running in the foreground
-        val notificationIntent = Intent(this, MainActivityScreen::class.java)
-        val pendingIntent = PendingIntent.getActivity(this, 0, notificationIntent, 0)
-        val notification = NotificationCompat.Builder(this, "MyVPNService")
-            .setContentTitle("My VPN Service")
-            .setContentText("Connected")
-            .setSmallIcon(R.drawable.ic_launcher_foreground)
-            .setContentIntent(pendingIntent)
-            .build()
-        startForeground(1, notification)
-    }
-
-    override fun onDestroy() {
-        super.onDestroy()
-        vpnInterface?.close()
     }
 }
 
@@ -185,18 +167,44 @@ fun showMain() {
         -1
     )
     val workBookHandler = WorkBookHandler()
-    workBookHandler.onRecordListChange(List(10){ index -> record})
-    MainScreen(workBookHandler = workBookHandler, MainViewModel())
+    workBookHandler.onRecordListChange(List(10) { index -> record })
+
+//    MainScreen(workBookHandler = workBookHandler, MainViewModel())
 }
 
 @Composable
-fun MainScreen(workBookHandler: WorkBookHandler, viewModel: MainViewModel) {
+fun MainScreen(
+    workBookHandler: WorkBookHandler,
+    serverHandler: ServerHandler,
+    viewModel: MainViewModel
+) {
     val sourceOption = viewModel.sourceOption.observeAsState(SOURCE_OPTION)
-    val records = workBookHandler.listOfRecords.observeAsState(emptyList())
+    val bookRecords by workBookHandler.listOfRecords.observeAsState(emptyList())
+    val serverRecords by serverHandler.listOfRecords.observeAsState(emptyList())
     val lastClicked = viewModel.position.observeAsState(LAST_LIST_POSITION)
+    val id by viewModel.fileId.observeAsState(1)
 
     val listState = rememberLazyListState()
     val coroutineScope = rememberCoroutineScope()
+    val context = LocalContext.current
+
+    val sortedListToShow = if (sourceOption.value.id == 0) {
+        bookRecords.sortedBy {
+            it.houseNumber.split("/")[0].filter { it.isDigit() }.toInt()
+        }
+    } else {
+        serverRecords.sortedBy {
+            it.houseNumber.split("/")[0].filter { it.isDigit() }.toInt()
+        }
+    }
+
+    if (sourceOption.value.id == 0) {
+        serverHandler.clearList()
+    } else if (sourceOption.value.id == 1) {
+        workBookHandler.clearList()
+    }
+
+    val area = sortedListToShow.firstOrNull()?.area ?: "Район"
 
     Column {
 
@@ -209,7 +217,6 @@ fun MainScreen(workBookHandler: WorkBookHandler, viewModel: MainViewModel) {
                 modifier = Modifier
                     .weight(2F)
                     .fillMaxWidth()
-
                     .padding(10.dp)
             ) {
                 Spacer(modifier = Modifier.height(50.dp))
@@ -227,12 +234,17 @@ fun MainScreen(workBookHandler: WorkBookHandler, viewModel: MainViewModel) {
                             viewModel = viewModel
                         )
                     } else if (sourceOption.value.id == 1) {
-                        val serverHandler = ServerHandler()
-                        ServerBtn(
-                            "С сервера",
-                            onClick = serverHandler::getRecordsFromServer,
-                            viewModel = viewModel
-                        )
+
+                        val url = "https://indman.nokes.ru/engine/IndManDataByListNumber.php?listnumber=$id"
+                        Button(onClick = {
+                            try {
+                                serverHandler.getRecordsFromServer(url)
+                            } catch (e: Exception) {
+                                Toast.makeText(context, "Не удалось загрузить записи", Toast.LENGTH_LONG).show()
+                            }
+                        }) {
+                            Text("С сервера")
+                        }
                     }
 
                     val showSelector by remember { derivedStateOf { sourceOption.value.id > -1 } }
@@ -246,7 +258,7 @@ fun MainScreen(workBookHandler: WorkBookHandler, viewModel: MainViewModel) {
                     verticalArrangement = Arrangement.Bottom
                 ) {
                     Text(
-                        text = if (records.value.isNotEmpty()) records.value[0].area else "Район",
+                        text = area, // area title
                         fontSize = MaterialTheme.typography.h5.fontSize,
                         fontWeight = FontWeight(200)
                     )
@@ -260,9 +272,12 @@ fun MainScreen(workBookHandler: WorkBookHandler, viewModel: MainViewModel) {
                 .weight(10F)
                 .padding(10.dp)
         ) {
-            itemsIndexed(records.value.sortedBy { it.houseNumber.split("/")[0].filter { it.isDigit() }.toInt() }) { id, record ->
+
+            itemsIndexed(sortedListToShow) { id, record ->
                 RecordItem(id, record, viewModel)
             }
+
+
         }
         val showButton by remember { derivedStateOf { listState.firstVisibleItemIndex > 0 } }
         val showLastButton by remember { derivedStateOf { lastClicked.value > 0 } }
@@ -273,13 +288,14 @@ fun MainScreen(workBookHandler: WorkBookHandler, viewModel: MainViewModel) {
         ) {
 
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
-                AnimatedVisibility(visible = showLastButton, enter = fadeIn(),
-                    exit = fadeOut(),) {
+                AnimatedVisibility(
+                    visible = showLastButton, enter = fadeIn(),
+                    exit = fadeOut(),
+                ) {
                     Button(modifier = Modifier.padding(10.dp, 0.dp, 10.dp, 0.dp),
                         shape = CircleShape,
                         onClick = {
                             coroutineScope.launch {
-                                // Animate scroll to the 10th item
                                 listState.animateScrollToItem(index = LAST_LIST_POSITION)
                             }
                         }
@@ -306,24 +322,17 @@ fun MainScreen(workBookHandler: WorkBookHandler, viewModel: MainViewModel) {
 }
 
 @Composable
-fun AlertDialog(viewModel: MainViewModel){
+fun AlertDialog(viewModel: MainViewModel) {
     val context = LocalContext.current
-    val activityResultLauncher = rememberLauncherForActivityResult(
-        ActivityResultContracts.StartActivityForResult()) { result ->
-        if (result.resultCode == Activity.RESULT_OK) {
-            val vpnIntent = Intent(context, MyVpnService::class.java)
-            startForegroundService(context, vpnIntent)
-        }
-    }
 
     MaterialTheme {
         Column {
-            val openDialog = remember { mutableStateOf(false)  }
+            val openDialog = remember { mutableStateOf(false) }
 
             Button(shape = RoundedCornerShape(10.dp),
                 onClick = {
-                openDialog.value = true
-            }) {
+                    openDialog.value = true
+                }) {
                 Text("Иcточник")
             }
 
@@ -331,9 +340,6 @@ fun AlertDialog(viewModel: MainViewModel){
 
                 AlertDialog(
                     onDismissRequest = {
-                        // Dismiss the dialog when the user clicks outside the dialog or on the back
-                        // button. If you want to disable that functionality, simply use an empty
-                        // onCloseRequest.
                         openDialog.value = false
                     },
                     title = {
@@ -344,33 +350,18 @@ fun AlertDialog(viewModel: MainViewModel){
                     },
                     confirmButton = {
                         Button(
-
                             onClick = {
                                 openDialog.value = false
                                 viewModel.onSourceOptionChange(MainViewModel.SourceOption.FILE)
-
-
-
                             }) {
                             Text("Зарузить из файла")
                         }
                     },
                     dismissButton = {
                         Button(
-
                             onClick = {
                                 openDialog.value = false
                                 viewModel.onSourceOptionChange(MainViewModel.SourceOption.SERVER)
-
-
-
-//                                val intent = VpnService.prepare(context)
-//                                if (intent != null) {
-//                                    activityResultLauncher.launch(intent)
-//                                } else {
-//                                    val vpnIntent = Intent(context, MyVpnService::class.java)
-//                                    startForegroundService(context, vpnIntent)
-//                                }
                             }) {
                             Text("Скачать с сервера")
                         }
@@ -382,41 +373,9 @@ fun AlertDialog(viewModel: MainViewModel){
 }
 
 
-class MyVpn : VpnService() {
-
-    private var vpnInterface: ParcelFileDescriptor? = null
-
-    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        // Configure the VPN connection
-        val vpnBuilder = Builder()
-        vpnBuilder.setSession(getString(R.string.app_name))
-        vpnBuilder.setMtu(1500)
-        vpnBuilder.addAddress("10.0.0.2", 24)
-        vpnBuilder.addRoute("0.0.0.0", 0)
-        vpnBuilder.addDnsServer("8.8.8.8")
-        vpnBuilder.setBlocking(true)
-        vpnBuilder.setConfigureIntent(PendingIntent.getActivity(this, 0, Intent(this, MainActivityScreen::class.java), 0))
-
-        // Start the VPN connection
-        vpnInterface = vpnBuilder.establish()
-
-        return START_STICKY
-    }
-
-    override fun onDestroy() {
-        super.onDestroy()
-
-        // Disconnect the VPN connection
-        vpnInterface?.close()
-        vpnInterface = null
-    }
-}
-
-
-
 //@Preview
 @Composable
-fun ShowDialog(){
+fun ShowDialog() {
     AlertDialog(MainViewModel())
 }
 
@@ -425,6 +384,7 @@ fun ShowDialog(){
 fun showSelector() {
     Selector(viewModel = MainViewModel())
 }
+
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
 fun Selector(viewModel: MainViewModel) {
@@ -441,7 +401,7 @@ fun Selector(viewModel: MainViewModel) {
 
         Button(
             modifier = Modifier.fillMaxWidth(),
-            border = BorderStroke(1.dp, color = Color.Black,),
+            border = BorderStroke(1.dp, color = Color.Black),
             colors = ButtonDefaults.buttonColors(backgroundColor = Color.White),
             onClick = { /*TODO*/ }) {
             Text(selectedOptionText)
@@ -476,11 +436,9 @@ fun FileBtn(
             try {
                 onClick(filename)
                 FILE_NAME = filename
-            }
-            catch (ex: EmptyFileException) {
+            } catch (ex: EmptyFileException) {
                 Toast.makeText(context, "Пустой файл!", Toast.LENGTH_SHORT).show()
-            }
-            catch (ex: FileNotFoundException) {
+            } catch (ex: FileNotFoundException) {
                 Toast.makeText(context, "Нет файла!", Toast.LENGTH_SHORT).show()
                 viewModel.onPositionChange(-1)
             }
@@ -490,27 +448,6 @@ fun FileBtn(
     }
 }
 
-@Composable
-fun ServerBtn(title: String, viewModel: MainViewModel,  onClick: KFunction1<String, Unit>) {
-    val id by viewModel.fileId.observeAsState(1)
-
-    val url = "https://indman.nokes.ru/engine/IndManDataByListNumber.php?listnumber=$id"
-    val context = LocalContext.current
-    Button(
-        modifier = Modifier.padding(10.dp),
-        shape = RoundedCornerShape(10.dp),
-        onClick = {
-            try {
-                onClick(url)
-            }
-            catch (ex: EmptyFileException) {
-                Toast.makeText(context, "Ошибка выгрузки", Toast.LENGTH_SHORT).show()
-            }
-        }
-    ) {
-        Text(title)
-    }
-}
 
 @Composable
 fun RecordItem(id: Int, record: RecordDto, viewModel: MainViewModel) {
@@ -546,9 +483,11 @@ fun RecordItem(id: Int, record: RecordDto, viewModel: MainViewModel) {
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Text(text = record.street.split(" ")[0],
+                Text(
+                    text = record.street.split(" ")[0],
                     fontSize = MaterialTheme.typography.h6.fontSize,
-                    fontWeight = FontWeight(300))
+                    fontWeight = FontWeight(300)
+                )
                 Text(
                     text = record.name,
                     fontSize = MaterialTheme.typography.h6.fontSize,
@@ -561,7 +500,8 @@ fun RecordItem(id: Int, record: RecordDto, viewModel: MainViewModel) {
                 horizontalArrangement = Arrangement.Start
             ) {
                 Row(modifier = Modifier, horizontalArrangement = Arrangement.Start) {
-                    Text(modifier = Modifier, text = "д: ",
+                    Text(
+                        modifier = Modifier, text = "д: ",
                         fontSize = MaterialTheme.typography.h6.fontSize,
                         fontWeight = FontWeight(300)
                     )
@@ -570,7 +510,8 @@ fun RecordItem(id: Int, record: RecordDto, viewModel: MainViewModel) {
                         fontSize = MaterialTheme.typography.h6.fontSize
                     )
                     Spacer(modifier = Modifier.width(10.dp))
-                    Text(modifier = Modifier, text = "кв: ",
+                    Text(
+                        modifier = Modifier, text = "кв: ",
                         fontSize = MaterialTheme.typography.h6.fontSize,
                         fontWeight = FontWeight(300)
                     )
@@ -585,7 +526,10 @@ fun RecordItem(id: Int, record: RecordDto, viewModel: MainViewModel) {
                     horizontalArrangement = Arrangement.End,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Icon(painter = painterResource(id = R.drawable.baseline_light_mode_24), contentDescription = "")
+                    Icon(
+                        painter = painterResource(id = R.drawable.baseline_light_mode_24),
+                        contentDescription = ""
+                    )
                     val color = Color(46, 133, 64, 255)
                     var fieldValue = record.ko_D
                     Text(
@@ -597,7 +541,10 @@ fun RecordItem(id: Int, record: RecordDto, viewModel: MainViewModel) {
 
                     Spacer(modifier = Modifier.width(10.dp))
 
-                    Icon(painter = painterResource(id = R.drawable.baseline_dark_mode_24), contentDescription = "")
+                    Icon(
+                        painter = painterResource(id = R.drawable.baseline_dark_mode_24),
+                        contentDescription = ""
+                    )
                     fieldValue = record.ko_N
                     Text(
                         color = if (fieldValue > 0) color else Color.Black,
@@ -616,7 +563,11 @@ fun RecordItem(id: Int, record: RecordDto, viewModel: MainViewModel) {
 //@Preview
 @Composable
 fun ShowMainScreen() {
-    MainScreen(workBookHandler = WorkBookHandler(), viewModel = MainViewModel())
+    MainScreen(
+        workBookHandler = WorkBookHandler(),
+        serverHandler = ServerHandler(),
+        viewModel = MainViewModel()
+    )
 }
 
 @Composable
