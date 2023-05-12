@@ -4,15 +4,20 @@ import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import com.google.gson.GsonBuilder
+import com.google.gson.JsonParser
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import org.apache.poi.EmptyFileException
 import org.apache.poi.ss.usermodel.*
-import java.io.File
-import java.io.FileInputStream
-import java.io.FileNotFoundException
-import java.io.FileOutputStream
+import org.json.JSONObject
+import java.io.*
+import java.net.HttpURLConnection
+import java.net.URL
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
+import java.util.concurrent.Executors
 
 
 /* This class helps manage an excel file
@@ -36,6 +41,13 @@ class WorkBookHandler : ViewModel() {
 
     fun onRecordListChange(newRecords: List<RecordDto>) {
         _listOfRecords.value = newRecords
+    }
+
+    private val _countOfServerRecords: MutableLiveData<Int> = MutableLiveData()
+    val countOfServerRecords: LiveData<Int> = _countOfServerRecords
+
+    fun countOfServerRecordsChange(newCount: Int) {
+        _countOfServerRecords.value = newCount
     }
 
 
@@ -182,6 +194,48 @@ class WorkBookHandler : ViewModel() {
         }
     }
 
-    fun getRecordsFromServer(connection: String) {}
+    fun getRecordsFromServer(string: String) {
+
+        // URL REQUEST
+
+        val executor = Executors.newSingleThreadExecutor()
+        fun sendGetRequest(urlString: String) {
+            executor.execute {
+                try {
+
+                    val url = URL(urlString)
+                    val conn = url.openConnection() as HttpURLConnection
+                    conn.requestMethod = "GET"
+                    conn.setRequestProperty("Accept", "application/json")
+
+
+                    val responseCode = conn.responseCode
+
+                    if (responseCode == HttpURLConnection.HTTP_OK) {
+
+                        val response = conn.inputStream.bufferedReader().use { it.readText() }
+
+                        // Convert raw JSON to pretty JSON using GSON library
+                        val gson = GsonBuilder().setPrettyPrinting().create()
+                        val prettyJson = gson.toJson(JsonParser.parseString(response))
+                        Log.d("Pretty Printed JSON :", prettyJson)
+
+                    } else {
+                        Log.e("Server error", "error")
+                    }
+                    conn.disconnect()
+                } catch (e: Exception) {
+                    println("API ERR")
+                    println(e)
+                }
+            }
+
+        }
+        sendGetRequest(string)
+        executor.shutdown()
+
+
+
+    }
 
 }
