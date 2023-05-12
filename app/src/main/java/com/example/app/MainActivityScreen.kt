@@ -227,9 +227,10 @@ fun MainScreen(workBookHandler: WorkBookHandler, viewModel: MainViewModel) {
                             viewModel = viewModel
                         )
                     } else if (sourceOption.value.id == 1) {
+                        val serverHandler = ServerHandler()
                         ServerBtn(
                             "С сервера",
-                            onClick = workBookHandler::getRecordsFromServer,
+                            onClick = serverHandler::getRecordsFromServer,
                             viewModel = viewModel
                         )
                     }
