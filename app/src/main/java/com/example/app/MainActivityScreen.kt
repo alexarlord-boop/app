@@ -1,17 +1,11 @@
 package com.example.app
 
-import android.app.Activity
-import android.app.PendingIntent
+
 import android.content.Intent
-import android.net.VpnService
 import android.os.Bundle
-import android.os.ParcelFileDescriptor
-import android.util.Log
 import android.widget.TextView
 import android.widget.Toast
-import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
@@ -28,7 +22,6 @@ import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowUpward
 import androidx.compose.material.icons.filled.MoveUp
-
 import androidx.compose.runtime.*
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
@@ -40,8 +33,6 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.core.app.NotificationCompat
-import androidx.core.content.ContextCompat.startForegroundService
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -49,10 +40,8 @@ import com.google.gson.Gson
 import kotlinx.coroutines.launch
 import org.apache.poi.EmptyFileException
 import java.io.FileNotFoundException
-
 import java.time.LocalDateTime
 import kotlin.reflect.KFunction1
-import kotlin.reflect.KFunction2
 
 var FILE_NAME = ""
 var SOURCE_OPTION = MainViewModel.SourceOption.NONE
@@ -205,6 +194,8 @@ fun MainScreen(
     }
 
     val area = sortedListToShow.firstOrNull()?.area ?: "Район"
+    val showButton by remember { derivedStateOf { listState.firstVisibleItemIndex > 0 } }
+    val showLastButton by remember { derivedStateOf { lastClicked.value > 0 } }
 
     Column {
 
@@ -235,12 +226,17 @@ fun MainScreen(
                         )
                     } else if (sourceOption.value.id == 1) {
 
-                        val url = "https://indman.nokes.ru/engine/IndManDataByListNumber.php?listnumber=$id"
+                        val url =
+                            "https://indman.nokes.ru/engine/IndManDataByListNumber.php?listnumber=$id"
                         Button(onClick = {
                             try {
                                 serverHandler.getRecordsFromServer(url)
                             } catch (e: Exception) {
-                                Toast.makeText(context, "Не удалось загрузить записи", Toast.LENGTH_LONG).show()
+                                Toast.makeText(
+                                    context,
+                                    "Не удалось загрузить записи",
+                                    Toast.LENGTH_LONG
+                                ).show()
                             }
                         }) {
                             Text("С сервера")
@@ -279,8 +275,7 @@ fun MainScreen(
 
 
         }
-        val showButton by remember { derivedStateOf { listState.firstVisibleItemIndex > 0 } }
-        val showLastButton by remember { derivedStateOf { lastClicked.value > 0 } }
+
         AnimatedVisibility(
             visible = showLastButton || showButton,
             enter = fadeIn(),
