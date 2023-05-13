@@ -40,6 +40,7 @@ import com.google.gson.Gson
 import kotlinx.coroutines.launch
 import org.apache.poi.EmptyFileException
 import java.io.FileNotFoundException
+import java.net.UnknownHostException
 import java.time.LocalDateTime
 import kotlin.reflect.KFunction1
 
@@ -121,7 +122,7 @@ class MainViewModel : ViewModel() {
     fun fileChange() {
         filename.value?.let { name ->
             val parts = name.split("/").toMutableList()
-            parts[parts.lastIndex] = "control$_fileId.xls"
+            parts[parts.lastIndex] = "control${_fileId.value}.xls"
             _filename.value = parts.joinToString("/")
             FILE_NAME = _filename.value ?: ""
         }
@@ -178,11 +179,11 @@ fun MainScreen(
     val context = LocalContext.current
 
     val sortedListToShow = if (sourceOption.value.id == 0) {
-        bookRecords.sortedBy {
+        bookRecords.sortedBy { it ->
             it.houseNumber.split("/")[0].filter { it.isDigit() }.toInt()
         }
     } else {
-        serverRecords.sortedBy {
+        serverRecords.sortedBy { it ->
             it.houseNumber.split("/")[0].filter { it.isDigit() }.toInt()
         }
     }
@@ -226,18 +227,8 @@ fun MainScreen(
                         )
                     } else if (sourceOption.value.id == 1) {
 
-                        val url =
-                            "https://indman.nokes.ru/engine/IndManDataByListNumber.php?listnumber=$id"
                         Button(onClick = {
-                            try {
-                                serverHandler.getRecordsFromServer(url)
-                            } catch (e: Exception) {
-                                Toast.makeText(
-                                    context,
-                                    "Не удалось загрузить записи",
-                                    Toast.LENGTH_LONG
-                                ).show()
-                            }
+                            serverHandler.getRecordsFromServer(id.toString(), context)
                         }) {
                             Text("С сервера")
                         }
@@ -318,7 +309,6 @@ fun MainScreen(
 
 @Composable
 fun AlertDialog(viewModel: MainViewModel) {
-    val context = LocalContext.current
 
     MaterialTheme {
         Column {
@@ -376,7 +366,7 @@ fun ShowDialog() {
 
 @Preview
 @Composable
-fun showSelector() {
+fun ShowSelector() {
     Selector(viewModel = MainViewModel())
 }
 
@@ -564,51 +554,4 @@ fun ShowMainScreen() {
         viewModel = MainViewModel()
     )
 }
-
-@Composable
-fun UpButton() {
-    Button(modifier = Modifier.padding(10.dp, 0.dp, 10.dp, 0.dp),
-        shape = CircleShape,
-        onClick = {
-//            coroutineScope.launch {
-//                // Animate scroll to the 10th item
-//                listState.animateScrollToItem(index = 0)
-//            }
-        }
-    ) {
-        Icon(Icons.Default.ArrowUpward, contentDescription = null)
-    }
-}
-
-//@Preview
-@Composable
-fun showUpButton() {
-    UpButton()
-}
-
-//@Preview
-@Composable
-fun ShowRecord() {
-
-    val record = RecordDto(
-        "Батецкий",
-        "Звездная",
-        "43в",
-        12.0,
-        1234.0,
-        "Иванова М.Ф.",
-        "1234567890",
-        "12234Ь2344-ывваЦУК 1234",
-        LocalDateTime.now(),
-        12345.0,
-        12345.0,
-        0.0,
-        0.0,
-        "не живут",
-        34567.0,
-        -1
-    )
-    RecordItem(id = 1, record = record, MainViewModel())
-}
-
 

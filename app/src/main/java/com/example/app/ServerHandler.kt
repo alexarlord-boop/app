@@ -1,6 +1,8 @@
 package com.example.app
 
+import android.content.Context
 import android.util.Log
+import android.widget.Toast
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.lifecycle.LiveData
@@ -8,13 +10,11 @@ import androidx.lifecycle.MutableLiveData
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
 import com.google.gson.JsonParser
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
+import kotlinx.coroutines.*
 import java.io.IOException
 import java.net.HttpURLConnection
 import java.net.URL
+import java.net.UnknownHostException
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.util.concurrent.Executors
@@ -36,11 +36,16 @@ class ServerHandler {
         onRecordListChange(emptyList())
     }
 
-    fun getRecordsFromServer(string: String) {
-        viewModelScope.launch {
+    val exceptionHandler = CoroutineExceptionHandler { _, exception ->
+        Log.e("Coroutine", "Caught an exception: $exception")
+    }
+
+    fun getRecordsFromServer(id: String, context: Context) {
+        val path = "storage/emulated/0/download/control$id.json"
+        viewModelScope.launch(exceptionHandler) {
             try {
                 val prettyJson = withContext(Dispatchers.IO) {
-                    val url = URL(string)
+                    val url = URL("https://indman.nokes.ru/engine/IndManDataByListNumber.php?listnumber=$id")
                     val conn = url.openConnection() as HttpURLConnection
                     conn.requestMethod = "GET"
                     conn.setRequestProperty("Accept", "application/json")
@@ -52,15 +57,17 @@ class ServerHandler {
                         throw IOException("HTTP response code: $responseCode")
                     }
                 }
-
                 val records = convertServerListToRecordDtoList(parseRecordsFromJson(prettyJson))
                 onRecordListChange(records)
 
+                IOUtils().saveJsonToFile(prettyJson, path)
 
-
-            } catch (e: Exception) {
-                println("API ERR")
-                Log.e("SERVER", e.toString())
+            Toast.makeText(context, "Загружены записи для контролера $id", Toast.LENGTH_SHORT).show()
+            } catch (e: java.lang.Exception) {
+                Toast.makeText(context, "Сервер недоступен", Toast.LENGTH_SHORT).show()
+                val records = convertServerListToRecordDtoList(parseRecordsFromJson(IOUtils().readJsonFromFile(path)))
+                onRecordListChange(records)
+                Toast.makeText(context, "Загружены скачанные данные", Toast.LENGTH_LONG).show()
             }
         }
     }
@@ -92,7 +99,7 @@ class ServerHandler {
             srv.Person_name,
             srv.AU_number,
             srv.AU_type,
-           LocalDateTime.parse(srv.LastDate.replace("[\t\n]+".toRegex(), " "), formatter),
+            LocalDateTime.parse(srv.LastDate.replace("[\t\n]+".toRegex(), " "), formatter),
             srv.LastDay_value.toDouble(),
             srv.LastNight_value.toDouble(),
             srv.NewDay_value.toDouble(),
