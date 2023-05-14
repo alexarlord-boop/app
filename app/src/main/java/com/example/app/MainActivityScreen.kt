@@ -339,7 +339,7 @@ fun AlertDialog(viewModel: MainViewModel) {
                                 openDialog.value = false
                                 viewModel.onSourceOptionChange(MainViewModel.SourceOption.FILE)
                             }) {
-                            Text("Зарузить из файла")
+                            Text("Excel Файл")
                         }
                     },
                     dismissButton = {
@@ -348,7 +348,7 @@ fun AlertDialog(viewModel: MainViewModel) {
                                 openDialog.value = false
                                 viewModel.onSourceOptionChange(MainViewModel.SourceOption.SERVER)
                             }) {
-                            Text("Скачать с сервера")
+                            Text("Сервер")
                         }
                     }
                 )
