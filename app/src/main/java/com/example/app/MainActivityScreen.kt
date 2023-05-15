@@ -72,10 +72,11 @@ class MainActivityScreen : AppCompatActivity() {
                 if (FILE_NAME.isNotEmpty()) {
                     workbookHandler.getRecordsFromFile(FILE_NAME)
                 }
-                viewModel.onSourceOptionChange(SOURCE_OPTION)
+//                viewModel.onSourceOptionChange(SOURCE_OPTION)
             }
             1 -> {
-                return
+                serverHandler.reloadRecordsFromFile(viewModel.fileId.value.toString(), this)
+                println(serverHandler.listOfRecords.value?.size)
             }
         }
     }
@@ -178,7 +179,7 @@ fun MainScreen(
     val coroutineScope = rememberCoroutineScope()
     val context = LocalContext.current
 
-    val sortedListToShow = if (sourceOption.value.id == 0) {
+    var sortedListToShow = if (sourceOption.value.id == 0) {
         bookRecords.sortedBy { it ->
             it.houseNumber.split("/")[0].filter { it.isDigit() }.toInt()
         }
@@ -187,6 +188,19 @@ fun MainScreen(
             it.houseNumber.split("/")[0].filter { it.isDigit() }.toInt()
         }
     }
+    LaunchedEffect(bookRecords, serverRecords) {
+        sortedListToShow = if (sourceOption.value.id == 0) {
+            bookRecords.sortedBy { it ->
+                it.houseNumber.split("/")[0].filter { it.isDigit() }.toInt()
+            }
+        } else {
+            serverRecords.sortedBy { it ->
+                it.houseNumber.split("/")[0].filter { it.isDigit() }.toInt()
+            }
+        }
+        println(sortedListToShow.size)
+    }
+
 
     if (sourceOption.value.id == 0) {
         serverHandler.clearList()
@@ -439,9 +453,12 @@ fun RecordItem(id: Int, record: RecordDto, viewModel: MainViewModel) {
     val padding = 5.dp
     val margin = 10.dp
     val context = LocalContext.current
-    val filename = viewModel.filename.observeAsState("storage/emulated/0/download/control1.xls")
     val lastPosition = viewModel.position.observeAsState(-1)
     val selected = id == lastPosition.value
+    val fid = viewModel.fileId.observeAsState(0).value
+
+    val sourceOption = viewModel.sourceOption.value?.id
+    val filename = if (sourceOption == 0) "storage/emulated/0/download/control${fid}.xls" else "storage/emulated/0/download/control${fid}.json"
 
     Card(
 
@@ -450,12 +467,15 @@ fun RecordItem(id: Int, record: RecordDto, viewModel: MainViewModel) {
                 viewModel.onPositionChange(id)
 
                 val intent = Intent(context, RecordActivity::class.java)
-                intent.putExtra("filename", filename.value)
+
+                intent.putExtra("filename", filename)
+
                 intent.putExtra("position", id)
                 intent.putExtra(
                     "lastDate",
-                    WorkBookHandler().convertDateToFormattedString(record.lastKoDate)
+                    IOUtils().convertDateToFormattedString(record.lastKoDate)
                 )
+                intent.putExtra("sourceOption", sourceOption.toString())
                 val gson = Gson()
                 intent.putExtra("recordData", gson.toJson(record))
                 context.startActivity(intent)

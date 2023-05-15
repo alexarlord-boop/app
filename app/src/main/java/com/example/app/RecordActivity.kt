@@ -21,17 +21,6 @@ class RecordActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_record)
 
-        val position = intent.getIntExtra("position", -1)
-        val filename = intent. getStringExtra("filename")!!
-        val lastDate = intent.getStringExtra("lastDate")!!
-        val gson = Gson()
-        val passedRecord = gson.fromJson( intent.getStringExtra("recordData"), RecordDto::class.java)
-
-
-        val workbookHandler = WorkBookHandler()
-        workbookHandler.getRecordsFromFile(filename)
-        passedRecord.lastKoDate = workbookHandler.convertStringToDate(lastDate)
-
         val name: TextView = findViewById(R.id.record_name)
         val puType: TextView = findViewById(R.id.record_pu_type)
         val puNumber: TextView = findViewById(R.id.record_pu_number)
@@ -42,19 +31,42 @@ class RecordActivity : AppCompatActivity() {
         val newDataNight: EditText = findViewById(R.id.record_current_check_night)
         val newComments: TextInputEditText = findViewById(R.id.textInputEditText)
 
+        val gson = Gson()
+        val passedRecord = gson.fromJson(intent.getStringExtra("recordData"), RecordDto::class.java)
+
+        var dataHandler: DataHandlerInterface? = null
+
+        val sourceOption = intent.getStringExtra("sourceOption")!!.toInt()
+        val filename = intent.getStringExtra("filename")!!
+        val lastDate = intent.getStringExtra("lastDate")!!
+        println(lastDate)
+
+        when (sourceOption) {
+            0 -> {
+                dataHandler = WorkBookHandler()
+                dataHandler.getRecordsFromFile(filename)
+                passedRecord.lastKoDate = IOUtils().convertStringToDate(lastDate)
+            }
+            1 -> {
+                dataHandler = ServerHandler()
+                // write code here
+                passedRecord.lastKoDate = IOUtils().convertStringToDate(lastDate)
+            }
+        }
+
         passedRecord?.let {
             name.text = it.name
             puType.text = it.puType
             puNumber.text = it.puNumber
-            lastCheckDate.text = workbookHandler.convertDateToFormattedString(it.lastKoDate)
+            lastCheckDate.text = lastDate
             lastCheckDateDay.text = it.lastKo_D.toString().beforeZeroOrBlank()
             lastCheckDateNight.text = it.lastKo_N.toString().beforeZeroOrBlank()
-
-
             newDataDay.setText(it.ko_D.toString().beforeZeroOrBlank())
             newDataNight.setText(it.ko_N.toString().beforeZeroOrBlank())
             newComments.setText(it.comments)
         }
+
+        val position = intent.getIntExtra("position", -1)
 
 
         val saveBtn: Button = findViewById(R.id.save_btn)
@@ -73,8 +85,10 @@ class RecordActivity : AppCompatActivity() {
                     it.ko_N = if (night != "") night.toDouble() else 0.0
                     it.comments = comments
 
-                    workbookHandler.updateRowData(position, it, filename)
-                    Toast.makeText(this, "Сохранено", Toast.LENGTH_SHORT).show()
+                    if (dataHandler != null) {
+                        dataHandler.updateRowData(position, it, filename)
+                        Toast.makeText(this, "Сохранено", Toast.LENGTH_SHORT).show()
+                    }
                     onBackPressed()
                 }
             } else {
