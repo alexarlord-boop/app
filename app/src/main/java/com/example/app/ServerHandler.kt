@@ -20,7 +20,10 @@ import java.time.format.DateTimeFormatter
 import java.util.concurrent.Executors
 
 
-class ServerHandler {
+class ServerHandler: DataHandlerInterface {
+
+    val formatter: DateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS")
+
 
     private val viewModelScope = CoroutineScope(Dispatchers.Main)
 
@@ -59,23 +62,28 @@ class ServerHandler {
                 }
                 val records = convertServerListToRecordDtoList(parseRecordsFromJson(prettyJson))
                 onRecordListChange(records)
-
                 IOUtils().saveJsonToFile(prettyJson, path)
+                println(records.size)
 
             Toast.makeText(context, "Загружены записи для контролера $id", Toast.LENGTH_SHORT).show()
             } catch (e: java.lang.Exception) {
+                println(e.message)
                 Toast.makeText(context, "Сервер недоступен", Toast.LENGTH_SHORT).show()
-                val records = convertServerListToRecordDtoList(parseRecordsFromJson(IOUtils().readJsonFromFile(path)))
-                onRecordListChange(records)
-                Toast.makeText(context, "Загружены скачанные данные", Toast.LENGTH_LONG).show()
+                reloadRecordsFromFile(id, context)
             }
         }
     }
 
+    fun reloadRecordsFromFile(id: String, context: Context) {
+        val path = "storage/emulated/0/download/control$id.json"
+        val records = convertServerListToRecordDtoList(parseRecordsFromJson(IOUtils().readJsonFromFile(path)))
+        onRecordListChange(records)
+        Toast.makeText(context, "Загружены скачанные данные", Toast.LENGTH_LONG).show()
+    }
 
-    fun parseRecordsFromJson(json: String): List<ServerRecord> {
+    fun parseRecordsFromJson(json: String): MutableList<ServerRecord> {
         val gson = Gson()
-        return gson.fromJson(json, Array<ServerRecord>::class.java).toList()
+        return gson.fromJson(json, Array<ServerRecord>::class.java).toMutableList()
     }
 
     fun getRecordFromJson(json: String): ServerRecord {
@@ -83,12 +91,16 @@ class ServerHandler {
         return gson.fromJson(json, ServerRecord::class.java)
     }
 
+    fun getJsonFromRecord(record: ServerRecord): String {
+        val gson = Gson()
+        return gson.toJson(record)
+    }
+
     fun convertServerListToRecordDtoList(serverRecords: List<ServerRecord>): List<RecordDto> {
         return serverRecords.map { it -> convertServerRecordToRecordDto(it) }
     }
 
     fun convertServerRecordToRecordDto(srv: ServerRecord): RecordDto {
-        val formatter: DateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS")
 
         return RecordDto(
             srv.Area_name,
@@ -109,6 +121,28 @@ class ServerHandler {
             -1
         )
     }
+
+    override fun updateRowData(position: Int, recordDto: RecordDto, filename: String) {
+        // update serverDto -> json -> include in full json -> save to file
+
+        val json = IOUtils().readJsonFromFile(filename)
+        val records = parseRecordsFromJson(json).sortedBy { it ->
+            it.House_name.split("/")[0].filter { it.isDigit() }.toInt()
+        }.toMutableList()
+
+        val oldRecord = records[position]
+
+        oldRecord.Comments = recordDto.comments
+        oldRecord.NewDay_value = recordDto.ko_D.toString()
+        oldRecord.NewNight_value = recordDto.ko_N.toString()
+        oldRecord.NewDate = LocalDateTime.now().toString().replace("T", " ")
+
+        records[position] = oldRecord
+
+        val newJson = IOUtils().listToJson(records)
+        IOUtils().saveJsonToFile(newJson, filename)
+
+    }
 }
 
 data class ServerRecord(
@@ -125,15 +159,16 @@ data class ServerRecord(
     val House_name: String,
     val Flat_number: String,
     val Person_name: String,
-    val Comments: String,
+    var Comments: String,
     val LastDate: String,
-    val NewDate: String,
+    var NewDate: String,
     val LastDay_value: String,
     val LastNight_value: String,
-    val NewDay_value: String,
-    val NewNight_value: String
+    var NewDay_value: String,
+    var NewNight_value: String
 
 ) {
+
     override fun toString(): String {
         return "ServerRecord(ListNumber='$ListNumber', ListDate='$ListDate', Source='$Source', Staff_Lnk='$Staff_Lnk', Staff_Name='$Staff_Name', AccountUnit_Lnk='$AccountUnit_Lnk', AU_number='$AU_number', AU_type='$AU_type', Area_name='$Area_name', Street_name='$Street_name', House_name='$House_name', Flat_number='$Flat_number', Person_name='$Person_name', Comments='$Comments', LastDate='$LastDate', NewDate='$NewDate', LastDay_value='$LastDay_value', LastNight_value='$LastNight_value', NewDay_value='$NewDay_value', NewNight_value='$NewNight_value')"
     }

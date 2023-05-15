@@ -25,10 +25,9 @@ import java.util.concurrent.Executors
 *  CRUD methods
 *  ---  */
 
-class WorkBookHandler : ViewModel() {
+class WorkBookHandler : ViewModel(), DataHandlerInterface {
 
 
-    val FORMAT = "dd.MM.yyyy"
     var workbook: Workbook? = null
     var sheet: Sheet? = null
     var cellStyle: CellStyle? = null
@@ -140,15 +139,7 @@ class WorkBookHandler : ViewModel() {
 
     }
 
-    fun convertDateToFormattedString(date: LocalDateTime): String {
-        val dateTimeFormatter = DateTimeFormatter.ofPattern(FORMAT)
-        return date.format(dateTimeFormatter)
-    }
 
-    fun convertStringToDate(date: String): LocalDateTime {
-        val dateTimeFormatter = DateTimeFormatter.ofPattern(FORMAT)
-        return LocalDate.parse(date, dateTimeFormatter).atStartOfDay()
-    }
 
     fun dataToRow(position: Int, recordDto: RecordDto) {
         val row = sheet?.createRow(position)
@@ -180,7 +171,7 @@ class WorkBookHandler : ViewModel() {
     }
 
 
-    fun updateRowData(position: Int, recordDto: RecordDto, filename: String) {
+    override fun updateRowData(position: Int, recordDto: RecordDto, filename: String) {
         dataToRow(position + 1, recordDto)
         saveWorkBookToFile(filename)
     }
