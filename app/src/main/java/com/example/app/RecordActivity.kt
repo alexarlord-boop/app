@@ -77,26 +77,23 @@ class RecordActivity : AppCompatActivity() {
             val inputDay = checkInput(lastCheckDateDay.text.toString(), day)
             val inputNight = checkInput(lastCheckDateNight.text.toString(), night)
 
-            if (inputDay && inputNight) {
-                val comments = newComments.text.toString()
+            when {
+                !inputDay -> newDataDay.error = "Значение должно быть не меньше предыдущего"
+                !inputNight -> newDataNight.error = "Значение должно быть не меньше предыдущего"
+                day.length > 6 -> newDataDay.error = "Значение не должно превышать лимит"
+                night.length > 6 -> newDataNight.error = "Значение не должно превышать лимит"
+                else -> {
+                    passedRecord?.let { record ->
+                        record.ko_D = day.toDoubleOrNull() ?: 0.0
+                        record.ko_N = night.toDoubleOrNull() ?: 0.0
+                        record.comments = newComments.text.toString()
 
-                passedRecord?.also {
-                    it.ko_D = if (day != "") day.toDouble() else 0.0
-                    it.ko_N = if (night != "") night.toDouble() else 0.0
-                    it.comments = comments
-
-                    if (dataHandler != null) {
-                        dataHandler.updateRowData(position, it, filename)
-                        Toast.makeText(this, "Сохранено", Toast.LENGTH_SHORT).show()
+                        dataHandler?.let { handler ->
+                            handler.updateRowData(position, record, filename)
+                            Toast.makeText(this, "Сохранено", Toast.LENGTH_SHORT).show()
+                            onBackPressed()
+                        }
                     }
-                    onBackPressed()
-                }
-            } else {
-                if (!inputDay) {
-                    newDataDay.error = "Значение должно быть не меньше предыдущего"
-                }
-                if (!inputNight) {
-                    newDataNight.error = "Значение должно быть не меньше предыдущего"
                 }
             }
         }
