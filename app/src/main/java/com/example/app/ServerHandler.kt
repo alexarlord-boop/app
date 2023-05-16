@@ -11,6 +11,7 @@ import com.google.gson.Gson
 import com.google.gson.GsonBuilder
 import com.google.gson.JsonParser
 import kotlinx.coroutines.*
+import java.io.File
 import java.io.IOException
 import java.net.HttpURLConnection
 import java.net.URL
@@ -43,29 +44,39 @@ class ServerHandler: DataHandlerInterface {
         Log.e("Coroutine", "Caught an exception: $exception")
     }
 
+    suspend fun fetchDataFromServer(urlString: String): String {
+        val url = URL(urlString)
+        val conn = withContext(Dispatchers.IO) {
+            url.openConnection()
+        } as HttpURLConnection
+        conn.requestMethod = "GET"
+        conn.setRequestProperty("Accept", "application/json")
+
+        val responseCode = conn.responseCode
+        if (responseCode == HttpURLConnection.HTTP_OK) {
+            return conn.inputStream.bufferedReader().use { it.readText() }
+        } else {
+            throw IOException("HTTP response code: $responseCode")
+        }
+    }
+
+
     fun getRecordsFromServer(id: String, context: Context) {
         val path = "storage/emulated/0/download/control$id.json"
+        val urlString = "https://indman.nokes.ru/engine/IndManDataByListNumber.php?listnumber=$id"
         viewModelScope.launch(exceptionHandler) {
             try {
-                val prettyJson = withContext(Dispatchers.IO) {
-                    val url = URL("https://indman.nokes.ru/engine/IndManDataByListNumber.php?listnumber=$id")
-                    val conn = url.openConnection() as HttpURLConnection
-                    conn.requestMethod = "GET"
-                    conn.setRequestProperty("Accept", "application/json")
-
-                    val responseCode = conn.responseCode
-                    if (responseCode == HttpURLConnection.HTTP_OK) {
-                        conn.inputStream.bufferedReader().use { it.readText() }
-                    } else {
-                        throw IOException("HTTP response code: $responseCode")
+                if (File(path).exists()) {
+                    reloadRecordsFromFile(id, context)
+                } else {
+                    val prettyJson = withContext(Dispatchers.IO) {
+                        fetchDataFromServer(urlString)
                     }
+                    val records = convertServerListToRecordDtoList(parseRecordsFromJson(prettyJson))
+                    onRecordListChange(records)
+                    IOUtils().saveJsonToFile(prettyJson, path)
+                    Toast.makeText(context, "Загружены записи для контролера $id", Toast.LENGTH_SHORT).show()
                 }
-                val records = convertServerListToRecordDtoList(parseRecordsFromJson(prettyJson))
-                onRecordListChange(records)
-                IOUtils().saveJsonToFile(prettyJson, path)
-                println(records.size)
-
-            Toast.makeText(context, "Загружены записи для контролера $id", Toast.LENGTH_SHORT).show()
             } catch (e: java.lang.Exception) {
                 println(e.message)
                 Toast.makeText(context, "Сервер недоступен", Toast.LENGTH_SHORT).show()
@@ -73,6 +84,7 @@ class ServerHandler: DataHandlerInterface {
             }
         }
     }
+
 
     fun reloadRecordsFromFile(id: String, context: Context) {
         val path = "storage/emulated/0/download/control$id.json"
