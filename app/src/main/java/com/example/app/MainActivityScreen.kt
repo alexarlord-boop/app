@@ -37,9 +37,13 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import com.google.gson.Gson
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import org.apache.poi.EmptyFileException
 import java.io.FileNotFoundException
+import java.io.IOException
 import java.net.UnknownHostException
 import java.time.LocalDateTime
 import kotlin.reflect.KFunction1
@@ -94,7 +98,7 @@ class MainViewModel : ViewModel() {
     private val _sourceOption: MutableLiveData<SourceOption> = MutableLiveData(SourceOption.NONE)
     val sourceOption: LiveData<SourceOption> = _sourceOption
 
-    private val _fileId: MutableLiveData<String> = MutableLiveData("1")
+    private val _fileId: MutableLiveData<String> = MutableLiveData("0")
     val fileId: LiveData<String> = _fileId
 
     private var _position: MutableLiveData<Int> = MutableLiveData(-1)
@@ -103,6 +107,10 @@ class MainViewModel : ViewModel() {
     private val _filename: MutableLiveData<String> =
         MutableLiveData("storage/emulated/0/download/control1.xls")
     val filename: LiveData<String> = _filename
+
+    private val _controllerId: MutableLiveData<String> = MutableLiveData("0")
+    var controllerId: LiveData<String> = _controllerId
+
     fun onSourceOptionChange(newSrcOption: SourceOption) {
         _sourceOption.value = newSrcOption
         SOURCE_OPTION = newSrcOption
@@ -133,6 +141,10 @@ class MainViewModel : ViewModel() {
     fun onIdChange(newId: String) {
         _fileId.value = newId
         fileChange()
+    }
+
+    fun onControllerChange(id: String) {
+        _controllerId.value = id
     }
 }
 
@@ -387,7 +399,19 @@ fun ShowSelector() {
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
 fun Selector(viewModel: MainViewModel) {
-    val options = listOf("1", "2", "3", "4", "5")
+    val context = LocalContext.current
+    val coroutineScope = rememberCoroutineScope()
+    val options = listOf("1", "2", "3", "4", "5") // get from server ???
+//    var options by remember { mutableStateOf(listOf("-")) }
+
+//    LaunchedEffect(Unit) {
+//        // Call the suspending function within the coroutine scope
+//        options = coroutineScope.async { // or withContext(Dispatchers.IO) for blocking calls
+//            ServerHandler().gerControllersFromServer().map { it -> it.Staff_Lnk }
+//        }.await()
+//    }
+
+
     var expanded by remember { mutableStateOf(false) }
     var selectedOptionText by remember { mutableStateOf(options[0]) }
 
@@ -458,7 +482,8 @@ fun RecordItem(id: Int, record: RecordDto, viewModel: MainViewModel) {
     val fid = viewModel.fileId.observeAsState(0).value
 
     val sourceOption = viewModel.sourceOption.value?.id
-    val filename = if (sourceOption == 0) "storage/emulated/0/download/control${fid}.xls" else "storage/emulated/0/download/control${fid}.json"
+    val filename =
+        if (sourceOption == 0) "storage/emulated/0/download/control${fid}.xls" else "storage/emulated/0/download/control${fid}.json"
 
     Card(
 

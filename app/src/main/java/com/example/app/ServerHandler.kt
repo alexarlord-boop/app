@@ -75,7 +75,11 @@ class ServerHandler: DataHandlerInterface {
                     val records = convertServerListToRecordDtoList(parseRecordsFromJson(prettyJson))
                     onRecordListChange(records)
                     IOUtils().saveJsonToFile(prettyJson, path)
-                    Toast.makeText(context, "Загружены записи для контролера $id", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(
+                        context,
+                        "Загружены записи для контролера $id",
+                        Toast.LENGTH_SHORT
+                    ).show()
                 }
             } catch (e: java.lang.Exception) {
                 println(e.message)
@@ -85,10 +89,25 @@ class ServerHandler: DataHandlerInterface {
         }
     }
 
+    data class Controller(val Staff_Lnk: String, val Staff_Name: String) {}
+
+    suspend fun gerControllersFromServer(): List<Controller> {
+        val gson = Gson()
+        val urlString = "https://indman.nokes.ru/engine/IndManListsStaffOnly.php"
+        try {
+            val controllers = withContext(Dispatchers.IO) {
+                fetchDataFromServer(urlString)
+            }
+            return gson.fromJson(controllers, Array<Controller>::class.java).toMutableList().filter { it.Staff_Lnk != "0" }
+        } catch (e: IOException) {
+            return listOf(Controller("-", "-"))
+        }
+    }
 
     fun reloadRecordsFromFile(id: String, context: Context) {
         val path = "storage/emulated/0/download/control$id.json"
-        val records = convertServerListToRecordDtoList(parseRecordsFromJson(IOUtils().readJsonFromFile(path)))
+        val records =
+            convertServerListToRecordDtoList(parseRecordsFromJson(IOUtils().readJsonFromFile(path)))
         onRecordListChange(records)
         Toast.makeText(context, "Загружены скачанные данные", Toast.LENGTH_LONG).show()
     }
@@ -184,4 +203,8 @@ data class ServerRecord(
     override fun toString(): String {
         return "ServerRecord(ListNumber='$ListNumber', ListDate='$ListDate', Source='$Source', Staff_Lnk='$Staff_Lnk', Staff_Name='$Staff_Name', AccountUnit_Lnk='$AccountUnit_Lnk', AU_number='$AU_number', AU_type='$AU_type', Area_name='$Area_name', Street_name='$Street_name', House_name='$House_name', Flat_number='$Flat_number', Person_name='$Person_name', Comments='$Comments', LastDate='$LastDate', NewDate='$NewDate', LastDay_value='$LastDay_value', LastNight_value='$LastNight_value', NewDay_value='$NewDay_value', NewNight_value='$NewNight_value')"
     }
+}
+
+suspend fun main() {
+    ServerHandler().gerControllersFromServer()
 }
