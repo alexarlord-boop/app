@@ -1,7 +1,11 @@
 package com.example.app
 
 
+import android.content.Context
 import android.content.Intent
+import android.icu.text.CaseMap.Title
+import android.net.ConnectivityManager
+import android.net.NetworkCapabilities
 import android.os.Bundle
 import android.widget.TextView
 import android.widget.Toast
@@ -37,10 +41,7 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import com.google.gson.Gson
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.async
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
+import kotlinx.coroutines.*
 import org.apache.poi.EmptyFileException
 import java.io.FileNotFoundException
 import java.io.IOException
@@ -91,7 +92,7 @@ class MainActivityScreen : AppCompatActivity() {
 //                viewModel.onSourceOptionChange(SOURCE_OPTION)
             }
             1 -> {
-                serverHandler.reloadRecordsFromFile(viewModel.fileId.value.toString(), this)
+                serverHandler.reloadRecordsFromFile(viewModel.fileId.value.toString(), viewModel.stateId.value.toString(),this)
                 println(serverHandler.listOfRecords.value?.size)
             }
         }
@@ -110,8 +111,11 @@ class MainViewModel : ViewModel() {
     private val _sourceOption: MutableLiveData<SourceOption> = MutableLiveData(SourceOption.NONE)
     val sourceOption: LiveData<SourceOption> = _sourceOption
 
-    private val _fileId: MutableLiveData<String> = MutableLiveData("0")
+    private val _fileId: MutableLiveData<String> = MutableLiveData("1")
     val fileId: LiveData<String> = _fileId
+
+    private val _stateId: MutableLiveData<String> = MutableLiveData("0")
+    val stateId: LiveData<String> = _stateId
 
     private var _position: MutableLiveData<Int> = MutableLiveData(-1)
     var position: LiveData<Int> = _position
@@ -158,6 +162,10 @@ class MainViewModel : ViewModel() {
     fun onControllerChange(id: String) {
         _controllerId.value = id
     }
+
+    fun onStateIdChange(newId: String) {
+        _stateId.value = newId
+    }
 }
 
 //@Preview
@@ -198,6 +206,7 @@ fun MainScreen(
     val serverRecords by serverHandler.listOfRecords.observeAsState(emptyList())
     val lastClicked = viewModel.position.observeAsState(LAST_LIST_POSITION)
     val id by viewModel.fileId.observeAsState(1)
+    val stateId by viewModel.stateId.observeAsState("0")
 
     val listState = rememberLazyListState()
     val coroutineScope = rememberCoroutineScope()
@@ -266,7 +275,7 @@ fun MainScreen(
                     } else if (sourceOption.value.id == 1) {
 
                         Button(onClick = {
-                            serverHandler.getRecordsFromServer(id.toString(), context)
+                            serverHandler.getRecordsFromServer(id.toString(), stateId.toString(), context)
                         }) {
                             Text("С сервера")
                         }
@@ -274,7 +283,7 @@ fun MainScreen(
 
                     val showSelector by remember { derivedStateOf { sourceOption.value.id > -1 } }
                     AnimatedVisibility(visible = showSelector) {
-                        Selector(viewModel)
+                        Selector(viewModel, serverHandler)
                     }
                 }
 
@@ -402,30 +411,74 @@ fun ShowDialog() {
     AlertDialog(MainViewModel())
 }
 
-@Preview
-@Composable
-fun ShowSelector() {
-    Selector(viewModel = MainViewModel())
-}
 
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
-fun Selector(viewModel: MainViewModel) {
+fun Selector(viewModel: MainViewModel, serverHandler: ServerHandler) {
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
-    val options = listOf("1", "2", "3", "4", "5") // get from server ???
-//    var options by remember { mutableStateOf(listOf("-")) }
-
-//    LaunchedEffect(Unit) {
-//        // Call the suspending function within the coroutine scope
-//        options = coroutineScope.async { // or withContext(Dispatchers.IO) for blocking calls
-//            ServerHandler().gerControllersFromServer().map { it -> it.Staff_Lnk }
-//        }.await()
-//    }
-
-
+    val cs = CoroutineScope(Dispatchers.Main)
     var expanded by remember { mutableStateOf(false) }
-    var selectedOptionText by remember { mutableStateOf(options[0]) }
+    var selectedOptionText by remember { mutableStateOf("id") }
+    var fetchedData by remember { mutableStateOf(emptyList<ServerHandler.RecordStatement>()) }
+    var isDialogVisible by remember { mutableStateOf(false) }
+
+    val id by viewModel.fileId.observeAsState("1") // TODO:- check the value
+    val stateId by viewModel.stateId.observeAsState("0")
+
+    var options by remember { mutableStateOf(listOf("-")) }
+    LaunchedEffect(Unit) {
+        coroutineScope.launch {
+            options = ServerHandler().gerControllersFromServer().map { it.Staff_Lnk }
+        }
+    }
+
+    // Function to show the modal dialog with fetched data
+    @Composable
+    fun ShowModalDialog() {
+        AlertDialog(
+            onDismissRequest = { isDialogVisible = false },
+            title = { Text(text = fetchedData[0].staffName) },
+            text = {
+                Column {
+                    fetchedData.forEach { item ->
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.Start,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = item.listDate,
+                                fontSize = MaterialTheme.typography.h6.fontSize,
+                                fontWeight = FontWeight(300),
+                                modifier = Modifier.padding(12.dp)
+                            )
+                            Button(
+                                onClick = {
+                                    viewModel.onStateIdChange(item.listNumber)
+                                    serverHandler.getRecordsFromServer(id, item.listNumber, context)
+                                },
+                                modifier = Modifier
+                                    .width(200.dp)
+                                    .padding(12.dp)
+                            ) {
+                                Text(text = item.listNumber)
+                            }
+
+
+                        }
+                    }
+                }
+            },
+            confirmButton = {
+                Button(onClick = { isDialogVisible = false }) {
+                    Text(text = "OK")
+                }
+            }
+        )
+    }
+
+
 
     ExposedDropdownMenuBox(
         expanded = true, onExpandedChange = {
@@ -448,10 +501,28 @@ fun Selector(viewModel: MainViewModel) {
                     selectedOptionText = optionText
                     viewModel.onIdChange(optionText)
                     expanded = false
+
+                    // Fetching controller lists
+                    cs.launch {
+                        try {
+                            withContext(Dispatchers.IO) {
+                                val data = ServerHandler().getListsForController(selectedOptionText)
+                                fetchedData = data // Assign fetched data to the variable
+                            }
+                            isDialogVisible = true // Show the dialog
+                        } catch (e: Exception) {
+                            println("Error occurred: ${e.message}")
+                            Toast.makeText(context, "Не удалось получить ведомости", Toast.LENGTH_LONG).show()
+                        }
+                    }
+
                 }) {
                     Text(text = optionText)
                 }
             }
+        }
+        if (isDialogVisible && fetchedData.isNotEmpty()) {
+            ShowModalDialog() // Show the modal dialog with fetched data
         }
     }
 }
@@ -492,10 +563,11 @@ fun RecordItem(id: Int, record: RecordDto, viewModel: MainViewModel) {
     val lastPosition = viewModel.position.observeAsState(-1)
     val selected = id == lastPosition.value
     val fid = viewModel.fileId.observeAsState(0).value
+    val stateId = viewModel.stateId.observeAsState("0").value
 
     val sourceOption = viewModel.sourceOption.value?.id
     val filename =
-        if (sourceOption == 0) "storage/emulated/0/download/control${fid}.xls" else "storage/emulated/0/download/control${fid}.json"
+        if (sourceOption == 0) "storage/emulated/0/download/control${fid}.xls" else "storage/emulated/0/download/control-${fid}-${stateId}.json" // TODO:- check files
 
     Card(
 

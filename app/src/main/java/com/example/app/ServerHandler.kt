@@ -9,7 +9,9 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
+import com.google.gson.JsonObject
 import com.google.gson.JsonParser
+import com.google.gson.annotations.SerializedName
 import kotlinx.coroutines.*
 import java.io.File
 import java.io.IOException
@@ -21,7 +23,7 @@ import java.time.format.DateTimeFormatter
 import java.util.concurrent.Executors
 
 
-class ServerHandler: DataHandlerInterface {
+class ServerHandler : DataHandlerInterface {
 
     val formatter: DateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS")
 
@@ -33,7 +35,6 @@ class ServerHandler: DataHandlerInterface {
 
     fun onRecordListChange(newRecords: List<RecordDto>) {
         _listOfRecords.value = newRecords
-        println(newRecords)
     }
 
     fun clearList() {
@@ -46,6 +47,7 @@ class ServerHandler: DataHandlerInterface {
 
     suspend fun fetchDataFromServer(urlString: String): String {
         val url = URL(urlString)
+        Log.w("SERVER", "Request to: $url")
         val conn = withContext(Dispatchers.IO) {
             url.openConnection()
         } as HttpURLConnection
@@ -61,13 +63,14 @@ class ServerHandler: DataHandlerInterface {
     }
 
 
-    fun getRecordsFromServer(id: String, context: Context) {
-        val path = "storage/emulated/0/download/control$id.json"
-        val urlString = "https://indman.nokes.ru/engine/IndManDataByListNumber.php?listnumber=$id"
+    fun getRecordsFromServer(controlId: String, stateId: String, context: Context) {
+        val path = "storage/emulated/0/download/control-$controlId-$stateId.json"
+        val urlString =
+            "https://indman.nokes.ru/engine/IndManDataByListNumber.php?listnumber=$stateId"
         viewModelScope.launch(exceptionHandler) {
             try {
                 if (File(path).exists()) {
-                    reloadRecordsFromFile(id, context)
+                    reloadRecordsFromFile(controlId, stateId, context)
                 } else {
                     val prettyJson = withContext(Dispatchers.IO) {
                         fetchDataFromServer(urlString)
@@ -77,14 +80,14 @@ class ServerHandler: DataHandlerInterface {
                     IOUtils().saveJsonToFile(prettyJson, path)
                     Toast.makeText(
                         context,
-                        "Загружены записи для контролера $id",
+                        "Контролер $controlId, Ведомость $stateId",
                         Toast.LENGTH_SHORT
                     ).show()
                 }
             } catch (e: java.lang.Exception) {
                 println(e.message)
                 Toast.makeText(context, "Сервер недоступен", Toast.LENGTH_SHORT).show()
-                reloadRecordsFromFile(id, context)
+                reloadRecordsFromFile(controlId, stateId, context)
             }
         }
     }
@@ -98,18 +101,72 @@ class ServerHandler: DataHandlerInterface {
             val controllers = withContext(Dispatchers.IO) {
                 fetchDataFromServer(urlString)
             }
-            return gson.fromJson(controllers, Array<Controller>::class.java).toMutableList().filter { it.Staff_Lnk != "0" }
+            return gson.fromJson(controllers, Array<Controller>::class.java).toMutableList()
+                .filter { it.Staff_Lnk != "0" }
         } catch (e: IOException) {
             return listOf(Controller("-", "-"))
         }
     }
 
-    fun reloadRecordsFromFile(id: String, context: Context) {
-        val path = "storage/emulated/0/download/control$id.json"
+    data class RecordStatement(
+        @SerializedName("ListNumber") val listNumber: String,
+        @SerializedName("ListDate") val listDate: String,
+        @SerializedName("Source") val source: String,
+        @SerializedName("Staff_Lnk") val staffLink: String,
+        @SerializedName("Staff_Name") val staffName: String,
+        @SerializedName("Processed") val processed: String
+    )
+
+    data class RecordStatements(
+        @SerializedName("object") val items: Map<String, RecordStatement>
+    )
+
+    fun purifyJsonString(jsonString: String): String {
+        // Remove leading/trailing whitespace
+        val trimmedJson = jsonString.trim()
+
+        // Remove non-essential characters
+        val purifiedJson = StringBuilder()
+        var insideQuotes = false
+
+        for (char in trimmedJson) {
+            if (char == '"') {
+                insideQuotes = !insideQuotes
+            }
+
+            if (!char.isWhitespace() || insideQuotes) {
+                purifiedJson.append(char)
+            }
+        }
+
+        return purifiedJson.toString()
+    }
+
+    suspend fun getListsForController(id: String): MutableList<RecordStatement> {
+        val gson = Gson()
+        val urlString = "https://indman.nokes.ru/engine/IndManListsByStaff_Lnk.php?Staff_Lnk=$id"
+        try {
+            val statements = withContext(Dispatchers.IO) {
+                fetchDataFromServer(urlString).trimIndent()
+            }
+
+            val jsonObject = gson.fromJson(statements, JsonObject::class.java)
+            return jsonObject.keySet()
+                .map { key -> gson.fromJson(jsonObject[key], RecordStatement::class.java) }
+                .toMutableList().sortedBy { it.listNumber }.toMutableList()
+
+        } catch (e: IOException) {
+            throw IOException("No Statements")
+        }
+    }
+
+    fun reloadRecordsFromFile(controlId: String, stateId: String, context: Context) {
+        val path = "storage/emulated/0/download/control-$controlId-$stateId.json"
         val records =
             convertServerListToRecordDtoList(parseRecordsFromJson(IOUtils().readJsonFromFile(path)))
         onRecordListChange(records)
-        Toast.makeText(context, "Загружены скачанные данные", Toast.LENGTH_LONG).show()
+//        Toast.makeText(context, "Загружены скачанные данные: $stateId", Toast.LENGTH_LONG).show()
+        Toast.makeText(context, "Загружена ведомость $stateId", Toast.LENGTH_LONG).show()
     }
 
     fun parseRecordsFromJson(json: String): MutableList<ServerRecord> {
@@ -206,5 +263,5 @@ data class ServerRecord(
 }
 
 suspend fun main() {
-    ServerHandler().gerControllersFromServer()
+    ServerHandler().getListsForController("1")
 }
