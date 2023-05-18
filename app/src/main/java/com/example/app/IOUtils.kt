@@ -1,4 +1,5 @@
 package com.example.app
+import android.util.Log
 import com.google.gson.Gson
 import java.io.File
 import java.io.IOException
@@ -25,6 +26,7 @@ class IOUtils {
     }
 
     fun saveJsonToFile(jsonString: String, filePath: String) {
+        Log.w("FILESYSTEM", "Saved data to: $filePath")
         val file = File(filePath)
         file.writeText(jsonString)
     }
