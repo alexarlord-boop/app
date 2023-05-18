@@ -62,10 +62,22 @@ class MainActivityScreen : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContent {
 
-            MainScreen(workbookHandler, serverHandler, viewModel)
+        val connectivityManager =
+            getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+        val networkCapabilities =
+            connectivityManager.getNetworkCapabilities(connectivityManager.activeNetwork)
 
+        if (networkCapabilities != null && networkCapabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)) {
+            setContent {
+                MainScreen(workbookHandler, serverHandler, viewModel)
+            }
+        } else {
+            // Show a dialog or handle the case when there is no network connectivity
+            // You can display an error message or prompt the user to check their internet connection
+            Toast.makeText(this, "Нет подключения к сети.", Toast.LENGTH_LONG).show()
+            // You can also finish the activity if you don't want to proceed without network connectivity
+            // finish()
         }
     }
 
