@@ -50,13 +50,13 @@ import java.time.LocalDateTime
 import kotlin.reflect.KFunction1
 
 var FILE_NAME = ""
-var SOURCE_OPTION = MainViewModel.SourceOption.NONE
+var DATA_MODE = MainViewModel.DataMode.SERVER
 var LAST_LIST_POSITION = -1
 
 class MainActivityScreen : AppCompatActivity() {
     lateinit var area: TextView
     lateinit var fioHeader: TextView
-    var workbookHandler = WorkBookHandler()
+//    var workbookHandler = WorkBookHandler()
     var serverHandler = ServerHandler()
     var viewModel: MainViewModel = MainViewModel()
 
@@ -71,7 +71,7 @@ class MainActivityScreen : AppCompatActivity() {
 
         if (networkCapabilities != null && networkCapabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)) {
             setContent {
-                MainScreen(workbookHandler, serverHandler, viewModel)
+                MainScreen(serverHandler, viewModel)
             }
         } else {
             // Show a dialog or handle the case when there is no network connectivity
@@ -84,16 +84,16 @@ class MainActivityScreen : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
-        when (SOURCE_OPTION.id) {
+        when (DATA_MODE.id) {
             0 -> {
-                if (FILE_NAME.isNotEmpty()) {
-                    workbookHandler.getRecordsFromFile(FILE_NAME)
-                }
-//                viewModel.onSourceOptionChange(SOURCE_OPTION)
+
             }
             1 -> {
-                serverHandler.reloadRecordsFromFile(viewModel.fileId.value.toString(), viewModel.stateId.value.toString(),this)
-                println(serverHandler.listOfRecords.value?.size)
+                serverHandler.reloadRecordsFromFile(
+                    viewModel.fileId.value.toString(),
+                    viewModel.stateId.value.toString(),
+                    this
+                )
             }
         }
     }
@@ -102,14 +102,13 @@ class MainActivityScreen : AppCompatActivity() {
 }
 
 class MainViewModel : ViewModel() {
-    enum class SourceOption(val id: Int) {
-        NONE(-1),
+    enum class DataMode(val id: Int) {
         FILE(0),
         SERVER(1)
     }
 
-    private val _sourceOption: MutableLiveData<SourceOption> = MutableLiveData(SourceOption.NONE)
-    val sourceOption: LiveData<SourceOption> = _sourceOption
+    private val _sourceOption: MutableLiveData<DataMode> = MutableLiveData(DataMode.SERVER)
+    val sourceOption: LiveData<DataMode> = _sourceOption
 
     private val _fileId: MutableLiveData<String> = MutableLiveData("1")
     val fileId: LiveData<String> = _fileId
@@ -127,9 +126,9 @@ class MainViewModel : ViewModel() {
     private val _controllerId: MutableLiveData<String> = MutableLiveData("0")
     var controllerId: LiveData<String> = _controllerId
 
-    fun onSourceOptionChange(newSrcOption: SourceOption) {
+    fun onSourceOptionChange(newSrcOption: DataMode) {
         _sourceOption.value = newSrcOption
-        SOURCE_OPTION = newSrcOption
+        DATA_MODE = newSrcOption
     }
 
     fun onPositionChange(newPosition: Int) {
@@ -183,20 +182,19 @@ fun showMain() {
         34567.0,
         -1
     )
-    val workBookHandler = WorkBookHandler()
-    workBookHandler.onRecordListChange(List(10) { index -> record })
+//    val workBookHandler = WorkBookHandler()
+//    workBookHandler.onRecordListChange(List(10) { index -> record })
 
 }
 
 @Composable
 fun MainScreen(
-    workBookHandler: WorkBookHandler,
-    serverHandler: ServerHandler,
+
+    dataHandler: DataHandlerInterface,
     viewModel: MainViewModel
 ) {
-    val sourceOption = viewModel.sourceOption.observeAsState(SOURCE_OPTION)
-    val bookRecords by workBookHandler.listOfRecords.observeAsState(emptyList())
-    val serverRecords by serverHandler.listOfRecords.observeAsState(emptyList())
+    val sourceOption = viewModel.sourceOption.observeAsState(DATA_MODE)
+    val serverRecords by dataHandler.listOfRecords.observeAsState(emptyList())
     val lastClicked = viewModel.position.observeAsState(LAST_LIST_POSITION)
     val id by viewModel.fileId.observeAsState(1)
     val stateId by viewModel.stateId.observeAsState("0")
@@ -205,34 +203,15 @@ fun MainScreen(
     val coroutineScope = rememberCoroutineScope()
     val context = LocalContext.current
 
-    var sortedListToShow = if (sourceOption.value.id == 0) {
-        bookRecords.sortedBy { it ->
-            it.houseNumber.split("/")[0].filter { it.isDigit() }.toInt()
-        }
-    } else {
-        serverRecords.sortedBy { it ->
-            it.houseNumber.split("/")[0].filter { it.isDigit() }.toInt()
-        }
-    }
-    LaunchedEffect(bookRecords, serverRecords) {
-        sortedListToShow = if (sourceOption.value.id == 0) {
-            bookRecords.sortedBy { it ->
-                it.houseNumber.split("/")[0].filter { it.isDigit() }.toInt()
-            }
-        } else {
+    var sortedListToShow = serverRecords.sortedBy { it -> it.houseNumber.split("/")[0].filter { it.isDigit() }.toInt() }
+    LaunchedEffect(serverRecords) {
+        sortedListToShow =
             serverRecords.sortedBy { it ->
                 it.houseNumber.split("/")[0].filter { it.isDigit() }.toInt()
             }
-        }
-        println(sortedListToShow.size)
+
     }
 
-
-    if (sourceOption.value.id == 0) {
-        serverHandler.clearList()
-    } else if (sourceOption.value.id == 1) {
-        workBookHandler.clearList()
-    }
 
     val area = sortedListToShow.firstOrNull()?.area ?: "Район"
     val showButton by remember { derivedStateOf { listState.firstVisibleItemIndex > 0 } }
@@ -257,32 +236,13 @@ fun MainScreen(
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-//                    AlertDialog(viewModel)
-
-//                    if (sourceOption.value.id == 0) {
-//                        FileBtn(
-//                            "Из файла",
-//                            onClick = workBookHandler::getRecordsFromFile,
-//                            viewModel = viewModel
-//                        )
-//                    } else if (sourceOption.value.id == 1) {
-//
-//                        Button(onClick = {
-//                            serverHandler.getRecordsFromServer(id.toString(), stateId.toString(), context)
-//                        }) {
-//                            Text("С сервера")
-//                        }
-//                    }
-
-//                    val showSelector by remember { derivedStateOf { sourceOption.value.id > -1 } }
-//                    AnimatedVisibility(visible = showSelector) {
-//                        Selector(viewModel, serverHandler)
-//                    }
-                    Selector(viewModel, serverHandler)
+                    Selector(viewModel, dataHandler)
                 }
 
                 Column(
-                    modifier = Modifier.fillMaxHeight().fillMaxWidth(),
+                    modifier = Modifier
+                        .fillMaxHeight()
+                        .fillMaxWidth(),
                     verticalArrangement = Arrangement.Bottom
                 ) {
                     Text(
@@ -348,36 +308,15 @@ fun MainScreen(
     }
 }
 
-@Composable
-fun AlertDialog(viewModel: MainViewModel) {
-
-    MaterialTheme {
-        Column {
-            val openDialog = remember { mutableStateOf(false) }
-
-
-
-
-        }
-    }
-}
-
-
-//@Preview
-@Composable
-fun ShowDialog() {
-    AlertDialog(MainViewModel())
-}
-
 
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
-fun Selector(viewModel: MainViewModel, serverHandler: ServerHandler) {
+fun Selector(viewModel: MainViewModel, dataHandler: DataHandlerInterface) {
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
     val cs = CoroutineScope(Dispatchers.Main)
     var expanded by remember { mutableStateOf(false) }
-    var selectedOptionText by remember { mutableStateOf("id") }
+    var selectedOptionText by remember { mutableStateOf("Выбрать контролера") }
     var fetchedData by remember { mutableStateOf(emptyList<ServerHandler.RecordStatement>()) }
     var isDialogVisible by remember { mutableStateOf(false) }
 
@@ -385,9 +324,13 @@ fun Selector(viewModel: MainViewModel, serverHandler: ServerHandler) {
     val stateId by viewModel.stateId.observeAsState("0")
 
     var options by remember { mutableStateOf(listOf("-")) }
+    var names by remember { mutableStateOf(listOf("-")) }
+
     LaunchedEffect(Unit) {
         coroutineScope.launch {
-            options = ServerHandler().gerControllersFromServer().map { it.Staff_Lnk }
+            val controllers = ServerHandler().getControllers()
+            options = controllers.map { it.Staff_Lnk }
+            names = controllers.map { it.Staff_Name }
         }
     }
 
@@ -396,7 +339,7 @@ fun Selector(viewModel: MainViewModel, serverHandler: ServerHandler) {
     fun ShowModalDialog() {
         AlertDialog(
             onDismissRequest = { isDialogVisible = false },
-            title = { Text(text = fetchedData[0].staffName) },
+            title = { Text(text = "Ведомости") },
             text = {
                 Column {
                     fetchedData.forEach { item ->
@@ -414,7 +357,12 @@ fun Selector(viewModel: MainViewModel, serverHandler: ServerHandler) {
                             Button(
                                 onClick = {
                                     viewModel.onStateIdChange(item.listNumber)
-                                    serverHandler.getRecordsFromServer(id, item.listNumber, context)
+                                    val records = dataHandler.getRecordsForStatement(
+                                        id,
+                                        item.listNumber,
+                                        context
+                                    )
+                                    isDialogVisible = false
                                 },
                                 modifier = Modifier
                                     .width(200.dp)
@@ -423,14 +371,13 @@ fun Selector(viewModel: MainViewModel, serverHandler: ServerHandler) {
                                 Text(text = item.listNumber)
                             }
 
-
                         }
                     }
                 }
             },
             confirmButton = {
                 Button(onClick = { isDialogVisible = false }) {
-                    Text(text = "OK")
+                    Text(text = "Закрыть")
                 }
             }
         )
@@ -452,10 +399,14 @@ fun Selector(viewModel: MainViewModel, serverHandler: ServerHandler) {
             Text(selectedOptionText)
         }
 
-        ExposedDropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
-            options.forEach { optionText ->
+        ExposedDropdownMenu(
+            expanded = expanded,
+            onDismissRequest = { expanded = false },
+            modifier = Modifier.fillMaxWidth(),
+        ) {
+            options.forEachIndexed { index, optionText ->
                 DropdownMenuItem(onClick = {
-                    selectedOptionText = optionText
+                    selectedOptionText = names[index]
                     viewModel.onIdChange(optionText)
                     expanded = false
 
@@ -463,51 +414,28 @@ fun Selector(viewModel: MainViewModel, serverHandler: ServerHandler) {
                     cs.launch {
                         try {
                             withContext(Dispatchers.IO) {
-                                val data = ServerHandler().getListsForController(selectedOptionText)
+                                val data = dataHandler.getStatementsForController(optionText)
                                 fetchedData = data // Assign fetched data to the variable
                             }
                             isDialogVisible = true // Show the dialog
                         } catch (e: Exception) {
                             println("Error occurred: ${e.message}")
-                            Toast.makeText(context, "Не удалось получить ведомости", Toast.LENGTH_LONG).show()
+                            Toast.makeText(
+                                context,
+                                "Не удалось получить ведомости",
+                                Toast.LENGTH_LONG
+                            ).show()
                         }
                     }
 
                 }) {
-                    Text(text = optionText)
+                    Text(text = names[index])
                 }
             }
         }
         if (isDialogVisible && fetchedData.isNotEmpty()) {
             ShowModalDialog() // Show the modal dialog with fetched data
         }
-    }
-}
-
-@Composable
-fun FileBtn(
-    title: String,
-    viewModel: MainViewModel,
-    onClick: KFunction1<String, Unit>,
-) {
-    val filename by viewModel.filename.observeAsState("storage/emulated/0/download/control1.xls")
-    val context = LocalContext.current
-    Button(
-        modifier = Modifier.padding(10.dp),
-        shape = RoundedCornerShape(10.dp),
-        onClick = {
-            try {
-                onClick(filename)
-                FILE_NAME = filename
-            } catch (ex: EmptyFileException) {
-                Toast.makeText(context, "Пустой файл!", Toast.LENGTH_SHORT).show()
-            } catch (ex: FileNotFoundException) {
-                Toast.makeText(context, "Нет файла!", Toast.LENGTH_SHORT).show()
-                viewModel.onPositionChange(-1)
-            }
-        }
-    ) {
-        Text(title)
     }
 }
 
@@ -541,7 +469,7 @@ fun RecordItem(id: Int, record: RecordDto, viewModel: MainViewModel) {
                     "lastDate",
                     IOUtils().convertDateToFormattedString(record.lastKoDate)
                 )
-                intent.putExtra("sourceOption", sourceOption.toString())
+                intent.putExtra("dataMode", sourceOption.toString())
                 val gson = Gson()
                 intent.putExtra("recordData", gson.toJson(record))
                 context.startActivity(intent)
@@ -631,13 +559,4 @@ fun RecordItem(id: Int, record: RecordDto, viewModel: MainViewModel) {
     Spacer(modifier = Modifier.height(margin))
 }
 
-//@Preview
-@Composable
-fun ShowMainScreen() {
-    MainScreen(
-        workBookHandler = WorkBookHandler(),
-        serverHandler = ServerHandler(),
-        viewModel = MainViewModel()
-    )
-}
 

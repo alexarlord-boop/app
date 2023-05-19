@@ -36,20 +36,19 @@ class RecordActivity : AppCompatActivity() {
 
         var dataHandler: DataHandlerInterface? = null
 
-        val sourceOption = intent.getStringExtra("sourceOption")!!.toInt()
+        val dataMode = intent.getStringExtra("dataMode")!!.toInt()
         val filename = intent.getStringExtra("filename")!!
         val lastDate = intent.getStringExtra("lastDate")!!
         println(lastDate)
 
-        when (sourceOption) {
+        when (dataMode) {
             0 -> {
-                dataHandler = WorkBookHandler()
-                dataHandler.getRecordsFromFile(filename)
+//                dataHandler = WorkBookHandler()
+//                dataHandler.getRecordsFromFile(filename)
                 passedRecord.lastKoDate = IOUtils().convertStringToDate(lastDate)
             }
             1 -> {
                 dataHandler = ServerHandler()
-                // write code here
                 passedRecord.lastKoDate = IOUtils().convertStringToDate(lastDate)
             }
         }
@@ -89,11 +88,12 @@ class RecordActivity : AppCompatActivity() {
                         record.comments = newComments.text.toString()
 
                         dataHandler?.let { handler ->
-                            handler.updateRowData(position, record, filename)
+                            IOUtils().updateRowData(position, record, filename)
                             Toast.makeText(this, "Сохранено", Toast.LENGTH_SHORT).show()
                             onBackPressed()
                         }
                     }
+
                 }
             }
         }
