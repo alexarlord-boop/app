@@ -137,12 +137,6 @@ class MainViewModel : ViewModel() {
         LAST_LIST_POSITION = newPosition
     }
 
-//    fun fileChange() {
-//        _filename.value = filename.value?.split("/")?.toMutableList()?.also {
-//            it[it.lastIndex] = "control${_fileId.value}.xls"
-//        }?.joinToString("/")
-//        FILE_NAME = filename.value.toString()
-//    }
 
     fun fileChange() {
         filename.value?.let { name ->
@@ -192,7 +186,6 @@ fun showMain() {
     val workBookHandler = WorkBookHandler()
     workBookHandler.onRecordListChange(List(10) { index -> record })
 
-//    MainScreen(workBookHandler = workBookHandler, MainViewModel())
 }
 
 @Composable
@@ -264,31 +257,32 @@ fun MainScreen(
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    AlertDialog(viewModel)
+//                    AlertDialog(viewModel)
 
-                    if (sourceOption.value.id == 0) {
-                        FileBtn(
-                            "Из файла",
-                            onClick = workBookHandler::getRecordsFromFile,
-                            viewModel = viewModel
-                        )
-                    } else if (sourceOption.value.id == 1) {
+//                    if (sourceOption.value.id == 0) {
+//                        FileBtn(
+//                            "Из файла",
+//                            onClick = workBookHandler::getRecordsFromFile,
+//                            viewModel = viewModel
+//                        )
+//                    } else if (sourceOption.value.id == 1) {
+//
+//                        Button(onClick = {
+//                            serverHandler.getRecordsFromServer(id.toString(), stateId.toString(), context)
+//                        }) {
+//                            Text("С сервера")
+//                        }
+//                    }
 
-                        Button(onClick = {
-                            serverHandler.getRecordsFromServer(id.toString(), stateId.toString(), context)
-                        }) {
-                            Text("С сервера")
-                        }
-                    }
-
-                    val showSelector by remember { derivedStateOf { sourceOption.value.id > -1 } }
-                    AnimatedVisibility(visible = showSelector) {
-                        Selector(viewModel, serverHandler)
-                    }
+//                    val showSelector by remember { derivedStateOf { sourceOption.value.id > -1 } }
+//                    AnimatedVisibility(visible = showSelector) {
+//                        Selector(viewModel, serverHandler)
+//                    }
+                    Selector(viewModel, serverHandler)
                 }
 
                 Column(
-                    modifier = Modifier.fillMaxHeight(),
+                    modifier = Modifier.fillMaxHeight().fillMaxWidth(),
                     verticalArrangement = Arrangement.Bottom
                 ) {
                     Text(
@@ -361,45 +355,9 @@ fun AlertDialog(viewModel: MainViewModel) {
         Column {
             val openDialog = remember { mutableStateOf(false) }
 
-            Button(shape = RoundedCornerShape(10.dp),
-                onClick = {
-                    openDialog.value = true
-                }) {
-                Text("Иcточник")
-            }
 
-            if (openDialog.value) {
 
-                AlertDialog(
-                    onDismissRequest = {
-                        openDialog.value = false
-                    },
-                    title = {
-                        Text(text = "Источник данных")
-                    },
-                    text = {
-                        Text("")
-                    },
-                    confirmButton = {
-                        Button(
-                            onClick = {
-                                openDialog.value = false
-                                viewModel.onSourceOptionChange(MainViewModel.SourceOption.FILE)
-                            }) {
-                            Text("Excel Файл")
-                        }
-                    },
-                    dismissButton = {
-                        Button(
-                            onClick = {
-                                openDialog.value = false
-                                viewModel.onSourceOptionChange(MainViewModel.SourceOption.SERVER)
-                            }) {
-                            Text("Сервер")
-                        }
-                    }
-                )
-            }
+
         }
     }
 }
@@ -483,8 +441,7 @@ fun Selector(viewModel: MainViewModel, serverHandler: ServerHandler) {
     ExposedDropdownMenuBox(
         expanded = true, onExpandedChange = {
             expanded = !expanded
-        }, modifier = Modifier
-            .width(80.dp)
+        }, modifier = Modifier.fillMaxWidth()
     ) {
 
         Button(
