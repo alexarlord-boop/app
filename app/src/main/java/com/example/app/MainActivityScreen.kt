@@ -7,6 +7,7 @@ import android.icu.text.CaseMap.Title
 import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
 import android.os.Bundle
+import android.util.Log
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.compose.setContent
@@ -89,11 +90,13 @@ class MainActivityScreen : AppCompatActivity() {
 
             }
             1 -> {
-                serverHandler.reloadRecordsFromFile(
-                    viewModel.fileId.value.toString(),
-                    viewModel.stateId.value.toString(),
-                    this
-                )
+                try {
+                    serverHandler.reloadRecordsFromFile(
+                        viewModel.fileId.value.toString(),
+                        viewModel.stateId.value.toString(),
+                        this
+                    )
+                } catch (e: Exception) { Log.w("LIFECYCLE", e.message.toString())}
             }
         }
     }
@@ -317,6 +320,9 @@ fun Selector(viewModel: MainViewModel, dataHandler: DataHandlerInterface) {
     val cs = CoroutineScope(Dispatchers.Main)
     var expanded by remember { mutableStateOf(false) }
     var selectedOptionText by remember { mutableStateOf("Выбрать контролера") }
+    var selectedStatementId by remember {
+        mutableStateOf("")
+    }
     var fetchedData by remember { mutableStateOf(emptyList<ServerHandler.RecordStatement>()) }
     var isDialogVisible by remember { mutableStateOf(false) }
 
@@ -362,6 +368,7 @@ fun Selector(viewModel: MainViewModel, dataHandler: DataHandlerInterface) {
                                         item.listNumber,
                                         context
                                     )
+                                    selectedStatementId = item.listNumber
                                     isDialogVisible = false
                                 },
                                 modifier = Modifier
@@ -396,7 +403,7 @@ fun Selector(viewModel: MainViewModel, dataHandler: DataHandlerInterface) {
             border = BorderStroke(1.dp, color = Color.Black),
             colors = ButtonDefaults.buttonColors(backgroundColor = Color.White),
             onClick = { /*TODO*/ }) {
-            Text(selectedOptionText)
+            Text("$selectedOptionText | Ведомость $selectedStatementId")
         }
 
         ExposedDropdownMenu(
@@ -434,6 +441,7 @@ fun Selector(viewModel: MainViewModel, dataHandler: DataHandlerInterface) {
             }
         }
         if (isDialogVisible && fetchedData.isNotEmpty()) {
+            selectedStatementId = ""
             ShowModalDialog() // Show the modal dialog with fetched data
         }
     }
