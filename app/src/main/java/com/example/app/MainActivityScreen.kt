@@ -59,6 +59,7 @@ class MainActivityScreen : AppCompatActivity() {
     lateinit var fioHeader: TextView
 //    var workbookHandler = WorkBookHandler()
     var serverHandler = ServerHandler()
+    var fsHandler = FileSystemHandler()
     var viewModel: MainViewModel = MainViewModel()
 
 
@@ -76,10 +77,12 @@ class MainActivityScreen : AppCompatActivity() {
             }
         } else {
             // Show a dialog or handle the case when there is no network connectivity
-            // You can display an error message or prompt the user to check their internet connection
+            // Setting up filesystem handler instead of server handler, to load data from downloaded files
             Toast.makeText(this, "Нет подключения к сети.", Toast.LENGTH_LONG).show()
-            // You can also finish the activity if you don't want to proceed without network connectivity
-            // finish()
+            DATA_MODE = MainViewModel.DataMode.FILE
+            setContent {
+                MainScreen(fsHandler, viewModel)
+            }
         }
     }
 
@@ -87,7 +90,12 @@ class MainActivityScreen : AppCompatActivity() {
         super.onResume()
         when (DATA_MODE.id) {
             0 -> {
-
+                try {
+                    fsHandler.reloadRecordsFromFile( viewModel.fileId.value.toString(),
+                        viewModel.stateId.value.toString(),
+                        this
+                    )
+                } catch (e: Exception) { Log.w("LIFECYCLE", e.message.toString())}
             }
             1 -> {
                 try {
@@ -334,7 +342,7 @@ fun Selector(viewModel: MainViewModel, dataHandler: DataHandlerInterface) {
 
     LaunchedEffect(Unit) {
         coroutineScope.launch {
-            val controllers = ServerHandler().getControllers()
+            val controllers = dataHandler.getControllers()
             options = controllers.map { it.Staff_Lnk }
             names = controllers.map { it.Staff_Name }
         }
@@ -363,7 +371,7 @@ fun Selector(viewModel: MainViewModel, dataHandler: DataHandlerInterface) {
                             Button(
                                 onClick = {
                                     viewModel.onStateIdChange(item.listNumber)
-                                    val records = dataHandler.getRecordsForStatement(
+                                    dataHandler.getRecordsForStatement(
                                         id,
                                         item.listNumber,
                                         context

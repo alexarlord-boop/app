@@ -28,6 +28,12 @@ class IOUtils {
         return gson.toJson(list)
     }
 
+    fun jsonToControllerListFiltered(controllers: String): List<ServerHandler.Controller> {
+        val gson = Gson()
+        return gson.fromJson(controllers, Array<ServerHandler.Controller>::class.java).toMutableList()
+            .filter { it.Staff_Lnk != "0" }
+    }
+
     fun saveJsonToFile(jsonString: String, filePath: String) {
         Log.w("FILESYSTEM", "Saved data to: $filePath")
         val file = File(filePath)
@@ -76,6 +82,18 @@ class IOUtils {
         )
     }
 
+    fun getSavedStatementIds(): List<String> {
+        val directoryPath = "storage/emulated/0/download/"
+        val searchTerm = "control-"
+        var ids = emptyList<String>()
+        val directory = File(directoryPath)
+        ids = directory.listFiles { file ->
+            file.isFile && file.name.contains(searchTerm)
+        }?.map { file -> file.name.split("-").last().split(".")[0] }?.toList()!!
+
+        return ids
+
+    }
 
     fun updateRowData(position: Int, recordDto: RecordDto, filename: String) {
 
@@ -98,4 +116,10 @@ class IOUtils {
 
     }
 
+    fun sendDataToServer() {}
+
+}
+
+fun main() {
+    IOUtils().getSavedStatementIds()
 }

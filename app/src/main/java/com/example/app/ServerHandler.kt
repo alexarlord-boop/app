@@ -90,14 +90,14 @@ class ServerHandler : DataHandlerInterface {
     data class Controller(val Staff_Lnk: String, val Staff_Name: String) {}
 
     override suspend fun getControllers(): List<Controller> {
-        val gson = Gson()
         val urlString = "https://indman.nokes.ru/engine/IndManListsStaffOnly.php"
+        val pathToControllers = "storage/emulated/0/download/controllers.json"
         try {
             val controllers = withContext(Dispatchers.IO) {
                 fetchDataFromServer(urlString)
             }
-            return gson.fromJson(controllers, Array<Controller>::class.java).toMutableList()
-                .filter { it.Staff_Lnk != "0" }
+            IOUtils().saveJsonToFile(controllers, pathToControllers)
+            return IOUtils().jsonToControllerListFiltered(controllers)
         } catch (e: IOException) {
             return listOf(Controller("-", "-"))
         }
@@ -115,28 +115,24 @@ class ServerHandler : DataHandlerInterface {
     override suspend fun getStatementsForController(id: String): MutableList<RecordStatement> {
         val gson = Gson()
         val urlString = "https://indman.nokes.ru/engine/IndManListsByStaff_Lnk.php?Staff_Lnk=$id"
+        val pathToStatements = "storage/emulated/0/download/statements$id.json"
         try {
             val statements = withContext(Dispatchers.IO) {
                 fetchDataFromServer(urlString).trimIndent()
             }
 
             val jsonObject = gson.fromJson(statements, JsonObject::class.java)
-            return jsonObject.keySet()
+            val statementList = jsonObject.keySet()
                 .map { key -> gson.fromJson(jsonObject[key], RecordStatement::class.java) }
                 .toMutableList().sortedBy { it.listNumber }.toMutableList()
+            IOUtils().saveJsonToFile(gson.toJson(statementList), pathToStatements)
+            return statementList
 
         } catch (e: IOException) {
             throw IOException("No Statements")
         }
     }
 
-    fun reloadRecordsFromFile(controlId: String, stateId: String, context: Context) {
-        val path = "storage/emulated/0/download/control-$controlId-$stateId.json"
-        val records =
-            IOUtils().convertServerListToRecordDtoList(IOUtils().parseRecordsFromJson(IOUtils().readJsonFromFile(path)))
-        onRecordListChange(records)
-        Toast.makeText(context, "Загружена ведомость $stateId", Toast.LENGTH_LONG).show()
-    }
 
 
 }
