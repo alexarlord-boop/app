@@ -9,6 +9,7 @@ import com.google.gson.Gson
 import com.google.gson.JsonObject
 import com.google.gson.annotations.SerializedName
 import kotlinx.coroutines.*
+import java.io.File
 import java.io.IOException
 import java.net.HttpURLConnection
 import java.net.URL
@@ -58,24 +59,29 @@ class ServerHandler : DataHandlerInterface {
         val path = "storage/emulated/0/download/control-$controllerId-$statementId.json"
         val urlString =
             "https://indman.nokes.ru/engine/IndManDataByListNumber.php?listnumber=$statementId"
-        viewModelScope.launch(exceptionHandler) {
-            try {
+        if (File(path).exists()) {
+            this.reloadRecordsFromFile(controllerId, statementId, context)
+        } else {
+            viewModelScope.launch(exceptionHandler) {
+                try {
+                    val prettyJson = withContext(Dispatchers.IO) {
+                        fetchDataFromServer(urlString)
+                    }
+                    records = IOUtils().convertServerListToRecordDtoList(
+                        IOUtils().parseRecordsFromJson(prettyJson)
+                    )
+                    onRecordListChange(records)
+                    IOUtils().saveJsonToFile(prettyJson, path)
+                    Toast.makeText(
+                        context,
+                        "Получена ведомость $statementId",
+                        Toast.LENGTH_SHORT
+                    ).show()
 
-                val prettyJson = withContext(Dispatchers.IO) {
-                    fetchDataFromServer(urlString)
+                } catch (e: java.lang.Exception) {
+                    println(e.message)
+                    Toast.makeText(context, "Сервер недоступен", Toast.LENGTH_SHORT).show()
                 }
-                records = IOUtils().convertServerListToRecordDtoList(IOUtils().parseRecordsFromJson(prettyJson))
-                onRecordListChange(records)
-                IOUtils().saveJsonToFile(prettyJson, path)
-                Toast.makeText(
-                    context,
-                    "Ведомость $statementId",
-                    Toast.LENGTH_SHORT
-                ).show()
-
-            } catch (e: java.lang.Exception) {
-                println(e.message)
-                Toast.makeText(context, "Сервер недоступен", Toast.LENGTH_SHORT).show()
             }
         }
         return records
