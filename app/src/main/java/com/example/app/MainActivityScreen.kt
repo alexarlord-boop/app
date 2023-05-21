@@ -450,7 +450,6 @@ fun Selector(viewModel: MainViewModel, dataHandler: DataHandlerInterface) {
             }
         }
         if (isDialogVisible && fetchedData.isNotEmpty()) {
-            selectedStatementId = ""
             ShowModalDialog() // Show the modal dialog with fetched data
         }
     }
