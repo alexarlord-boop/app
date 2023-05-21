@@ -3,7 +3,6 @@ package com.example.app
 
 import android.content.Context
 import android.content.Intent
-import android.icu.text.CaseMap.Title
 import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
 import android.os.Bundle
@@ -22,7 +21,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowUpward
@@ -36,19 +34,13 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import com.google.gson.Gson
 import kotlinx.coroutines.*
-import org.apache.poi.EmptyFileException
-import java.io.FileNotFoundException
-import java.io.IOException
-import java.net.UnknownHostException
 import java.time.LocalDateTime
-import kotlin.reflect.KFunction1
 
 var FILE_NAME = ""
 var DATA_MODE = MainViewModel.DataMode.SERVER
@@ -225,7 +217,7 @@ fun MainScreen(
     }
 
 
-    val showButton by remember { derivedStateOf { listState.firstVisibleItemIndex > 0 } }
+    val showUpButton by remember { derivedStateOf { listState.firstVisibleItemIndex > 0 } }
     val showLastButton by remember { derivedStateOf { lastClicked.value > 0 } }
 
     Column {
@@ -275,14 +267,11 @@ fun MainScreen(
             itemsIndexed(sortedListToShow) { id, record ->
                 RecordItem(id, record, viewModel)
             }
-            coroutineScope.launch {
-                listState.animateScrollToItem(index = 0)
-            }
         }
 
 
         AnimatedVisibility(
-            visible = showLastButton || showButton,
+            visible = showLastButton || showUpButton,
             enter = fadeIn(),
             exit = fadeOut(),
         ) {
@@ -300,11 +289,11 @@ fun MainScreen(
                             }
                         }
                     ) {
-                        Icon(Icons.Default.MoveUp, contentDescription = null)
+                        Icon(Icons.Default.MoveUp, contentDescription = "Перейти к последней просмотренной записи")
                     }
                 }
 
-                AnimatedVisibility(visible = showButton) {
+                AnimatedVisibility(visible = showUpButton) {
                     Button(modifier = Modifier.padding(10.dp, 0.dp, 10.dp, 0.dp),
                         shape = CircleShape,
                         onClick = {
@@ -313,7 +302,7 @@ fun MainScreen(
                             }
                         }
                     ) {
-                        Icon(Icons.Default.ArrowUpward, contentDescription = null)
+                        Icon(Icons.Default.ArrowUpward, contentDescription = "Вернуться к началу списка")
                     }
                 }
             }
