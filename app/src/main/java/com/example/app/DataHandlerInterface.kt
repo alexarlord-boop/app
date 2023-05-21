@@ -10,6 +10,12 @@ interface DataHandlerInterface {
     val listOfRecords: LiveData<List<RecordDto>>
 
     fun onRecordListChange(newRecords: List<RecordDto>)
+
+    val _area: MutableLiveData<String>
+    val area: LiveData<String>
+
+    fun onAreaChange(newArea: String)
+
     suspend fun getControllers(): List<ServerHandler.Controller>
 
     suspend fun getStatementsForController(id: String): MutableList<ServerHandler.RecordStatement>

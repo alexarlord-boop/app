@@ -26,6 +26,14 @@ class ServerHandler : DataHandlerInterface {
 
     override fun onRecordListChange(newRecords: List<RecordDto>) {
         _listOfRecords.value = newRecords
+        onAreaChange(newRecords[0].area)
+    }
+
+    override val _area: MutableLiveData<String> = MutableLiveData()
+    override val area: LiveData<String> = _area
+
+    override fun onAreaChange(newArea: String) {
+        _area.value = newArea
     }
 
     val exceptionHandler = CoroutineExceptionHandler { _, exception ->

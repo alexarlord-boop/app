@@ -205,26 +205,26 @@ fun MainScreen(
     viewModel: MainViewModel
 ) {
     val sourceOption = viewModel.sourceOption.observeAsState(DATA_MODE)
-    val serverRecords by dataHandler.listOfRecords.observeAsState(emptyList())
+    val records by dataHandler.listOfRecords.observeAsState(emptyList())
     val lastClicked = viewModel.position.observeAsState(LAST_LIST_POSITION)
     val id by viewModel.fileId.observeAsState(1)
     val stateId by viewModel.stateId.observeAsState("0")
+    val area by dataHandler.area.observeAsState("Район")
 
     val listState = rememberLazyListState()
     val coroutineScope = rememberCoroutineScope()
     val context = LocalContext.current
 
-    var sortedListToShow = serverRecords.sortedBy { it -> it.houseNumber.split("/")[0].filter { it.isDigit() }.toInt() }
-    LaunchedEffect(serverRecords) {
+    var sortedListToShow = records.sortedBy { it -> it.houseNumber.split("/")[0].filter { it.isDigit() }.toInt() }
+    LaunchedEffect(records) {
         sortedListToShow =
-            serverRecords.sortedBy { it ->
+            records.sortedBy { it ->
                 it.houseNumber.split("/")[0].filter { it.isDigit() }.toInt()
             }
 
     }
 
 
-    val area = sortedListToShow.firstOrNull()?.area ?: "Район"
     val showButton by remember { derivedStateOf { listState.firstVisibleItemIndex > 0 } }
     val showLastButton by remember { derivedStateOf { lastClicked.value > 0 } }
 
@@ -257,7 +257,7 @@ fun MainScreen(
                     verticalArrangement = Arrangement.Bottom
                 ) {
                     Text(
-                        text = area, // area title
+                        text = area ?: "Район", // area title
                         fontSize = MaterialTheme.typography.h5.fontSize,
                         fontWeight = FontWeight(200)
                     )
@@ -377,6 +377,7 @@ fun Selector(viewModel: MainViewModel, dataHandler: DataHandlerInterface) {
                                         context
                                     )
                                     selectedStatementId = item.listNumber
+                                    viewModel.onPositionChange(-1)
                                     isDialogVisible = false
                                 },
                                 modifier = Modifier
