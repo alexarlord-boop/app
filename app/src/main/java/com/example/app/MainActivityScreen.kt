@@ -267,6 +267,9 @@ fun MainScreen(
             itemsIndexed(sortedListToShow) { id, record ->
                 RecordItem(id, record, viewModel)
             }
+            coroutineScope.launch {
+                listState.animateScrollToItem(index = 0)
+            }
         }
 
 
