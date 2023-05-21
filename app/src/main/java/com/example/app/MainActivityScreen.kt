@@ -257,6 +257,15 @@ fun MainScreen(
             }
         }
 
+        // when record list is updated, it triggers launch -> scroll
+        LaunchedEffect(sortedListToShow) {
+            if (LAST_LIST_POSITION != -1) {
+                listState.animateScrollToItem(index = LAST_LIST_POSITION)
+            } else {
+                listState.animateScrollToItem(index = 0)
+            }
+        }
+
         LazyColumn(
             state = listState,
             modifier = Modifier
@@ -266,9 +275,6 @@ fun MainScreen(
 
             itemsIndexed(sortedListToShow) { id, record ->
                 RecordItem(id, record, viewModel)
-            }
-            coroutineScope.launch {
-                listState.animateScrollToItem(index = 0)
             }
         }
 
