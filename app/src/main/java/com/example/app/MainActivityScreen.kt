@@ -37,6 +37,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -221,6 +222,7 @@ fun MainScreen(
 
     val showUpButton by remember { derivedStateOf { listState.firstVisibleItemIndex > 0 } }
     val showLastButton by remember { derivedStateOf { lastClicked.value > 0 } }
+    val showUploadButton by remember { derivedStateOf { records.isNotEmpty() } }
     var isUploadDialogVisible by remember { mutableStateOf(false) }
 
     @Composable
@@ -237,8 +239,18 @@ fun MainScreen(
         } else {
             AlertDialog(onDismissRequest = { isUploadDialogVisible = false },
                 shape = RoundedCornerShape(15.dp),
-                title = {Text(text ="Выгрузка данных")},
-                text = { Text(text = "При выгрузке файлов, данные о записях удаляются с устройства. Вы хотите продолжить?") },
+                title = {
+                    Column() {
+                        Text(text = "Выгрузка данных", fontSize = 20.sp, fontWeight = FontWeight.Bold)
+                        Text(text = "Ведомость $stateId", fontSize = 15.sp)
+                    } },
+                text = {
+                    Column() {
+                        Text(text = "При выгрузке данных, файлы с записями удаляются с устройства.")
+                        Text(text = "Вы хотите продолжить?")
+
+                    }
+                       },
                 confirmButton = {
                     Button(onClick = { isUploadDialogVisible = false }) {
                         Text(text = "Да")
@@ -250,7 +262,6 @@ fun MainScreen(
                     }
                 })
         }
-
     }
 
 
@@ -290,16 +301,18 @@ fun MainScreen(
                             fontWeight = FontWeight(200)
                         )
 
-                        Button(shape = CircleShape,
-                            onClick = {
-                                isUploadDialogVisible = true
+                        if (showUploadButton) {
+                            Button(shape = CircleShape,
+                                onClick = {
+                                    isUploadDialogVisible = true
+                                }
+                            ) {
+                                Icon(
+                                    painter = painterResource(id = R.drawable.baseline_cloud_upload_24),
+                                    contentDescription = "",
+                                    modifier = Modifier.size(24.dp)
+                                )
                             }
-                        ) {
-                            Icon(
-                                painter = painterResource(id = R.drawable.baseline_cloud_upload_24),
-                                contentDescription = "",
-                                modifier = Modifier.size(24.dp)
-                            )
                         }
                     }
                 }
@@ -404,6 +417,7 @@ fun Selector(viewModel: MainViewModel, dataHandler: DataHandlerInterface) {
     @Composable
     fun ShowModalDialog() {
         AlertDialog(
+            shape = RoundedCornerShape(15.dp),
             onDismissRequest = { isDialogVisible = false },
             title = { Text(text = "Ведомости") },
             text = {
@@ -628,10 +642,54 @@ fun RecordItem(id: Int, record: RecordDto, viewModel: MainViewModel) {
 }
 
 
-@Preview
+//@Preview
 @Composable
 fun showMainScreen() {
     var fsHandler = FileSystemHandler()
     var viewModel: MainViewModel = MainViewModel()
     MainScreen(connected = true, dataHandler = fsHandler, viewModel = viewModel)
+}
+
+
+
+@Composable
+fun showUploadDialog() {
+    val connected = true
+    var isUploadDialogVisible = true
+    val stateId = 1
+    if (!connected) {
+        AlertDialog(onDismissRequest = { isUploadDialogVisible = false },
+            title = {Text(text ="Выгрузка данных")},
+            text = { Text(text = "Нет подключения к серверу. Выгрузка недоступна.") },
+            confirmButton = {
+                Button(onClick = { isUploadDialogVisible = false }) {
+                    Text(text = "Закрыть")
+                }
+            })
+    } else {
+        AlertDialog(onDismissRequest = { isUploadDialogVisible = false },
+            shape = RoundedCornerShape(15.dp),
+            title = {
+                Column() {
+                    Text(text = "Выгрузка данных", fontSize = 20.sp, fontWeight = FontWeight.Bold)
+                    Text(text = "Ведомость $stateId", fontSize = 15.sp)
+                } },
+            text = { Text(text = "При выгрузке данных, файлы с записями удаляются с устройства. Вы хотите продолжить?") },
+            confirmButton = {
+                Button(onClick = { isUploadDialogVisible = false }) {
+                    Text(text = "Да")
+                }
+            },
+            dismissButton = {
+                Button(onClick = { isUploadDialogVisible = false }) {
+                    Text(text = "Нет")
+                }
+            })
+    }
+}
+
+@Preview
+@Composable
+fun showUpload() {
+    showUploadDialog()
 }
