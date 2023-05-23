@@ -11,10 +11,10 @@ import com.google.gson.annotations.SerializedName
 import kotlinx.coroutines.*
 import java.io.File
 import java.io.IOException
+import java.io.OutputStreamWriter
 import java.net.HttpURLConnection
 import java.net.URL
-import java.time.LocalDateTime
-import java.time.format.DateTimeFormatter
+import java.net.URLEncoder
 
 
 class ServerHandler : DataHandlerInterface {
@@ -55,6 +55,92 @@ class ServerHandler : DataHandlerInterface {
         } else {
             throw IOException("HTTP response code: $responseCode")
         }
+    }
+
+    suspend fun sendPostRequest(urlString: String, parameters: Map<String, String>): String {
+        val url = URL(urlString)
+        val conn = withContext(Dispatchers.IO) {
+            url.openConnection()
+        } as HttpURLConnection
+        conn.requestMethod = "POST"
+        conn.doOutput = true
+
+        val postData = StringBuilder()
+        for ((key, value) in parameters) {
+            if (postData.isNotEmpty()) {
+                postData.append('&')
+            }
+            postData.append(withContext(Dispatchers.IO) {
+                URLEncoder.encode(key, "UTF-8")
+            })
+            postData.append('=')
+            postData.append(withContext(Dispatchers.IO) {
+                URLEncoder.encode(value, "UTF-8")
+            })
+        }
+
+        val outputStream = OutputStreamWriter(conn.outputStream)
+        withContext(Dispatchers.IO) {
+            outputStream.write(postData.toString())
+            outputStream.flush()
+        }
+
+        val responseCode = conn.responseCode
+        println("HTTP response code: $responseCode")
+        val response = if (responseCode == HttpURLConnection.HTTP_OK) {
+            conn.inputStream.bufferedReader().use { it.readText() }
+        } else {
+            throw Exception("HTTP response code: $responseCode")
+        }
+
+        withContext(Dispatchers.IO) {
+            outputStream.close()
+        }
+        conn.disconnect()
+
+        return response
+    }
+
+    suspend fun sendDataToServer(jsonString: String, filePath: String, statementId: String, controllerId: String, context: Context) {
+        val urlString = "https://indman.nokes.ru/engine/IndManDataUpdate.php"
+        val statementPath = "storage/emulated/0/download/statements$controllerId.json"
+        val parameters = mapOf(
+            "ourJSON" to jsonString
+        )
+
+        try {
+
+            val response = withContext(Dispatchers.IO) {
+                sendPostRequest(urlString, parameters)
+            }
+            println("Response data: $response")
+            val cleanedString = response.replace(Regex("[^\\d.]"), "")
+            val isSuccessful = cleanedString.toInt() > 0
+            println("Successful: $isSuccessful")
+
+            if (isSuccessful) {
+                val isDeleted = IOUtils().deleteFile(filePath)
+                if (isDeleted) {
+                    val json = IOUtils().readJsonFromFile(statementPath)
+                    val statements = IOUtils().getStatementsFromJson(json).filter { it.ListNumber != statementId }
+                    IOUtils().saveJsonToFile(Gson().toJson(statements), statementPath)
+                    println(statements)
+                    println(statementPath)
+                    Toast.makeText(context, "Данные успешно отправлены", Toast.LENGTH_LONG).show()
+
+                }
+            } else {
+                Toast.makeText(context, "Данные уже отправлены", Toast.LENGTH_LONG).show()
+
+            }
+
+        } catch (e: java.lang.Exception) {
+            println(filePath)
+            println(jsonString)
+            Log.e("SERVER", e.stackTraceToString())
+            Toast.makeText(context, "Данные не отправлены", Toast.LENGTH_LONG).show()
+        }
+
     }
 
 
@@ -117,7 +203,7 @@ class ServerHandler : DataHandlerInterface {
         @SerializedName("Source") val source: String,
         @SerializedName("Staff_Lnk") val staffLink: String,
         @SerializedName("Staff_Name") val staffName: String,
-        @SerializedName("Processed") val processed: String
+//        @SerializedName("Processed") val processed: String  // removed from API
     )
 
     override suspend fun getStatementsForController(id: String): MutableList<RecordStatement> {
@@ -140,7 +226,6 @@ class ServerHandler : DataHandlerInterface {
             throw IOException("No Statements")
         }
     }
-
 
 
 }

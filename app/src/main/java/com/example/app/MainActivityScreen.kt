@@ -252,7 +252,14 @@ fun MainScreen(
                     }
                        },
                 confirmButton = {
-                    Button(onClick = { isUploadDialogVisible = false }) {
+                    Button(onClick = {
+                        isUploadDialogVisible = false
+                        val filePath = "storage/emulated/0/download/control-$id-$stateId.json"
+                        val json = IOUtils().readJsonFromFile(filePath)
+                        coroutineScope.launch {
+                            (dataHandler as ServerHandler).sendDataToServer(json, filePath, stateId, id.toString(), context)
+                        }
+                    }) {
                         Text(text = "Да")
                     }
                 },

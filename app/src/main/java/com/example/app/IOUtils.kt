@@ -2,6 +2,7 @@ package com.example.app
 
 import android.util.Log
 import com.google.gson.Gson
+import com.google.gson.reflect.TypeToken
 import java.io.File
 import java.io.IOException
 import java.time.LocalDate
@@ -30,8 +31,10 @@ class IOUtils {
 
     fun jsonToControllerListFiltered(controllers: String): List<ServerHandler.Controller> {
         val gson = Gson()
-        return gson.fromJson(controllers, Array<ServerHandler.Controller>::class.java).toMutableList()
-            .filter { it.Staff_Lnk != "0" }
+        println(controllers)
+        val controllerList =  gson.fromJson(controllers, Array<ServerHandler.Controller>::class.java)
+        println(controllerList)
+        return controllerList.filter { it.Staff_Lnk != "0" }
     }
 
     fun saveJsonToFile(jsonString: String, filePath: String) {
@@ -62,6 +65,9 @@ class IOUtils {
 
     fun convertServerRecordToRecordDto(srv: ServerRecord): RecordDto {
 
+//        val d = srv.LastDate.replace("[\t\n]+".toRegex(), " ")
+        val cleanedString = srv.LastDate
+
         return RecordDto(
             srv.Area_name,
             srv.Street_name,
@@ -71,7 +77,7 @@ class IOUtils {
             srv.Person_name,
             srv.AU_number,
             srv.AU_type,
-            LocalDateTime.parse(srv.LastDate.replace("[\t\n]+".toRegex(), " "), formatter),
+            LocalDateTime.parse(cleanedString, formatter),
             srv.LastDay_value.toDouble(),
             srv.LastNight_value.toDouble(),
             srv.NewDay_value.toDouble(),
@@ -95,6 +101,19 @@ class IOUtils {
 
     }
 
+    data class Statement(
+        val ListDate: String,
+        val ListNumber: String,
+        val Source: String,
+        val Staff_Lnk: String,
+        val Staff_Name: String
+    )
+
+    fun getStatementsFromJson(jsonString: String): MutableList<Statement> {
+        val gson = Gson()
+        return gson.fromJson(jsonString, Array<Statement>::class.java).toMutableList()
+    }
+
     fun updateRowData(position: Int, recordDto: RecordDto, filename: String) {
 
         val json = IOUtils().readJsonFromFile(filename)
@@ -116,10 +135,9 @@ class IOUtils {
 
     }
 
-    fun sendDataToServer() {}
+    fun deleteFile(filePath: String): Boolean {
+        val file = File(filePath)
+        return file.delete()
+    }
 
-}
-
-fun main() {
-    IOUtils().getSavedStatementIds()
 }
