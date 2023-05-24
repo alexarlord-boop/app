@@ -91,7 +91,7 @@ class IOUtils {
     fun getSavedStatementIds(): List<String> {
         val directoryPath = "storage/emulated/0/download/"
         val searchTerm = "control-"
-        var ids = emptyList<String>()
+        val ids: List<String>
         val directory = File(directoryPath)
         ids = directory.listFiles { file ->
             file.isFile && file.name.contains(searchTerm)

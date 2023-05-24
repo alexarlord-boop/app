@@ -87,10 +87,10 @@ class RecordActivity : AppCompatActivity() {
                         record.ko_N = night.toDoubleOrNull() ?: 0.0
                         record.comments = newComments.text.toString()
 
-                        dataHandler?.let { handler ->
+                        dataHandler?.let {
                             IOUtils().updateRowData(position, record, filename)
                             Toast.makeText(this, "Сохранено", Toast.LENGTH_SHORT).show()
-                            onBackPressed()
+                            onBackPressedDispatcher.onBackPressed()
                         }
                     }
 
@@ -116,8 +116,4 @@ class RecordActivity : AppCompatActivity() {
         return super.dispatchTouchEvent(ev)
     }
 
-    override fun onBackPressed() {
-        super.onBackPressed()
-        finish() // destroys activity and returns to the previous one
-    }
 }

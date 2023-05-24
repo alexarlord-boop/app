@@ -176,31 +176,6 @@ class MainViewModel : ViewModel() {
     }
 }
 
-//@Preview
-@Composable
-fun showMain() {
-    val record = RecordDto(
-        "Район Интересный",
-        "Сонная",
-        "2",
-        1.0,
-        1234.0,
-        "Обломов И.И.",
-        "1234567890",
-        "12234Ь2344-ывваЦУК 1234",
-        LocalDateTime.now(),
-        12345.0,
-        12345.0,
-        10.0,
-        220.0,
-        "отдыхают",
-        34567.0,
-        -1
-    )
-//    val workBookHandler = WorkBookHandler()
-//    workBookHandler.onRecordListChange(List(10) { index -> record })
-
-}
 
 @Composable
 fun MainScreen(
@@ -208,7 +183,6 @@ fun MainScreen(
     dataHandler: DataHandlerInterface,
     viewModel: MainViewModel
 ) {
-    val sourceOption = viewModel.sourceOption.observeAsState(DATA_MODE)
     val records by dataHandler.listOfRecords.observeAsState(emptyList())
     val lastClicked = viewModel.position.observeAsState(LAST_LIST_POSITION)
     val id by viewModel.fileId.observeAsState(1)
@@ -318,7 +292,7 @@ fun MainScreen(
                 ) {
                     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween, modifier = Modifier.fillMaxWidth()) {
                         Text(
-                            text = area ?: "Район", // area title
+                            text = area,
                             fontSize = MaterialTheme.typography.h5.fontSize,
                             fontWeight = FontWeight(200)
                         )
