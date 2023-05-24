@@ -119,7 +119,7 @@ class MainViewModel : ViewModel() {
     private val _fileId: MutableLiveData<String> = MutableLiveData("1")
     val fileId: LiveData<String> = _fileId
 
-    private val _stateId: MutableLiveData<String> = MutableLiveData("0")
+    private val _stateId: MutableLiveData<String> = MutableLiveData("")
     val stateId: LiveData<String> = _stateId
 
     private var _position: MutableLiveData<Int> = MutableLiveData(-1)
@@ -131,6 +131,15 @@ class MainViewModel : ViewModel() {
 
     private val _controllerId: MutableLiveData<String> = MutableLiveData("0")
     var controllerId: LiveData<String> = _controllerId
+
+    val defaultOption = "Выбрать контролера"
+    private val _selectedOptionText: MutableLiveData<String> = MutableLiveData(defaultOption)
+    var selectedOptionText: LiveData<String> = _selectedOptionText
+
+    fun onOptionChange(newOption: String) {
+        _selectedOptionText.value = newOption
+    }
+
 
     fun onSourceOptionChange(newSrcOption: DataMode) {
         _sourceOption.value = newSrcOption
@@ -257,7 +266,13 @@ fun MainScreen(
                         val filePath = "storage/emulated/0/download/control-$id-$stateId.json"
                         val json = IOUtils().readJsonFromFile(filePath)
                         coroutineScope.launch {
-                            (dataHandler as ServerHandler).sendDataToServer(json, filePath, stateId, id.toString(), context)
+                            val isSent = (dataHandler as ServerHandler).sendDataToServer(json, filePath, stateId, id.toString(), context)
+                            if (isSent) {
+                                dataHandler.clearRecordList()
+                                viewModel.onOptionChange(viewModel.defaultOption)
+                                viewModel.onStateIdChange("")
+                                viewModel.onPositionChange(-1)
+                            }
                         }
                     }) {
                         Text(text = "Да")
@@ -399,15 +414,12 @@ fun Selector(viewModel: MainViewModel, dataHandler: DataHandlerInterface) {
     val coroutineScope = rememberCoroutineScope()
     val cs = CoroutineScope(Dispatchers.Main)
     var expanded by remember { mutableStateOf(false) }
-    var selectedOptionText by remember { mutableStateOf("Выбрать контролера") }
-    var selectedStatementId by remember {
-        mutableStateOf("")
-    }
+    val selectedOptionText = viewModel.selectedOptionText.observeAsState(viewModel.defaultOption)
+    val selectedStatementId = viewModel.stateId.observeAsState("")
     var fetchedData by remember { mutableStateOf(emptyList<ServerHandler.RecordStatement>()) }
     var isDialogVisible by remember { mutableStateOf(false) }
 
     val id by viewModel.fileId.observeAsState("1") // TODO:- check the value
-    val stateId by viewModel.stateId.observeAsState("0")
 
     var options by remember { mutableStateOf(listOf("-")) }
     var names by remember { mutableStateOf(listOf("-")) }
@@ -449,7 +461,7 @@ fun Selector(viewModel: MainViewModel, dataHandler: DataHandlerInterface) {
                                         item.listNumber,
                                         context
                                     )
-                                    selectedStatementId = item.listNumber
+                                    viewModel.onStateIdChange(item.listNumber)
                                     viewModel.onPositionChange(-1)
                                     isDialogVisible = false
                                 },
@@ -485,7 +497,7 @@ fun Selector(viewModel: MainViewModel, dataHandler: DataHandlerInterface) {
             border = BorderStroke(1.dp, color = Color.Black),
             colors = ButtonDefaults.buttonColors(backgroundColor = Color.White),
             onClick = { /*TODO*/ }) {
-            Text("$selectedOptionText | Ведомость $selectedStatementId")
+            Text("${selectedOptionText.value} | Ведомость ${selectedStatementId.value}")
         }
 
         ExposedDropdownMenu(
@@ -495,7 +507,7 @@ fun Selector(viewModel: MainViewModel, dataHandler: DataHandlerInterface) {
         ) {
             options.forEachIndexed { index, optionText ->
                 DropdownMenuItem(onClick = {
-                    selectedOptionText = names[index]
+                    viewModel.onOptionChange(names[index])
                     viewModel.onIdChange(optionText)
                     expanded = false
 

@@ -30,4 +30,8 @@ interface DataHandlerInterface {
 //        Toast.makeText(context, "Загружена ведомость $stateId", Toast.LENGTH_LONG).show()
     }
 
+    fun clearRecordList() {
+        onRecordListChange(emptyList())
+    }
+
 }

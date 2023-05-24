@@ -26,7 +26,11 @@ class ServerHandler : DataHandlerInterface {
 
     override fun onRecordListChange(newRecords: List<RecordDto>) {
         _listOfRecords.value = newRecords
-        onAreaChange(newRecords[0].area)
+        if (newRecords.isEmpty()) {
+            onAreaChange("Район")
+        } else {
+            onAreaChange(newRecords[0].area)
+        }
     }
 
     override val _area: MutableLiveData<String> = MutableLiveData()
@@ -101,12 +105,13 @@ class ServerHandler : DataHandlerInterface {
         return response
     }
 
-    suspend fun sendDataToServer(jsonString: String, filePath: String, statementId: String, controllerId: String, context: Context) {
+    suspend fun sendDataToServer(jsonString: String, filePath: String, statementId: String, controllerId: String, context: Context): Boolean {
         val urlString = "https://indman.nokes.ru/engine/IndManDataUpdate.php"
         val statementPath = "storage/emulated/0/download/statements$controllerId.json"
         val parameters = mapOf(
             "ourJSON" to jsonString
         )
+        var isSent = false
 
         try {
 
@@ -127,20 +132,22 @@ class ServerHandler : DataHandlerInterface {
                     println(statements)
                     println(statementPath)
                     Toast.makeText(context, "Данные успешно отправлены", Toast.LENGTH_LONG).show()
-
+                    isSent = true
                 }
             } else {
                 Toast.makeText(context, "Данные уже отправлены", Toast.LENGTH_LONG).show()
-
+                isSent = false
             }
+
 
         } catch (e: java.lang.Exception) {
             println(filePath)
             println(jsonString)
             Log.e("SERVER", e.stackTraceToString())
             Toast.makeText(context, "Данные не отправлены", Toast.LENGTH_LONG).show()
+            isSent = false
         }
-
+        return isSent
     }
 
 
