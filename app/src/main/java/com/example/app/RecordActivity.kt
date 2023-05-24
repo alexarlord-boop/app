@@ -21,17 +21,6 @@ class RecordActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_record)
 
-        val position = intent.getIntExtra("position", -1)
-        val filename = intent. getStringExtra("filename")!!
-        val lastDate = intent.getStringExtra("lastDate")!!
-        val gson = Gson()
-        val passedRecord = gson.fromJson( intent.getStringExtra("recordData"), RecordDto::class.java)
-
-
-        val workbookHandler = WorkBookHandler()
-        workbookHandler.getRecordsFromFile(filename)
-        passedRecord.lastKoDate = workbookHandler.convertStringToDate(lastDate)
-
         val name: TextView = findViewById(R.id.record_name)
         val puType: TextView = findViewById(R.id.record_pu_type)
         val puNumber: TextView = findViewById(R.id.record_pu_number)
@@ -42,19 +31,41 @@ class RecordActivity : AppCompatActivity() {
         val newDataNight: EditText = findViewById(R.id.record_current_check_night)
         val newComments: TextInputEditText = findViewById(R.id.textInputEditText)
 
+        val gson = Gson()
+        val passedRecord = gson.fromJson(intent.getStringExtra("recordData"), RecordDto::class.java)
+
+        var dataHandler: DataHandlerInterface? = null
+
+        val dataMode = intent.getStringExtra("dataMode")!!.toInt()
+        val filename = intent.getStringExtra("filename")!!
+        val lastDate = intent.getStringExtra("lastDate")!!
+        println(lastDate)
+
+        when (dataMode) {
+            0 -> {
+//                dataHandler = WorkBookHandler()
+//                dataHandler.getRecordsFromFile(filename)
+                passedRecord.lastKoDate = IOUtils().convertStringToDate(lastDate)
+            }
+            1 -> {
+                dataHandler = ServerHandler()
+                passedRecord.lastKoDate = IOUtils().convertStringToDate(lastDate)
+            }
+        }
+
         passedRecord?.let {
             name.text = it.name
             puType.text = it.puType
             puNumber.text = it.puNumber
-            lastCheckDate.text = workbookHandler.convertDateToFormattedString(it.lastKoDate)
+            lastCheckDate.text = lastDate
             lastCheckDateDay.text = it.lastKo_D.toString().beforeZeroOrBlank()
             lastCheckDateNight.text = it.lastKo_N.toString().beforeZeroOrBlank()
-
-
             newDataDay.setText(it.ko_D.toString().beforeZeroOrBlank())
             newDataNight.setText(it.ko_N.toString().beforeZeroOrBlank())
             newComments.setText(it.comments)
         }
+
+        val position = intent.getIntExtra("position", -1)
 
 
         val saveBtn: Button = findViewById(R.id.save_btn)
@@ -65,24 +76,24 @@ class RecordActivity : AppCompatActivity() {
             val inputDay = checkInput(lastCheckDateDay.text.toString(), day)
             val inputNight = checkInput(lastCheckDateNight.text.toString(), night)
 
-            if (inputDay && inputNight) {
-                val comments = newComments.text.toString()
+            when {
+                !inputDay -> newDataDay.error = "Значение должно быть не меньше предыдущего"
+                !inputNight -> newDataNight.error = "Значение должно быть не меньше предыдущего"
+                day.length > 6 -> newDataDay.error = "Значение не должно превышать лимит"
+                night.length > 6 -> newDataNight.error = "Значение не должно превышать лимит"
+                else -> {
+                    passedRecord?.let { record ->
+                        record.ko_D = day.toDoubleOrNull() ?: 0.0
+                        record.ko_N = night.toDoubleOrNull() ?: 0.0
+                        record.comments = newComments.text.toString()
 
-                passedRecord?.also {
-                    it.ko_D = if (day != "") day.toDouble() else 0.0
-                    it.ko_N = if (night != "") night.toDouble() else 0.0
-                    it.comments = comments
+                        dataHandler?.let { handler ->
+                            IOUtils().updateRowData(position, record, filename)
+                            Toast.makeText(this, "Сохранено", Toast.LENGTH_SHORT).show()
+                            onBackPressed()
+                        }
+                    }
 
-                    workbookHandler.updateRowData(position, it, filename)
-                    Toast.makeText(this, "Сохранено", Toast.LENGTH_SHORT).show()
-                    onBackPressed()
-                }
-            } else {
-                if (!inputDay) {
-                    newDataDay.error = "Значение должно быть не меньше предыдущего"
-                }
-                if (!inputNight) {
-                    newDataNight.error = "Значение должно быть не меньше предыдущего"
                 }
             }
         }
