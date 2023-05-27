@@ -67,6 +67,7 @@ class MainActivityScreen : AppCompatActivity() {
         val networkCapabilities =
             connectivityManager.getNetworkCapabilities(connectivityManager.activeNetwork)
 
+
         if (networkCapabilities != null && networkCapabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)) {
             setContent {
                 val navController = rememberNavController()
@@ -79,7 +80,9 @@ class MainActivityScreen : AppCompatActivity() {
             Toast.makeText(this, "Нет подключения к сети.", Toast.LENGTH_LONG).show()
             DATA_MODE = MainViewModel.DataMode.FILE
             setContent {
-                MainScreen(connected = false, fsHandler, viewModel)
+                val navController = rememberNavController()
+                SetupNavGraph(navController = navController, false, serverHandler, viewModel)
+
             }
         }
     }
