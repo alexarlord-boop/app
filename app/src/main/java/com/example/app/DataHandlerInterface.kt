@@ -23,11 +23,10 @@ interface DataHandlerInterface {
     fun getRecordsForStatement(controllerId: String, statementId: String, context: Context): List<RecordDto>
 
     fun reloadRecordsFromFile(controlId: String, stateId: String, context: Context) {
-        val path = "storage/emulated/0/download/control-$controlId-$stateId.json"
+        val path = AppStrings.deviceDirectory + "control-$controlId-$stateId.json"
         val records =
             IOUtils().convertServerListToRecordDtoList(IOUtils().parseRecordsFromJson(IOUtils().readJsonFromFile(path)))
         onRecordListChange(records)
-//        Toast.makeText(context, "Загружена ведомость $stateId", Toast.LENGTH_LONG).show()
     }
 
     fun clearRecordList() {

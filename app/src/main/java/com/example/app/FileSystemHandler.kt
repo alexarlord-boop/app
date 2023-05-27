@@ -29,7 +29,7 @@ class FileSystemHandler : DataHandlerInterface {
     }
 
     override suspend fun getControllers(): List<ServerHandler.Controller> {
-        val pathToControllers = "storage/emulated/0/download/controllers.json"
+        val pathToControllers = AppStrings.deviceDirectory + "controllers.json"
         try {
             val controllers =
                 IO().jsonToControllerListFiltered(IO().readJsonFromFile(pathToControllers))
@@ -42,7 +42,7 @@ class FileSystemHandler : DataHandlerInterface {
     }
 
     override suspend fun getStatementsForController(id: String): MutableList<ServerHandler.RecordStatement> {
-        val pathToStatements = "storage/emulated/0/download/statements$id.json"
+        val pathToStatements = AppStrings.deviceDirectory + "statements$id.json"
         val savedStatementIds = IO().getSavedStatementIds()
         try {
             var statements = Gson().fromJson(

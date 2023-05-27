@@ -106,8 +106,8 @@ class ServerHandler : DataHandlerInterface {
     }
 
     suspend fun sendDataToServer(jsonString: String, filePath: String, statementId: String, controllerId: String, context: Context): Boolean {
-        val urlString = "https://indman.nokes.ru/engine/IndManDataUpdate.php"
-        val statementPath = "storage/emulated/0/download/statements$controllerId.json"
+        val urlString = AppStrings.updateData
+        val statementPath = AppStrings.deviceDirectory + "statements$controllerId.json"
         val parameters = mapOf(
             "ourJSON" to jsonString
         )
@@ -157,9 +157,8 @@ class ServerHandler : DataHandlerInterface {
         context: Context
     ): List<RecordDto> {
         var records = emptyList<RecordDto>()
-        val path = "storage/emulated/0/download/control-$controllerId-$statementId.json"
-        val urlString =
-            "https://indman.nokes.ru/engine/IndManDataByListNumber.php?listnumber=$statementId"
+        val path = AppStrings.deviceDirectory + "control-$controllerId-$statementId.json"
+        val urlString = AppStrings.recordsByListId + "?listnumber=$statementId"
         if (File(path).exists()) {
             this.reloadRecordsFromFile(controllerId, statementId, context)
         } else {
@@ -191,8 +190,8 @@ class ServerHandler : DataHandlerInterface {
     data class Controller(val Staff_Lnk: String, val Staff_Name: String) {}
 
     override suspend fun getControllers(): List<Controller> {
-        val urlString = "https://indman.nokes.ru/engine/IndManListsStaffOnly.php"
-        val pathToControllers = "storage/emulated/0/download/controllers.json"
+        val urlString = AppStrings.controllers
+        val pathToControllers = AppStrings.deviceDirectory + "controllers.json"
         try {
             val controllers = withContext(Dispatchers.IO) {
                 fetchDataFromServer(urlString)
@@ -215,8 +214,8 @@ class ServerHandler : DataHandlerInterface {
 
     override suspend fun getStatementsForController(id: String): MutableList<RecordStatement> {
         val gson = Gson()
-        val urlString = "https://indman.nokes.ru/engine/IndManListsByStaff_Lnk.php?Staff_Lnk=$id"
-        val pathToStatements = "storage/emulated/0/download/statements$id.json"
+        val urlString = AppStrings.statementsByControllerId + "?Staff_Lnk=$id"
+        val pathToStatements = AppStrings.deviceDirectory + "statements$id.json"
         try {
             val statements = withContext(Dispatchers.IO) {
                 fetchDataFromServer(urlString).trimIndent()

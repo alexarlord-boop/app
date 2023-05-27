@@ -132,7 +132,7 @@ class MainViewModel : ViewModel() {
     var position: LiveData<Int> = _position
 
     private val _filename: MutableLiveData<String> =
-        MutableLiveData("storage/emulated/0/download/control1.xls")
+        MutableLiveData(AppStrings.deviceDirectory + "control1.xls")
     val filename: LiveData<String> = _filename
 
     private val _controllerId: MutableLiveData<String> = MutableLiveData("0")
@@ -243,7 +243,7 @@ fun MainScreen(
                 confirmButton = {
                     Button(onClick = {
                         isUploadDialogVisible = false
-                        val filePath = "storage/emulated/0/download/control-$id-$stateId.json"
+                        val filePath = AppStrings.deviceDirectory + "control-$id-$stateId.json"
                         val json = IOUtils().readJsonFromFile(filePath)
                         coroutineScope.launch {
                             val isSent = (dataHandler as ServerHandler).sendDataToServer(json, filePath, stateId, id.toString(), context)
@@ -532,8 +532,7 @@ fun RecordItem(id: Int, record: RecordDto, viewModel: MainViewModel) {
     val stateId = viewModel.stateId.observeAsState("0").value
 
     val sourceOption = viewModel.sourceOption.value?.id
-    val filename =
-        if (sourceOption == 0) "storage/emulated/0/download/control${fid}.xls" else "storage/emulated/0/download/control-${fid}-${stateId}.json" // TODO:- check files
+    val filename = AppStrings.deviceDirectory + "control-${fid}-${stateId}.json"
 
     Card(
 

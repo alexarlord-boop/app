@@ -89,7 +89,7 @@ class IOUtils {
     }
 
     fun getSavedStatementIds(): List<String> {
-        val directoryPath = "storage/emulated/0/download/"
+        val directoryPath = AppStrings.deviceDirectory
         val searchTerm = "control-"
         val ids: List<String>
         val directory = File(directoryPath)
