@@ -58,11 +58,15 @@ fun SplashScreen(alphaAnimation: Float, version: String) {
                     .alpha(alpha = alphaAnimation),
                 tint = Color.Black
             )
+
+            Text(text = "НОЭ контрольные обходы",  fontSize = 28.sp,
+                modifier = Modifier.alpha(alpha = alphaAnimation))
+
             
             Spacer(modifier = Modifier.height(250.dp))
 
             Text(text = "Version: $version",  fontSize = 20.sp,
-                modifier = Modifier.alpha(alpha = alphaAnimation),)
+                modifier = Modifier.alpha(alpha = alphaAnimation))
 
         }
 
