@@ -1,14 +1,14 @@
-package com.example.app
+package com.example.app.data
 
 import android.content.Context
 import android.widget.Toast
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
+import com.example.app.AppStrings
+import com.example.app.record.RecordDto
+import com.example.app.ServerHandler
 import com.google.gson.Gson
-import com.example.app.IOUtils as IO
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
+import com.example.app.data.IOUtils as IO
 import java.io.IOException
 
 class FileSystemHandler : DataHandlerInterface {

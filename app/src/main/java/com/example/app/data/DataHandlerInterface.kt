@@ -1,9 +1,11 @@
-package com.example.app
+package com.example.app.data
 
 import android.content.Context
-import android.widget.Toast
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
+import com.example.app.AppStrings
+import com.example.app.record.RecordDto
+import com.example.app.ServerHandler
 
 interface DataHandlerInterface {
     val _listOfRecords: MutableLiveData<List<RecordDto>>

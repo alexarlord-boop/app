@@ -1,10 +1,9 @@
-package com.example.app
+package com.example.app.record
 
 import android.content.Context
 import android.os.Build
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import android.util.Log
 import android.view.MotionEvent
 import android.view.inputmethod.InputMethodManager
 import android.widget.Button
@@ -12,6 +11,10 @@ import android.widget.EditText
 import android.widget.TextView
 import android.widget.Toast
 import androidx.annotation.RequiresApi
+import com.example.app.R
+import com.example.app.ServerHandler
+import com.example.app.data.DataHandlerInterface
+import com.example.app.data.IOUtils
 import com.google.android.material.textfield.TextInputEditText
 import com.google.gson.Gson
 
