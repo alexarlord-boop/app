@@ -1,8 +1,11 @@
-package com.example.app
+package com.example.app.data
 
 import android.util.Log
+import com.example.app.AppStrings
+import com.example.app.record.RecordDto
+import com.example.app.ServerHandler
+import com.example.app.ServerRecord
 import com.google.gson.Gson
-import com.google.gson.reflect.TypeToken
 import java.io.File
 import java.io.IOException
 import java.time.LocalDate
@@ -89,7 +92,7 @@ class IOUtils {
     }
 
     fun getSavedStatementIds(): List<String> {
-        val directoryPath = "storage/emulated/0/download/"
+        val directoryPath = AppStrings.deviceDirectory
         val searchTerm = "control-"
         val ids: List<String>
         val directory = File(directoryPath)

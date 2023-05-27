@@ -41,9 +41,14 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import androidx.navigation.compose.rememberNavController
+import com.example.app.data.DataHandlerInterface
+import com.example.app.data.FileSystemHandler
+import com.example.app.data.IOUtils
+import com.example.app.record.RecordActivity
+import com.example.app.record.RecordDto
 import com.google.gson.Gson
 import kotlinx.coroutines.*
-import java.time.LocalDateTime
 
 var FILE_NAME = ""
 var DATA_MODE = MainViewModel.DataMode.SERVER
@@ -66,9 +71,12 @@ class MainActivityScreen : AppCompatActivity() {
         val networkCapabilities =
             connectivityManager.getNetworkCapabilities(connectivityManager.activeNetwork)
 
+
         if (networkCapabilities != null && networkCapabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)) {
             setContent {
-                MainScreen(connected = true, serverHandler, viewModel)
+                val navController = rememberNavController()
+                SetupNavGraph(navController = navController, true, serverHandler, viewModel)
+//                MainScreen(connected = true, serverHandler, viewModel)
             }
         } else {
             // Show a dialog or handle the case when there is no network connectivity
@@ -76,7 +84,9 @@ class MainActivityScreen : AppCompatActivity() {
             Toast.makeText(this, "Нет подключения к сети.", Toast.LENGTH_LONG).show()
             DATA_MODE = MainViewModel.DataMode.FILE
             setContent {
-                MainScreen(connected = false, fsHandler, viewModel)
+                val navController = rememberNavController()
+                SetupNavGraph(navController = navController, false, fsHandler, viewModel)
+
             }
         }
     }
@@ -126,7 +136,7 @@ class MainViewModel : ViewModel() {
     var position: LiveData<Int> = _position
 
     private val _filename: MutableLiveData<String> =
-        MutableLiveData("storage/emulated/0/download/control1.xls")
+        MutableLiveData(AppStrings.deviceDirectory + "control1.xls")
     val filename: LiveData<String> = _filename
 
     private val _controllerId: MutableLiveData<String> = MutableLiveData("0")
@@ -237,7 +247,7 @@ fun MainScreen(
                 confirmButton = {
                     Button(onClick = {
                         isUploadDialogVisible = false
-                        val filePath = "storage/emulated/0/download/control-$id-$stateId.json"
+                        val filePath = AppStrings.deviceDirectory + "control-$id-$stateId.json"
                         val json = IOUtils().readJsonFromFile(filePath)
                         coroutineScope.launch {
                             val isSent = (dataHandler as ServerHandler).sendDataToServer(json, filePath, stateId, id.toString(), context)
@@ -526,8 +536,7 @@ fun RecordItem(id: Int, record: RecordDto, viewModel: MainViewModel) {
     val stateId = viewModel.stateId.observeAsState("0").value
 
     val sourceOption = viewModel.sourceOption.value?.id
-    val filename =
-        if (sourceOption == 0) "storage/emulated/0/download/control${fid}.xls" else "storage/emulated/0/download/control-${fid}-${stateId}.json" // TODO:- check files
+    val filename = AppStrings.deviceDirectory + "control-${fid}-${stateId}.json"
 
     Card(
 

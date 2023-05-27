@@ -1,4 +1,4 @@
-package com.example.app
+package com.example.app.record
 
 import android.os.Bundle
 import android.os.PersistableBundle
