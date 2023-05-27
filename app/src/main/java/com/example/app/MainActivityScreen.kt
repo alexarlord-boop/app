@@ -81,7 +81,7 @@ class MainActivityScreen : AppCompatActivity() {
             DATA_MODE = MainViewModel.DataMode.FILE
             setContent {
                 val navController = rememberNavController()
-                SetupNavGraph(navController = navController, false, serverHandler, viewModel)
+                SetupNavGraph(navController = navController, false, fsHandler, viewModel)
 
             }
         }
