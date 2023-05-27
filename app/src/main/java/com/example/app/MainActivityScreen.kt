@@ -41,6 +41,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import androidx.navigation.compose.rememberNavController
 import com.google.gson.Gson
 import kotlinx.coroutines.*
 import java.time.LocalDateTime
@@ -68,7 +69,9 @@ class MainActivityScreen : AppCompatActivity() {
 
         if (networkCapabilities != null && networkCapabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)) {
             setContent {
-                MainScreen(connected = true, serverHandler, viewModel)
+                val navController = rememberNavController()
+                SetupNavGraph(navController = navController, true, serverHandler, viewModel)
+//                MainScreen(connected = true, serverHandler, viewModel)
             }
         } else {
             // Show a dialog or handle the case when there is no network connectivity
