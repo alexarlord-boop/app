@@ -44,6 +44,7 @@ class FileSystemHandler : DataHandlerInterface {
     override suspend fun getStatementsForController(id: String): MutableList<ServerHandler.RecordStatement> {
         val pathToStatements = AppStrings.deviceDirectory + "statements$id.json"
         val savedStatementIds = IO().getSavedStatementIds()
+        println(savedStatementIds)
         try {
             var statements = Gson().fromJson(
                 IO().readJsonFromFile(pathToStatements),
@@ -51,6 +52,7 @@ class FileSystemHandler : DataHandlerInterface {
             ).toMutableList()
             statements =
                 statements.filter { s -> savedStatementIds.contains(s.listNumber) }.toMutableList()
+            println(statements)
             return statements // filter only those, which is present on device (parse filenames...)
         } catch (e: java.lang.Exception) {
             throw IOException("No statements fetched")

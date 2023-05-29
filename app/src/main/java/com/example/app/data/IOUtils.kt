@@ -34,16 +34,21 @@ class IOUtils {
 
     fun jsonToControllerListFiltered(controllers: String): List<ServerHandler.Controller> {
         val gson = Gson()
-        println(controllers)
         val controllerList =  gson.fromJson(controllers, Array<ServerHandler.Controller>::class.java)
         println(controllerList)
         return controllerList.filter { it.Staff_Lnk != "0" }
     }
 
     fun saveJsonToFile(jsonString: String, filePath: String) {
-        Log.w("FILESYSTEM", "Saved data to: $filePath")
-        val file = File(filePath)
-        file.writeText(jsonString)
+        println(filePath)
+        try {
+            val file = File(filePath)
+            file.writeText(jsonString)
+            Log.w("FILESYSTEM", "Saved data to: $filePath")
+        } catch (e: java.lang.Exception) {
+            Log.e("FILESYSTEM", e.stackTraceToString())
+            println(e)
+        }
     }
 
 

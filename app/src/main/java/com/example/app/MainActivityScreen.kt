@@ -49,6 +49,7 @@ import com.example.app.record.RecordActivity
 import com.example.app.record.RecordDto
 import com.google.gson.Gson
 import kotlinx.coroutines.*
+import java.io.File
 
 var FILE_NAME = ""
 var DATA_MODE = MainViewModel.DataMode.SERVER
@@ -62,9 +63,20 @@ class MainActivityScreen : AppCompatActivity() {
     var fsHandler = FileSystemHandler()
     var viewModel: MainViewModel = MainViewModel()
 
+    fun createDirectoryIfNotExists(directoryPath: String) {
+        val directory = File(directoryPath)
+        if (!directory.exists()) {
+            directory.mkdirs()
+            println("Directory created: $directoryPath")
+        } else {
+            println("Directory already exists: $directoryPath")
+        }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        createDirectoryIfNotExists(AppStrings.deviceDirectory)
 
         val connectivityManager =
             getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
@@ -411,6 +423,7 @@ fun Selector(viewModel: MainViewModel, dataHandler: DataHandlerInterface) {
     LaunchedEffect(Unit) {
         coroutineScope.launch {
             val controllers = dataHandler.getControllers()
+            println(controllers)
             options = controllers.map { it.Staff_Lnk }
             names = controllers.map { it.Staff_Name }
         }
