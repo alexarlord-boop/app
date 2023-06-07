@@ -34,7 +34,14 @@ class IOUtils {
 
     fun jsonToControllerListFiltered(controllers: String): List<ServerHandler.Controller> {
         val gson = Gson()
-        val controllerList =  gson.fromJson(controllers, Array<ServerHandler.Controller>::class.java)
+        val arrayOfControllers = "[" + controllers
+            .substring(0, controllers.length - 1)
+            .split("},")
+            .map { it.split(":{")[1] }
+            .map { "{${it.trim('{').trim('}')}}" }.joinToString(",") + "]"
+
+        Log.w("DATA", arrayOfControllers)
+        val controllerList =  gson.fromJson(arrayOfControllers, Array<ServerHandler.Controller>::class.java)
         println(controllerList)
         return controllerList.filter { it.Staff_Lnk != "0" }
     }

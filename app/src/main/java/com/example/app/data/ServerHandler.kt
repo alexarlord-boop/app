@@ -200,6 +200,7 @@ class ServerHandler : DataHandlerInterface {
                 fetchDataFromServer(urlString)
             }
             IOUtils().saveJsonToFile(controllers, pathToControllers)
+            Log.w("DATA", controllers)
             return IOUtils().jsonToControllerListFiltered(controllers)
         } catch (e: IOException) {
             return listOf(Controller("-", "-"))
