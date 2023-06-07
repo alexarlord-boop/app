@@ -438,7 +438,7 @@ fun Selector(viewModel: MainViewModel, dataHandler: DataHandlerInterface) {
             title = { Text(text = "Ведомости") },
             text = {
                 Column {
-                    fetchedData.forEach { item ->
+                    fetchedData.sortedBy { it.listNumber.toInt() } .forEach { item ->
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.Start,
