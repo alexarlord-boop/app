@@ -420,16 +420,7 @@ fun Selector(viewModel: MainViewModel, dataHandler: DataHandlerInterface) {
     var options by remember { mutableStateOf(listOf("-")) }
     var names by remember { mutableStateOf(listOf("нет ведомостей")) }
 
-    LaunchedEffect(Unit) {
-        coroutineScope.launch {
-            val controllers = dataHandler.getControllers()
-            println(controllers)
-            if (controllers !== null) {
-                options = controllers.map { it.Staff_Lnk }
-                names = controllers.map { it.Staff_Name }
-            }
-        }
-    }
+
 
     // Function to show the modal dialog with fetched data
     @Composable
@@ -495,7 +486,18 @@ fun Selector(viewModel: MainViewModel, dataHandler: DataHandlerInterface) {
             modifier = Modifier.fillMaxWidth(),
             border = BorderStroke(1.dp, color = Color.Black),
             colors = ButtonDefaults.buttonColors(backgroundColor = Color.White),
-            onClick = { /*TODO*/ }) {
+            onClick = {
+
+                    coroutineScope.launch {
+                        val controllers = dataHandler.getControllers()
+                        println(controllers)
+                        if (controllers !== null) {
+                            options = controllers.map { it.Staff_Lnk }
+                            names = controllers.map { it.Staff_Name }
+                        }
+                    }
+
+            }) {
             Text("${selectedOptionText.value} | Ведомость ${selectedStatementId.value}")
         }
 
