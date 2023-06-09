@@ -1,6 +1,7 @@
 package com.example.app.data
 
 import android.content.Context
+import android.util.Log
 import android.widget.Toast
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
@@ -28,7 +29,7 @@ class FileSystemHandler : DataHandlerInterface {
         _area.value = newArea
     }
 
-    override suspend fun getControllers(): List<ServerHandler.Controller> {
+    override suspend fun getControllers(): List<ServerHandler.Controller>? {
         val pathToControllers = AppStrings.deviceDirectory + "controllers.json"
         try {
             val controllers =
@@ -36,7 +37,8 @@ class FileSystemHandler : DataHandlerInterface {
             println(controllers)
             return controllers
         } catch (e: java.lang.Exception) {
-            throw IOException("No controllers fetched")
+            Log.e("FILESYSTEM", "No controllers fetched")
+            return null
         }
 
     }

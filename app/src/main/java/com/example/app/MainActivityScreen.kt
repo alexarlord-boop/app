@@ -418,14 +418,16 @@ fun Selector(viewModel: MainViewModel, dataHandler: DataHandlerInterface) {
     val id by viewModel.fileId.observeAsState("1") // TODO:- check the value
 
     var options by remember { mutableStateOf(listOf("-")) }
-    var names by remember { mutableStateOf(listOf("-")) }
+    var names by remember { mutableStateOf(listOf("нет ведомостей")) }
 
     LaunchedEffect(Unit) {
         coroutineScope.launch {
             val controllers = dataHandler.getControllers()
             println(controllers)
-            options = controllers.map { it.Staff_Lnk }
-            names = controllers.map { it.Staff_Name }
+            if (controllers !== null) {
+                options = controllers.map { it.Staff_Lnk }
+                names = controllers.map { it.Staff_Name }
+            }
         }
     }
 

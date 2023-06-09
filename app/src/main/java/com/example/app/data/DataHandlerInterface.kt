@@ -18,7 +18,7 @@ interface DataHandlerInterface {
 
     fun onAreaChange(newArea: String)
 
-    suspend fun getControllers(): List<ServerHandler.Controller>
+    suspend fun getControllers(): List<ServerHandler.Controller>?
 
     suspend fun getStatementsForController(id: String): MutableList<ServerHandler.RecordStatement>
 

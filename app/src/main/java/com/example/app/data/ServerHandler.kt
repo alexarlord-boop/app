@@ -50,18 +50,28 @@ class ServerHandler : DataHandlerInterface {
     suspend fun fetchDataFromServer(urlString: String): String {
         val url = URL(urlString)
         Log.w("SERVER", "Request to: $url")
-        val conn = withContext(Dispatchers.IO) {
-            url.openConnection()
-        } as HttpURLConnection
-        conn.requestMethod = "GET"
-        conn.setRequestProperty("Accept", "application/json")
 
-        val responseCode = conn.responseCode
-        if (responseCode == HttpURLConnection.HTTP_OK) {
-            return conn.inputStream.bufferedReader().use { it.readText() }
-        } else {
-            throw IOException("HTTP response code: $responseCode")
+        try {
+            val conn = withContext(Dispatchers.IO) {
+                url.openConnection()
+            } as HttpURLConnection
+            conn.requestMethod = "GET"
+            conn.setRequestProperty("Accept", "application/json")
+
+            val responseCode = conn.responseCode
+            if (responseCode == HttpURLConnection.HTTP_OK) {
+                val response = conn.inputStream.bufferedReader().use { it.readText() }
+                Log.i("DATA",  response)
+                return if (response.length > 1) response else ""
+            } else {
+                Log.e("SERVER", responseCode.toString())
+                throw IOException("HTTP response code: $responseCode")
+            }
+        } catch (e: Exception) {
+            Log.e("SERVER", e.stackTraceToString())
+            return ""
         }
+
     }
 
     suspend fun sendPostRequest(urlString: String, parameters: Map<String, String>): String {
@@ -192,18 +202,22 @@ class ServerHandler : DataHandlerInterface {
 
     data class Controller(val Staff_Lnk: String, val Staff_Name: String) {}
 
-    override suspend fun getControllers(): List<Controller> {
+    override suspend fun getControllers(): List<Controller>? {
         val urlString = AppStrings.controllers
         val pathToControllers = AppStrings.deviceDirectory + "controllers.json"
         try {
             val controllers = withContext(Dispatchers.IO) {
                 fetchDataFromServer(urlString)
             }
-            IOUtils().saveJsonToFile(controllers, pathToControllers)
-            Log.w("DATA", controllers)
-            return IOUtils().jsonToControllerListFiltered(controllers)
+            if (controllers.isNotEmpty()) {
+                IOUtils().saveJsonToFile(controllers, pathToControllers)
+                return IOUtils().jsonToControllerListFiltered(controllers)
+            } else {
+                return null
+            }
+
         } catch (e: IOException) {
-            return listOf(Controller("-", "-"))
+            return null
         }
     }
 
