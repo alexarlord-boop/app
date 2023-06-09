@@ -37,7 +37,7 @@ class FileSystemHandler : DataHandlerInterface {
             println(controllers)
             return controllers
         } catch (e: java.lang.Exception) {
-            Log.e("FILESYSTEM", "No controllers fetched")
+            Log.e("FILESYSTEM", e.stackTraceToString())
             return null
         }
 
