@@ -112,7 +112,9 @@ class MainActivityScreen : AppCompatActivity() {
                         viewModel.stateId.value.toString(),
                         this
                     )
-                } catch (e: Exception) { Log.w("LIFECYCLE", e.message.toString())}
+                } catch (e: Exception) {
+                    Log.w("LIFECYCLE", e.message.toString())
+                }
             }
             1 -> {
                 try {
@@ -121,7 +123,9 @@ class MainActivityScreen : AppCompatActivity() {
                         viewModel.stateId.value.toString(),
                         this
                     )
-                } catch (e: Exception) { Log.w("LIFECYCLE", e.message.toString())}
+                } catch (e: Exception) {
+                    Log.w("LIFECYCLE", e.message.toString())
+                }
             }
         }
     }
@@ -214,12 +218,28 @@ fun MainScreen(
     val listState = rememberLazyListState()
     val coroutineScope = rememberCoroutineScope()
     val context = LocalContext.current
+    Log.w("DATA", records.toString())
 
-    var sortedListToShow = records.sortedBy { it -> it.houseNumber.split("/")[0].filter { it.isDigit() }.toInt() }
+    var sortedListToShow =
+        records.sortedBy { record ->
+            val houseNumber = record.houseNumber
+            val numericPart = houseNumber.split("\\D+".toRegex() )[0].filter { it.isDigit() }
+            if (numericPart.isNotEmpty()) {
+                numericPart.toInt()
+            } else {
+                Int.MAX_VALUE
+            }
+        }
     LaunchedEffect(records) {
         sortedListToShow =
-            records.sortedBy { it ->
-                it.houseNumber.split("/")[0].filter { it.isDigit() }.toInt()
+            records.sortedBy { record ->
+                val houseNumber = record.houseNumber
+                val numericPart = houseNumber.split("\\D+".toRegex() )[0].filter { it.isDigit() }
+                if (numericPart.isNotEmpty()) {
+                    numericPart.toInt()
+                } else {
+                    Int.MAX_VALUE
+                }
             }
 
     }
@@ -234,7 +254,7 @@ fun MainScreen(
     fun showUploadDialog() {
         if (!connected) {
             AlertDialog(onDismissRequest = { isUploadDialogVisible = false },
-                title = {Text(text ="Выгрузка данных")},
+                title = { Text(text = "Выгрузка данных") },
                 text = { Text(text = "Нет подключения к серверу. Выгрузка недоступна.") },
                 confirmButton = {
                     Button(onClick = { isUploadDialogVisible = false }) {
@@ -246,23 +266,34 @@ fun MainScreen(
                 shape = RoundedCornerShape(15.dp),
                 title = {
                     Column() {
-                        Text(text = "Выгрузка данных", fontSize = 20.sp, fontWeight = FontWeight.Bold)
+                        Text(
+                            text = "Выгрузка данных",
+                            fontSize = 20.sp,
+                            fontWeight = FontWeight.Bold
+                        )
                         Text(text = "Ведомость $stateId", fontSize = 15.sp)
-                    } },
+                    }
+                },
                 text = {
                     Column() {
                         Text(text = "При выгрузке данных, файлы с записями удаляются с устройства.")
                         Text(text = "Вы хотите продолжить?")
 
                     }
-                       },
+                },
                 confirmButton = {
                     Button(onClick = {
                         isUploadDialogVisible = false
                         val filePath = AppStrings.deviceDirectory + "control-$id-$stateId.json"
                         val json = IOUtils().readJsonFromFile(filePath)
                         coroutineScope.launch {
-                            val isSent = (dataHandler as ServerHandler).sendDataToServer(json, filePath, stateId, id.toString(), context)
+                            val isSent = (dataHandler as ServerHandler).sendDataToServer(
+                                json,
+                                filePath,
+                                stateId,
+                                id.toString(),
+                                context
+                            )
                             if (isSent) {
                                 dataHandler.clearRecordList()
                                 viewModel.onOptionChange(viewModel.defaultOption)
@@ -312,7 +343,11 @@ fun MainScreen(
                         .fillMaxWidth(),
                     verticalArrangement = Arrangement.Bottom
                 ) {
-                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween, modifier = Modifier.fillMaxWidth()) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
                         Text(
                             text = area,
                             fontSize = MaterialTheme.typography.h5.fontSize,
@@ -341,7 +376,7 @@ fun MainScreen(
         }
 
         // when record list is updated, it triggers launch -> scroll
-        LaunchedEffect(sortedListToShow) {
+        LaunchedEffect(records) {
             if (LAST_LIST_POSITION != -1) {
                 listState.animateScrollToItem(index = LAST_LIST_POSITION)
             } else {
@@ -356,7 +391,9 @@ fun MainScreen(
                 .padding(10.dp)
         ) {
 
-            itemsIndexed(sortedListToShow) { id, record ->
+            itemsIndexed(
+                sortedListToShow
+            ) { id, record ->
                 RecordItem(id, record, viewModel)
             }
         }
@@ -381,7 +418,10 @@ fun MainScreen(
                             }
                         }
                     ) {
-                        Icon(Icons.Default.MoveUp, contentDescription = "Перейти к последней просмотренной записи")
+                        Icon(
+                            Icons.Default.MoveUp,
+                            contentDescription = "Перейти к последней просмотренной записи"
+                        )
                     }
                 }
 
@@ -394,7 +434,10 @@ fun MainScreen(
                             }
                         }
                     ) {
-                        Icon(Icons.Default.ArrowUpward, contentDescription = "Вернуться к началу списка")
+                        Icon(
+                            Icons.Default.ArrowUpward,
+                            contentDescription = "Вернуться к началу списка"
+                        )
                     }
                 }
             }
@@ -411,7 +454,7 @@ fun Selector(viewModel: MainViewModel, dataHandler: DataHandlerInterface) {
     val cs = CoroutineScope(Dispatchers.Main)
     var expanded by remember { mutableStateOf(false) }
     val selectedOptionText = viewModel.selectedOptionText.observeAsState(viewModel.defaultOption)
-    val selectedStatementId = viewModel.stateId.observeAsState("")
+    val selectedStatementId = viewModel.stateId.observeAsState("0")
     var fetchedData by remember { mutableStateOf(emptyList<ServerHandler.RecordStatement>()) }
     var isDialogVisible by remember { mutableStateOf(false) }
 
@@ -421,17 +464,17 @@ fun Selector(viewModel: MainViewModel, dataHandler: DataHandlerInterface) {
     var names by remember { mutableStateOf(listOf("нет ведомостей")) }
 
 
-
     // Function to show the modal dialog with fetched data
     @Composable
     fun ShowModalDialog() {
+        Log.w("DATA", fetchedData.toString())
         AlertDialog(
             shape = RoundedCornerShape(15.dp),
             onDismissRequest = { isDialogVisible = false },
             title = { Text(text = "Ведомости") },
             text = {
                 Column {
-                    fetchedData.sortedBy { it.listNumber.toInt() } .forEach { item ->
+                    fetchedData.sortedBy { it.listNumber.toInt() }.forEach { item ->
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.Start,
@@ -488,14 +531,14 @@ fun Selector(viewModel: MainViewModel, dataHandler: DataHandlerInterface) {
             colors = ButtonDefaults.buttonColors(backgroundColor = Color.White),
             onClick = {
 
-                    coroutineScope.launch {
-                        val controllers = dataHandler.getControllers()
-                        println(controllers)
-                        if (controllers !== null) {
-                            options = controllers.map { it.Staff_Lnk }
-                            names = controllers.map { it.Staff_Name }
-                        }
+                coroutineScope.launch {
+                    val controllers = dataHandler.getControllers()
+                    println(controllers)
+                    if (controllers !== null) {
+                        options = controllers.map { it.Staff_Lnk }
+                        names = controllers.map { it.Staff_Name }
                     }
+                }
 
             }) {
             Text("${selectedOptionText.value} | Ведомость ${selectedStatementId.value}")
@@ -536,6 +579,7 @@ fun Selector(viewModel: MainViewModel, dataHandler: DataHandlerInterface) {
             }
         }
         if (isDialogVisible && fetchedData.isNotEmpty()) {
+            viewModel.onStateIdChange("")
             ShowModalDialog() // Show the modal dialog with fetched data
         }
     }
@@ -670,7 +714,6 @@ fun showMainScreen() {
 }
 
 
-
 @Composable
 fun showUploadDialog() {
     val connected = true
@@ -678,7 +721,7 @@ fun showUploadDialog() {
     val stateId = 1
     if (!connected) {
         AlertDialog(onDismissRequest = { isUploadDialogVisible = false },
-            title = {Text(text ="Выгрузка данных")},
+            title = { Text(text = "Выгрузка данных") },
             text = { Text(text = "Нет подключения к серверу. Выгрузка недоступна.") },
             confirmButton = {
                 Button(onClick = { isUploadDialogVisible = false }) {
@@ -692,7 +735,8 @@ fun showUploadDialog() {
                 Column() {
                     Text(text = "Выгрузка данных", fontSize = 20.sp, fontWeight = FontWeight.Bold)
                     Text(text = "Ведомость $stateId", fontSize = 15.sp)
-                } },
+                }
+            },
             text = { Text(text = "При выгрузке данных, файлы с записями удаляются с устройства. Вы хотите продолжить?") },
             confirmButton = {
                 Button(onClick = { isUploadDialogVisible = false }) {
