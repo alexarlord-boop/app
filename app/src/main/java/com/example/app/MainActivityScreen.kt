@@ -42,6 +42,7 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.navigation.compose.rememberNavController
+import com.example.app.data.Branch
 import com.example.app.data.DataHandlerInterface
 import com.example.app.data.FileSystemHandler
 import com.example.app.data.IOUtils
@@ -162,10 +163,35 @@ class MainViewModel : ViewModel() {
     private val _selectedOptionText: MutableLiveData<String> = MutableLiveData(defaultOption)
     var selectedOptionText: LiveData<String> = _selectedOptionText
 
+    val defaultBranch = ""
+    private val _selectedBranch: MutableLiveData<String> = MutableLiveData(defaultBranch)
+    var selectedBranch: LiveData<String> = _selectedBranch
+
+    private val _controllers: MutableLiveData<List<ServerHandler.Controller>> = MutableLiveData(
+        emptyList()
+    )
+    var controllers: LiveData<List<ServerHandler.Controller>> = _controllers
+
+
+    private val _selectedController: MutableLiveData<ServerHandler.Controller> = MutableLiveData(
+        ServerHandler.Controller("-", "-", "-"))
+    var selectedController: LiveData<ServerHandler.Controller> = _selectedController
+
+    fun onControllerChange(controller: ServerHandler.Controller) {
+        _selectedController.value = controller
+    }
+
+    fun onControllerListChange(controllers: List<ServerHandler.Controller>) {
+        _controllers.value = controllers
+    }
+
     fun onOptionChange(newOption: String) {
         _selectedOptionText.value = newOption
     }
 
+    fun onBranchChange(newBranch: String) {
+        _selectedBranch.value = newBranch
+    }
 
     fun onSourceOptionChange(newSrcOption: DataMode) {
         _sourceOption.value = newSrcOption
@@ -334,7 +360,14 @@ fun MainScreen(
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Selector(viewModel, dataHandler)
+                    BranchSelector(viewModel, dataHandler)
+                }
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    ControllerSelector(viewModel, dataHandler)
                 }
 
                 Column(
@@ -445,23 +478,125 @@ fun MainScreen(
     }
 }
 
+@OptIn(ExperimentalMaterialApi::class)
+@Composable
+fun BranchSelector(viewModel: MainViewModel, dataHandler: DataHandlerInterface) {
+    val context = LocalContext.current
+    val coroutineScope = rememberCoroutineScope()
+    val cs = CoroutineScope(Dispatchers.Main)
+    var expanded by remember { mutableStateOf(false) }
+    val selectedBranch = viewModel.selectedBranch.observeAsState(viewModel.defaultBranch)
+    val controllers = viewModel.controllers.observeAsState(emptyList())
+    var isDialogVisible by remember { mutableStateOf(false) }
+
+
+    var options by remember { mutableStateOf(listOf("нет филиалов")) } // text names
+    var branches by remember { mutableStateOf(emptyList<Branch>()) } // branch objects
+
+
+    ExposedDropdownMenuBox(
+        expanded = true, onExpandedChange = {
+            expanded = !expanded
+        }, modifier = Modifier.fillMaxWidth()
+    ) {
+
+        Button(
+            modifier = Modifier.fillMaxWidth(),
+            border = BorderStroke(1.dp, color = Color.Black),
+            colors = ButtonDefaults.buttonColors(backgroundColor = Color.White),
+            onClick = {
+
+                coroutineScope.launch {
+                    // server request -> branches
+                    withContext(Dispatchers.IO) {
+                        val data = dataHandler.getBranchList()
+                        branches = data
+                        options = data.map { it.companyName }
+                    }
+
+                }
+
+            }) {
+            var header = "Филиал"
+            if (selectedBranch.value != "") {
+                if (selectedBranch.value != "АО Новгородоблэлектро") {
+                    header = selectedBranch.value.split("АО")[0]
+                } else {
+                    header = selectedBranch.value
+                }
+            }
+            Text(header)
+        }
+
+        ExposedDropdownMenu(
+            expanded = expanded,
+            onDismissRequest = { expanded = false },
+            modifier = Modifier.fillMaxWidth(),
+        ) {
+            options.forEachIndexed { index, optionText ->
+                DropdownMenuItem(onClick = {
+
+                    expanded = false
+
+                    Log.w("SELECTOR", "Branch selected: ${branches[index].companyName}")
+                    viewModel.onBranchChange(branches[index].companyName)
+
+                    // Fetching controller lists
+                    cs.launch {
+                        try {
+                            withContext(Dispatchers.IO) {
+                                val fetchedControllers = dataHandler.getControllersForBranch(branches[index].companyLnk)
+                                withContext(Dispatchers.Main) {
+                                    // Perform UI-related operations here
+                                    viewModel.onControllerListChange(fetchedControllers)
+                                    viewModel.onControllerChange(ServerHandler.Controller("-", "-", "-"))
+                                    viewModel.onStateIdChange("")
+                                }
+                            }
+                        } catch (e: Exception) {
+                            println("Error occurred: ${e.message}")
+                            Log.e("SERVER", e.stackTraceToString())
+                            Toast.makeText(
+                                context,
+                                "Не удалось получить контролеров",
+                                Toast.LENGTH_LONG
+                            ).show()
+                        }
+                    }
+
+                }) {
+                    Text(text = optionText)
+                }
+            }
+        }
+
+//        if (isDialogVisible && fetchedData.isNotEmpty()) {
+//            viewModel.onStateIdChange("")
+//            ShowModalDialog() // Show the modal dialog with fetched data
+//        }
+    }
+}
+
 
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
-fun Selector(viewModel: MainViewModel, dataHandler: DataHandlerInterface) {
+fun ControllerSelector(viewModel: MainViewModel, dataHandler: DataHandlerInterface) {
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
     val cs = CoroutineScope(Dispatchers.Main)
     var expanded by remember { mutableStateOf(false) }
     val selectedOptionText = viewModel.selectedOptionText.observeAsState(viewModel.defaultOption)
     val selectedStatementId = viewModel.stateId.observeAsState("0")
+    val selectedController = viewModel.selectedController.observeAsState(ServerHandler.Controller("-", "-", "-"))
     var fetchedData by remember { mutableStateOf(emptyList<ServerHandler.RecordStatement>()) }
     var isDialogVisible by remember { mutableStateOf(false) }
 
+    val controllers = viewModel.controllers.observeAsState(listOf(ServerHandler.Controller("-","-", "-")))
+
     val id by viewModel.fileId.observeAsState("1") // TODO:- check the value
 
-    var options by remember { mutableStateOf(listOf("-")) }
-    var names by remember { mutableStateOf(listOf("нет ведомостей")) }
+//    var options by remember { mutableStateOf(listOf("-")) }
+
 
 
     // Function to show the modal dialog with fetched data
@@ -531,17 +666,13 @@ fun Selector(viewModel: MainViewModel, dataHandler: DataHandlerInterface) {
             colors = ButtonDefaults.buttonColors(backgroundColor = Color.White),
             onClick = {
 
-                coroutineScope.launch {
-                    val controllers = dataHandler.getControllers()
-                    println(controllers)
-                    if (controllers !== null) {
-                        options = controllers.map { it.Staff_Lnk }
-                        names = controllers.map { it.Staff_Name }
-                    }
-                }
 
             }) {
-            Text("${selectedOptionText.value} | Ведомость ${selectedStatementId.value}")
+            var header = "Контролер | Ведомость"
+            if (selectedController.value.Company_Lnk != "-") {
+                header = "${selectedController.value.Staff_Name} | Ведомость ${selectedStatementId.value}"
+            }
+            Text(header)
         }
 
         ExposedDropdownMenu(
@@ -549,35 +680,45 @@ fun Selector(viewModel: MainViewModel, dataHandler: DataHandlerInterface) {
             onDismissRequest = { expanded = false },
             modifier = Modifier.fillMaxWidth(),
         ) {
-            options.forEachIndexed { index, optionText ->
-                DropdownMenuItem(onClick = {
-                    viewModel.onOptionChange(names[index])
-                    viewModel.onIdChange(optionText)
-                    expanded = false
+            if (controllers.value.isNotEmpty()) {
+                controllers.value.forEachIndexed { index, element ->
+                    DropdownMenuItem(onClick = {
+                        viewModel.onControllerChange(element)
+                        expanded = false
 
-                    // Fetching controller lists
-                    cs.launch {
-                        try {
-                            withContext(Dispatchers.IO) {
-                                val data = dataHandler.getStatementsForController(optionText)
-                                fetchedData = data // Assign fetched data to the variable
+                        // Fetching controller lists
+                        cs.launch {
+                            try {
+                                withContext(Dispatchers.IO) {
+                                    val data = dataHandler.getStatementsForController(element.Staff_Lnk)
+                                    fetchedData = data // Assign fetched data to the variable
+                                }
+                                isDialogVisible = true // Show the dialog
+                            } catch (e: Exception) {
+                                println("Error occurred: ${e.message}")
+                                Toast.makeText(
+                                    context,
+                                    "Не удалось получить ведомости",
+                                    Toast.LENGTH_LONG
+                                ).show()
                             }
-                            isDialogVisible = true // Show the dialog
-                        } catch (e: Exception) {
-                            println("Error occurred: ${e.message}")
-                            Toast.makeText(
-                                context,
-                                "Не удалось получить ведомости",
-                                Toast.LENGTH_LONG
-                            ).show()
                         }
-                    }
 
+                    }) {
+                        Text(text = element.Staff_Name)
+                    }
+                }
+            } else {
+                DropdownMenuItem(onClick = {
+                    //                    viewModel.onOptionChange(names[index])
+                    //                    viewModel.onIdChange(optionText.)
+                    expanded = false
                 }) {
-                    Text(text = names[index])
+                    Text(text = "нет контролеров")
                 }
             }
         }
+
         if (isDialogVisible && fetchedData.isNotEmpty()) {
             viewModel.onStateIdChange("")
             ShowModalDialog() // Show the modal dialog with fetched data
@@ -705,7 +846,7 @@ fun RecordItem(id: Int, record: RecordDto, viewModel: MainViewModel) {
 }
 
 
-//@Preview
+@Preview
 @Composable
 fun showMainScreen() {
     var fsHandler = FileSystemHandler()
@@ -751,8 +892,8 @@ fun showUploadDialog() {
     }
 }
 
-@Preview
-@Composable
-fun showUpload() {
-    showUploadDialog()
-}
+//@Preview
+//@Composable
+//fun showUpload() {
+//    showUploadDialog()
+//}

@@ -32,12 +32,12 @@ class IOUtils {
         return gson.toJson(list)
     }
 
-    fun jsonToControllerListFiltered(controllers: String): List<ServerHandler.Controller>? {
+    fun jsonToControllerListFiltered(controllers: String): List<ServerHandler.Controller> {
 
         val gson = Gson()
         Log.w("DATA", controllers)
         if (controllers.trim() === "") {
-            return null
+            return emptyList()
         } else {
             val arrayOfControllers = "[" + controllers
                 .substring(0, controllers.length - 1)

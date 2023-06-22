@@ -82,4 +82,12 @@ class FileSystemHandler : DataHandlerInterface {
         return this.listOfRecords.value!!
 
     }
+
+    override suspend fun getBranchList(): List<Branch> {
+        return emptyList()
+    }
+
+    override suspend fun getControllersForBranch(branchId: String): List<ServerHandler.Controller> {
+        return emptyList()
+    }
 }
