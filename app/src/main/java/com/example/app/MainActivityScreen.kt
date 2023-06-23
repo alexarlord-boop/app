@@ -239,7 +239,7 @@ fun MainScreen(
     val lastClicked = viewModel.position.observeAsState(LAST_LIST_POSITION)
     val id by viewModel.fileId.observeAsState(1)
     val stateId by viewModel.stateId.observeAsState("0")
-    val area by dataHandler.area.observeAsState("Район")
+    val area by dataHandler.area.observeAsState(dataHandler.defaultArea)
 
     val listState = rememberLazyListState()
     val coroutineScope = rememberCoroutineScope()
@@ -257,16 +257,20 @@ fun MainScreen(
             }
         }
     LaunchedEffect(records) {
-        sortedListToShow =
-            records.sortedBy { record ->
-                val houseNumber = record.houseNumber
-                val numericPart = houseNumber.split("\\D+".toRegex() )[0].filter { it.isDigit() }
-                if (numericPart.isNotEmpty()) {
-                    numericPart.toInt()
-                } else {
-                    Int.MAX_VALUE
+        if (records.isEmpty()) {
+            dataHandler.onAreaChange(dataHandler.defaultArea)
+        } else {
+            sortedListToShow =
+                records.sortedBy { record ->
+                    val houseNumber = record.houseNumber
+                    val numericPart = houseNumber.split("\\D+".toRegex())[0].filter { it.isDigit() }
+                    if (numericPart.isNotEmpty()) {
+                        numericPart.toInt()
+                    } else {
+                        Int.MAX_VALUE
+                    }
                 }
-            }
+        }
 
     }
 
@@ -486,6 +490,7 @@ fun BranchSelector(viewModel: MainViewModel, dataHandler: DataHandlerInterface) 
     val cs = CoroutineScope(Dispatchers.Main)
     var expanded by remember { mutableStateOf(false) }
     val selectedBranch = viewModel.selectedBranch.observeAsState(viewModel.defaultBranch)
+    val records by dataHandler.listOfRecords.observeAsState(emptyList())
     val controllers = viewModel.controllers.observeAsState(emptyList())
     var isDialogVisible by remember { mutableStateOf(false) }
 
@@ -517,14 +522,7 @@ fun BranchSelector(viewModel: MainViewModel, dataHandler: DataHandlerInterface) 
                 }
 
             }) {
-            var header = "Филиал"
-            if (selectedBranch.value != "") {
-                if (selectedBranch.value != "АО Новгородоблэлектро") {
-                    header = selectedBranch.value.split("АО")[0]
-                } else {
-                    header = selectedBranch.value
-                }
-            }
+            val header = if (selectedBranch.value != "") selectedBranch.value else  "Филиал"
             Text(header)
         }
 
@@ -563,6 +561,7 @@ fun BranchSelector(viewModel: MainViewModel, dataHandler: DataHandlerInterface) 
                             ).show()
                         }
                     }
+                    dataHandler.onRecordListChange(emptyList())
 
                 }) {
                     Text(text = optionText)
@@ -588,10 +587,11 @@ fun ControllerSelector(viewModel: MainViewModel, dataHandler: DataHandlerInterfa
     val selectedOptionText = viewModel.selectedOptionText.observeAsState(viewModel.defaultOption)
     val selectedStatementId = viewModel.stateId.observeAsState("0")
     val selectedController = viewModel.selectedController.observeAsState(ServerHandler.Controller("-", "-", "-"))
-    var fetchedData by remember { mutableStateOf(emptyList<ServerHandler.RecordStatement>()) }
+    var statements by remember { mutableStateOf(emptyList<ServerHandler.RecordStatement>()) }
     var isDialogVisible by remember { mutableStateOf(false) }
 
     val controllers = viewModel.controllers.observeAsState(listOf(ServerHandler.Controller("-","-", "-")))
+    val selectedBranch = viewModel.selectedBranch.observeAsState("")
 
     val id by viewModel.fileId.observeAsState("1") // TODO:- check the value
 
@@ -602,14 +602,14 @@ fun ControllerSelector(viewModel: MainViewModel, dataHandler: DataHandlerInterfa
     // Function to show the modal dialog with fetched data
     @Composable
     fun ShowModalDialog() {
-        Log.w("DATA", fetchedData.toString())
+        Log.w("DATA", statements.toString())
         AlertDialog(
             shape = RoundedCornerShape(15.dp),
             onDismissRequest = { isDialogVisible = false },
             title = { Text(text = "Ведомости") },
             text = {
                 Column {
-                    fetchedData.sortedBy { it.listNumber.toInt() }.forEach { item ->
+                    statements.sortedBy { it.listNumber.toInt() }.forEach { item ->
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.Start,
@@ -690,9 +690,9 @@ fun ControllerSelector(viewModel: MainViewModel, dataHandler: DataHandlerInterfa
                         cs.launch {
                             try {
                                 withContext(Dispatchers.IO) {
-                                    val data = dataHandler.getStatementsForController(element.Staff_Lnk)
-                                    fetchedData = data // Assign fetched data to the variable
+                                    statements = dataHandler.getStatementsForController(element.Staff_Lnk).toMutableList()
                                 }
+
                                 isDialogVisible = true // Show the dialog
                             } catch (e: Exception) {
                                 println("Error occurred: ${e.message}")
@@ -710,18 +710,21 @@ fun ControllerSelector(viewModel: MainViewModel, dataHandler: DataHandlerInterfa
                 }
             } else {
                 DropdownMenuItem(onClick = {
-                    //                    viewModel.onOptionChange(names[index])
-                    //                    viewModel.onIdChange(optionText.)
                     expanded = false
                 }) {
-                    Text(text = "нет контролеров")
+                    val text = if (selectedBranch.value != "") "нет контролеров" else "выберите филиал"
+                    Text(text = text)
                 }
             }
         }
 
-        if (isDialogVisible && fetchedData.isNotEmpty()) {
-            viewModel.onStateIdChange("")
+        if (isDialogVisible && statements.isNotEmpty()) {
+//            viewModel.onStateIdChange("")
             ShowModalDialog() // Show the modal dialog with fetched data
+        } else if(statements.isEmpty()) {
+            dataHandler.onRecordListChange(emptyList())
+            dataHandler.onAreaChange(dataHandler.defaultArea)
+            viewModel.onStateIdChange("")
         }
     }
 }

@@ -16,6 +16,8 @@ interface DataHandlerInterface {
 
     fun onRecordListChange(newRecords: List<RecordDto>)
 
+    val defaultArea: String
+        get() = "Район"
     val _area: MutableLiveData<String>
     val area: LiveData<String>
 
@@ -23,7 +25,7 @@ interface DataHandlerInterface {
 
     suspend fun getControllers(): List<ServerHandler.Controller>?
 
-    suspend fun getStatementsForController(id: String): MutableList<ServerHandler.RecordStatement>
+    suspend fun getStatementsForController(id: String): List<ServerHandler.RecordStatement>
 
     fun getRecordsForStatement(controllerId: String, statementId: String, context: Context): List<RecordDto>
 

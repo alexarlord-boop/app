@@ -236,7 +236,7 @@ class ServerHandler : DataHandlerInterface {
 //        @SerializedName("Processed") val processed: String  // removed from API
     )
 
-    override suspend fun getStatementsForController(id: String): MutableList<RecordStatement> {
+    override suspend fun getStatementsForController(id: String): List<RecordStatement> {
         val gson = Gson()
         val urlString = AppStrings.statementsByControllerId + "?Staff_Lnk=$id"
         val pathToStatements = AppStrings.deviceDirectory + "statements$id.json"
@@ -245,12 +245,17 @@ class ServerHandler : DataHandlerInterface {
                 fetchDataFromServer(urlString).trimIndent()
             }
 
-            val jsonObject = gson.fromJson(statements, JsonObject::class.java)
-            val statementList = jsonObject.keySet()
-                .map { key -> gson.fromJson(jsonObject[key], RecordStatement::class.java) }
-                .toMutableList().sortedBy { it.listNumber }.toMutableList()
-            IOUtils().saveJsonToFile(gson.toJson(statementList), pathToStatements)
-            return statementList
+            if (statements != "") {
+                val jsonObject = gson.fromJson(statements, JsonObject::class.java)
+                val statementList = jsonObject.keySet()
+                    .map { key -> gson.fromJson(jsonObject[key], RecordStatement::class.java) }
+                    .toMutableList().sortedBy { it.listNumber }.toMutableList()
+                IOUtils().saveJsonToFile(gson.toJson(statementList), pathToStatements)
+                Log.w("STATEMENTS", statementList.toString())
+                return statementList
+            } else {
+                return emptyList()
+            }
 
         } catch (e: IOException) {
             throw IOException("No Statements")
@@ -269,7 +274,8 @@ class ServerHandler : DataHandlerInterface {
                 .map {
                     val linkname = it.split(",")
                     val link = linkname[0].split(":")[1].replace("\"", "")
-                    val name = linkname[1].split(":")[1].replace("\"", "").replace("/", "").replace("\\", "")
+                    var name = linkname[1].split(":")[1].replace("\"", "").replace("/", "").replace("\\", "")
+                    name = if (name != "АО Новгородоблэлектро") name.split("АО")[0] else name
                     Branch(link, name)
                 }.toList()
 
