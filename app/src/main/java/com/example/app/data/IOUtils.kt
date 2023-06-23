@@ -112,7 +112,7 @@ class IOUtils {
 
     fun getSavedStatementIds(): List<String> {
         val directoryPath = AppStrings.deviceDirectory
-        val searchTerm = "control-"
+        val searchTerm = "record-"
         val ids: List<String>
         val directory = File(directoryPath)
         ids = directory.listFiles { file ->
@@ -134,6 +134,16 @@ class IOUtils {
     fun getStatementsFromJson(jsonString: String): MutableList<Statement> {
         val gson = Gson()
         return gson.fromJson(jsonString, Array<Statement>::class.java).toMutableList()
+    }
+
+    fun branchesToJson(branches: List<Branch>): String {
+        val gson = Gson()
+        return gson.toJson(branches)
+    }
+
+    fun getBranchListFromJson(jsonData: String): List<Branch> {
+        val gson = Gson()
+        return gson.fromJson(jsonData, Array<Branch>::class.java).toList()
     }
 
     fun updateRowData(position: Int, recordDto: RecordDto, filename: String) {

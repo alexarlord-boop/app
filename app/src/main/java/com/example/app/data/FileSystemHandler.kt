@@ -19,7 +19,9 @@ class FileSystemHandler : DataHandlerInterface {
 
     override fun onRecordListChange(newRecords: List<RecordDto>) {
         _listOfRecords.value = newRecords
-        onAreaChange(newRecords[0].area)
+        if (newRecords.isNotEmpty()) {
+            onAreaChange(newRecords[0].area)
+        }
     }
 
     override val _area: MutableLiveData<String> = MutableLiveData()
@@ -43,8 +45,8 @@ class FileSystemHandler : DataHandlerInterface {
 
     }
 
-    override suspend fun getStatementsForController(id: String): MutableList<ServerHandler.RecordStatement> {
-        val pathToStatements = AppStrings.deviceDirectory + "statements$id.json"
+    override suspend fun getStatementsForController(controllerId: String, branchId: String): MutableList<ServerHandler.RecordStatement> {
+        val pathToStatements = AppStrings.deviceDirectory + "statements-$controllerId.json"
         val savedStatementIds = IO().getSavedStatementIds()
         println(savedStatementIds)
         try {
@@ -57,6 +59,7 @@ class FileSystemHandler : DataHandlerInterface {
             println(statements)
             return statements // filter only those, which is present on device (parse filenames...)
         } catch (e: java.lang.Exception) {
+            Log.e("FILESYSTEM", e.stackTraceToString())
             throw IOException("No statements fetched")
         }
     }
@@ -84,10 +87,27 @@ class FileSystemHandler : DataHandlerInterface {
     }
 
     override suspend fun getBranchList(): List<Branch> {
-        return emptyList()
+        val filePath = AppStrings.branchesFS
+
+        return try {
+            val json = IO().readJsonFromFile(filePath)
+            IO().getBranchListFromJson(json)
+        } catch (e: java.lang.Exception) {
+            Log.e("FILESYSTEM", e.stackTraceToString())
+            emptyList()
+        }
+
     }
 
     override suspend fun getControllersForBranch(branchId: String): List<ServerHandler.Controller> {
-        return emptyList()
+        val filePath = AppStrings.deviceDirectory + "controllers-${branchId}.json"
+
+        return try {
+            val json = IO().readJsonFromFile(filePath)
+            IO().jsonToControllerListFiltered(json)
+        } catch (e: java.lang.Exception) {
+            Log.e("FILESYSTEM", e.stackTraceToString())
+            return emptyList()
+        }
     }
 }

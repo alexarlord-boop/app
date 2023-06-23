@@ -581,21 +581,18 @@ fun BranchSelector(viewModel: MainViewModel, dataHandler: DataHandlerInterface) 
 @Composable
 fun ControllerSelector(viewModel: MainViewModel, dataHandler: DataHandlerInterface) {
     val context = LocalContext.current
-    val coroutineScope = rememberCoroutineScope()
     val cs = CoroutineScope(Dispatchers.Main)
     var expanded by remember { mutableStateOf(false) }
-    val selectedOptionText = viewModel.selectedOptionText.observeAsState(viewModel.defaultOption)
     val selectedStatementId = viewModel.stateId.observeAsState("0")
     val selectedController = viewModel.selectedController.observeAsState(ServerHandler.Controller("-", "-", "-"))
     var statements by remember { mutableStateOf(emptyList<ServerHandler.RecordStatement>()) }
     var isDialogVisible by remember { mutableStateOf(false) }
+    var isInfoVisible by remember { mutableStateOf(false) }
 
     val controllers = viewModel.controllers.observeAsState(listOf(ServerHandler.Controller("-","-", "-")))
     val selectedBranch = viewModel.selectedBranch.observeAsState("")
 
     val id by viewModel.fileId.observeAsState("1") // TODO:- check the value
-
-//    var options by remember { mutableStateOf(listOf("-")) }
 
 
 
@@ -652,6 +649,22 @@ fun ControllerSelector(viewModel: MainViewModel, dataHandler: DataHandlerInterfa
         )
     }
 
+    // Function to show the modal dialog with fetched data
+    @Composable
+    fun ShowInfoDialog() {
+        AlertDialog(
+            shape = RoundedCornerShape(15.dp),
+            onDismissRequest = { isInfoVisible = false },
+            title = { Text(text = "Нет ведомостей") },
+            text = { Text(text = "Для контролера не найдены ведомости.") },
+            confirmButton = {
+                Button(onClick = { isInfoVisible = false }) {
+                    Text(text = "ОК")
+                }
+            }
+        )
+    }
+
 
 
     ExposedDropdownMenuBox(
@@ -690,11 +703,16 @@ fun ControllerSelector(viewModel: MainViewModel, dataHandler: DataHandlerInterfa
                         cs.launch {
                             try {
                                 withContext(Dispatchers.IO) {
-                                    statements = dataHandler.getStatementsForController(element.Staff_Lnk).toMutableList()
+                                    statements = dataHandler.getStatementsForController(element.Staff_Lnk, selectedBranch.value).toMutableList()
                                 }
-
-                                isDialogVisible = true // Show the dialog
+                                if (statements.isNotEmpty()) {
+                                    isDialogVisible = true // Show the dialog
+                                } else {
+                                    isInfoVisible = true
+                                }
                             } catch (e: Exception) {
+                                viewModel.onStateIdChange("")
+                                dataHandler.onRecordListChange(emptyList())
                                 println("Error occurred: ${e.message}")
                                 Toast.makeText(
                                     context,
@@ -726,6 +744,9 @@ fun ControllerSelector(viewModel: MainViewModel, dataHandler: DataHandlerInterfa
             dataHandler.onAreaChange(dataHandler.defaultArea)
             viewModel.onStateIdChange("")
         }
+        if (isInfoVisible) {
+            ShowInfoDialog()
+        }
     }
 }
 
@@ -741,7 +762,7 @@ fun RecordItem(id: Int, record: RecordDto, viewModel: MainViewModel) {
     val stateId = viewModel.stateId.observeAsState("0").value
 
     val sourceOption = viewModel.sourceOption.value?.id
-    val filename = AppStrings.deviceDirectory + "control-${fid}-${stateId}.json"
+    val filename = AppStrings.deviceDirectory + "record-${fid}-${stateId}.json"
 
     Card(
 

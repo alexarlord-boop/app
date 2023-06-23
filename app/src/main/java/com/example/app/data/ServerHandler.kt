@@ -125,7 +125,7 @@ class ServerHandler : DataHandlerInterface {
         context: Context
     ): Boolean {
         val urlString = AppStrings.updateData
-        val statementPath = AppStrings.deviceDirectory + "statements$controllerId.json"
+        val statementPath = AppStrings.deviceDirectory + "statements-$controllerId.json"
         val parameters = mapOf(
             "ourJSON" to jsonString
         )
@@ -176,7 +176,7 @@ class ServerHandler : DataHandlerInterface {
         context: Context
     ): List<RecordDto> {
         var records = emptyList<RecordDto>()
-        val path = AppStrings.deviceDirectory + "control-$controllerId-$statementId.json"
+        val path = AppStrings.deviceDirectory + "record-$controllerId-$statementId.json"
         val urlString = AppStrings.recordsByListId + "?listnumber=$statementId"
         if (File(path).exists()) {
             this.reloadRecordsFromFile(controllerId, statementId, context)
@@ -233,13 +233,14 @@ class ServerHandler : DataHandlerInterface {
         @SerializedName("Source") val source: String,
         @SerializedName("Staff_Lnk") val staffLink: String,
         @SerializedName("Staff_Name") val staffName: String,
+//        @SerializedName("Company_Lnk") val branchId: String, //TODO:- ask for additional field
 //        @SerializedName("Processed") val processed: String  // removed from API
     )
 
-    override suspend fun getStatementsForController(id: String): List<RecordStatement> {
+    override suspend fun getStatementsForController(controllerId: String, branchId: String): List<RecordStatement> {
         val gson = Gson()
-        val urlString = AppStrings.statementsByControllerId + "?Staff_Lnk=$id"
-        val pathToStatements = AppStrings.deviceDirectory + "statements$id.json"
+        val urlString = AppStrings.statementsByControllerId + controllerId
+        val pathToStatements = AppStrings.deviceDirectory + "statements-$controllerId.json"
         try {
             val statements = withContext(Dispatchers.IO) {
                 fetchDataFromServer(urlString).trimIndent()
@@ -249,7 +250,9 @@ class ServerHandler : DataHandlerInterface {
                 val jsonObject = gson.fromJson(statements, JsonObject::class.java)
                 val statementList = jsonObject.keySet()
                     .map { key -> gson.fromJson(jsonObject[key], RecordStatement::class.java) }
-                    .toMutableList().sortedBy { it.listNumber }.toMutableList()
+                    .toMutableList()
+//                    .filter { it.branchId == branchId } //TODO:- after additional field is added
+                    .sortedBy { it.listNumber }.toMutableList()
                 IOUtils().saveJsonToFile(gson.toJson(statementList), pathToStatements)
                 Log.w("STATEMENTS", statementList.toString())
                 return statementList
@@ -279,6 +282,10 @@ class ServerHandler : DataHandlerInterface {
                     Branch(link, name)
                 }.toList()
 
+            val json = IOUtils().branchesToJson(formattedBranches)
+            val filePath = AppStrings.branchesFS
+            IOUtils().saveJsonToFile(json, filePath)
+
             return formattedBranches
         } else {
             return emptyList()
@@ -289,6 +296,8 @@ class ServerHandler : DataHandlerInterface {
         val controllerList = fetchDataFromServer(AppStrings.controllersByBranch + branchId.toInt()).trimIndent()
         return try {
             if (controllerList != "") {
+                val filePath = AppStrings.deviceDirectory + "controllers-${branchId}.json"
+                IOUtils().saveJsonToFile(controllerList, filePath)
                 IOUtils().jsonToControllerListFiltered(controllerList)
             } else {
                 emptyList()

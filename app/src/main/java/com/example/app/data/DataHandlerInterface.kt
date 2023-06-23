@@ -25,13 +25,13 @@ interface DataHandlerInterface {
 
     suspend fun getControllers(): List<ServerHandler.Controller>?
 
-    suspend fun getStatementsForController(id: String): List<ServerHandler.RecordStatement>
+    suspend fun getStatementsForController(controllerId: String, branchId: String): List<ServerHandler.RecordStatement>
 
     fun getRecordsForStatement(controllerId: String, statementId: String, context: Context): List<RecordDto>
 
     // TODO:- remove to IO ?
     fun reloadRecordsFromFile(controlId: String, stateId: String, context: Context) {
-        val path = AppStrings.deviceDirectory + "control-$controlId-$stateId.json"
+        val path = AppStrings.deviceDirectory + "record-$controlId-$stateId.json"
         val records =
             IOUtils().convertServerListToRecordDtoList(IOUtils().parseRecordsFromJson(IOUtils().readJsonFromFile(path)))
         onRecordListChange(records)
