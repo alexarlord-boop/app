@@ -113,7 +113,8 @@ class MainActivityScreen : AppCompatActivity() {
                         viewModel.stateId.value.toString(),
                         this
                     )
-                } catch (e: Exception) {
+                }
+                catch (e: Exception) {
                     Log.w("LIFECYCLE", e.message.toString())
                 }
             }
@@ -167,6 +168,10 @@ class MainViewModel : ViewModel() {
     private val _selectedBranch: MutableLiveData<String> = MutableLiveData(defaultBranch)
     var selectedBranch: LiveData<String> = _selectedBranch
 
+    val defaultBranchId = ""
+    private val _selectedBranchId: MutableLiveData<String> = MutableLiveData(defaultBranchId)
+    var selectedBranchId: LiveData<String> = _selectedBranchId
+
     private val _controllers: MutableLiveData<List<ServerHandler.Controller>> = MutableLiveData(
         emptyList()
     )
@@ -191,6 +196,9 @@ class MainViewModel : ViewModel() {
 
     fun onBranchChange(newBranch: String) {
         _selectedBranch.value = newBranch
+    }
+    fun onBranchIdChange(newBranchId: String) {
+        _selectedBranchId.value = newBranchId
     }
 
     fun onSourceOptionChange(newSrcOption: DataMode) {
@@ -236,6 +244,7 @@ fun MainScreen(
     viewModel: MainViewModel
 ) {
     val records by dataHandler.listOfRecords.observeAsState(emptyList())
+    val controllers by viewModel.controllers.observeAsState(emptyList())
     val lastClicked = viewModel.position.observeAsState(LAST_LIST_POSITION)
     val id by viewModel.fileId.observeAsState(1)
     val stateId by viewModel.stateId.observeAsState("0")
@@ -314,7 +323,7 @@ fun MainScreen(
                 confirmButton = {
                     Button(onClick = {
                         isUploadDialogVisible = false
-                        val filePath = AppStrings.deviceDirectory + "control-$id-$stateId.json"
+                        val filePath = AppStrings.deviceDirectory + "record-$id-$stateId.json"
                         val json = IOUtils().readJsonFromFile(filePath)
                         coroutineScope.launch {
                             val isSent = (dataHandler as ServerHandler).sendDataToServer(
@@ -490,12 +499,13 @@ fun BranchSelector(viewModel: MainViewModel, dataHandler: DataHandlerInterface) 
     val cs = CoroutineScope(Dispatchers.Main)
     var expanded by remember { mutableStateOf(false) }
     val selectedBranch = viewModel.selectedBranch.observeAsState(viewModel.defaultBranch)
+    val selectedBranchId = viewModel.selectedBranchId.observeAsState(viewModel.defaultBranchId)
     val records by dataHandler.listOfRecords.observeAsState(emptyList())
     val controllers = viewModel.controllers.observeAsState(emptyList())
     var isDialogVisible by remember { mutableStateOf(false) }
 
 
-    var options by remember { mutableStateOf(listOf("нет филиалов")) } // text names
+    var options by remember { mutableStateOf(listOf("филиалы")) } // text names
     var branches by remember { mutableStateOf(emptyList<Branch>()) } // branch objects
 
 
@@ -538,29 +548,35 @@ fun BranchSelector(viewModel: MainViewModel, dataHandler: DataHandlerInterface) 
 
                     Log.w("SELECTOR", "Branch selected: ${branches[index].companyName}")
                     viewModel.onBranchChange(branches[index].companyName)
+                    viewModel.onBranchIdChange(branches[index].companyLnk)
 
                     // Fetching controller lists
-                    cs.launch {
-                        try {
+
+                        cs.launch {
                             withContext(Dispatchers.IO) {
-                                val fetchedControllers = dataHandler.getControllersForBranch(branches[index].companyLnk)
-                                withContext(Dispatchers.Main) {
-                                    // Perform UI-related operations here
-                                    viewModel.onControllerListChange(fetchedControllers)
-                                    viewModel.onControllerChange(ServerHandler.Controller("-", "-", "-"))
-                                    viewModel.onStateIdChange("")
-                                }
+
+                                    val fetchedControllers =
+                                        dataHandler.getControllersForBranch(branches[index].companyLnk)
+
+                                    withContext(Dispatchers.Main) {
+                                        // Perform UI-related operations here
+                                        if (fetchedControllers.isEmpty()) {
+                                            Toast.makeText(context,"Контролеры не найдены", Toast.LENGTH_SHORT).show()
+                                        }
+                                        viewModel.onControllerListChange(fetchedControllers)
+                                        viewModel.onControllerChange(
+                                            ServerHandler.Controller(
+                                                "-",
+                                                "-",
+                                                "-"
+                                            )
+                                        )
+                                        viewModel.onStateIdChange("")
+                                    }
                             }
-                        } catch (e: Exception) {
-                            println("Error occurred: ${e.message}")
-                            Log.e("SERVER", e.stackTraceToString())
-                            Toast.makeText(
-                                context,
-                                "Не удалось получить контролеров",
-                                Toast.LENGTH_LONG
-                            ).show()
-                        }
+
                     }
+
                     dataHandler.onRecordListChange(emptyList())
 
                 }) {
@@ -591,6 +607,7 @@ fun ControllerSelector(viewModel: MainViewModel, dataHandler: DataHandlerInterfa
 
     val controllers = viewModel.controllers.observeAsState(listOf(ServerHandler.Controller("-","-", "-")))
     val selectedBranch = viewModel.selectedBranch.observeAsState("")
+    val selectedBranchId = viewModel.selectedBranchId.observeAsState("")
 
     val id by viewModel.fileId.observeAsState("1") // TODO:- check the value
 
@@ -703,7 +720,7 @@ fun ControllerSelector(viewModel: MainViewModel, dataHandler: DataHandlerInterfa
                         cs.launch {
                             try {
                                 withContext(Dispatchers.IO) {
-                                    statements = dataHandler.getStatementsForController(element.Staff_Lnk, selectedBranch.value).toMutableList()
+                                    statements = dataHandler.getStatementsForController(element.Staff_Lnk, selectedBranchId.value).toMutableList()
                                 }
                                 if (statements.isNotEmpty()) {
                                     isDialogVisible = true // Show the dialog
@@ -716,7 +733,7 @@ fun ControllerSelector(viewModel: MainViewModel, dataHandler: DataHandlerInterfa
                                 println("Error occurred: ${e.message}")
                                 Toast.makeText(
                                     context,
-                                    "Не удалось получить ведомости",
+                                    "Данные не были загружены",
                                     Toast.LENGTH_LONG
                                 ).show()
                             }

@@ -17,6 +17,7 @@ import java.io.*
 import java.net.HttpURLConnection
 import java.net.URL
 import java.net.URLEncoder
+import kotlin.reflect.typeOf
 
 
 class ServerHandler : DataHandlerInterface {
@@ -124,6 +125,7 @@ class ServerHandler : DataHandlerInterface {
         controllerId: String,
         context: Context
     ): Boolean {
+        Log.w("SERVER", "Sending to server: $jsonString")
         val urlString = AppStrings.updateData
         val statementPath = AppStrings.deviceDirectory + "statements-$controllerId.json"
         val parameters = mapOf(
@@ -144,12 +146,10 @@ class ServerHandler : DataHandlerInterface {
             if (isSuccessful) {
                 val isDeleted = IOUtils().deleteFile(filePath)
                 if (isDeleted) {
-                    val json = IOUtils().readJsonFromFile(statementPath)
-                    val statements = IOUtils().getStatementsFromJson(json)
-                        .filter { it.ListNumber != statementId }
-                    IOUtils().saveJsonToFile(Gson().toJson(statements), statementPath)
-                    println(statements)
-                    println(statementPath)
+//                    val json = IOUtils().readJsonFromFile(statementPath)
+//                    val statements = IOUtils().getStatementsFromJson(json)
+//                        .filter { it.ListNumber != statementId }
+//                    IOUtils().saveJsonToFile(Gson().toJson(statements), statementPath)
                     Toast.makeText(context, "Данные успешно отправлены", Toast.LENGTH_LONG).show()
                     isSent = true
                 }
@@ -186,6 +186,10 @@ class ServerHandler : DataHandlerInterface {
                     val prettyJson = withContext(Dispatchers.IO) {
                         fetchDataFromServer(urlString)
                     }
+                    if (prettyJson.isEmpty()) {
+                        Toast.makeText(context, "Пустая запись", Toast.LENGTH_SHORT).show()
+                        return@launch
+                    }
                     records = IOUtils().convertServerListToRecordDtoList(
                         IOUtils().parseRecordsFromJson(prettyJson)
                     )
@@ -198,8 +202,7 @@ class ServerHandler : DataHandlerInterface {
                     ).show()
 
                 } catch (e: java.lang.Exception) {
-                    println(e.message)
-                    Toast.makeText(context, "Сервер недоступен", Toast.LENGTH_SHORT).show()
+                    println(e.stackTraceToString())
                 }
             }
         }
@@ -233,7 +236,7 @@ class ServerHandler : DataHandlerInterface {
         @SerializedName("Source") val source: String,
         @SerializedName("Staff_Lnk") val staffLink: String,
         @SerializedName("Staff_Name") val staffName: String,
-//        @SerializedName("Company_Lnk") val branchId: String, //TODO:- ask for additional field
+        @SerializedName("Company_Lnk") val companyLnk: String,
 //        @SerializedName("Processed") val processed: String  // removed from API
     )
 
@@ -251,7 +254,7 @@ class ServerHandler : DataHandlerInterface {
                 val statementList = jsonObject.keySet()
                     .map { key -> gson.fromJson(jsonObject[key], RecordStatement::class.java) }
                     .toMutableList()
-//                    .filter { it.branchId == branchId } //TODO:- after additional field is added
+                    .filter { it.companyLnk == branchId } //TODO:- after additional field is added
                     .sortedBy { it.listNumber }.toMutableList()
                 IOUtils().saveJsonToFile(gson.toJson(statementList), pathToStatements)
                 Log.w("STATEMENTS", statementList.toString())

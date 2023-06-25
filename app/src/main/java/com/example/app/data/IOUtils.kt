@@ -128,7 +128,8 @@ class IOUtils {
         val ListNumber: String,
         val Source: String,
         val Staff_Lnk: String,
-        val Staff_Name: String
+        val Staff_Name: String,
+        val Company_Lnk: String
     )
 
     fun getStatementsFromJson(jsonString: String): MutableList<Statement> {
