@@ -2,7 +2,7 @@ package com.example.app
 
 class AppStrings {
     companion object {
-        const val version = "1.0.2"
+        const val version = "1.1.0"
         const val deviceDirectory = "storage/emulated/0/download/noe/"
         const val branchesFS = AppStrings.deviceDirectory + "branches.json"
 
