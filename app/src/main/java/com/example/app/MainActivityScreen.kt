@@ -37,6 +37,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -379,7 +380,7 @@ fun MainScreen(
                     .fillMaxWidth()
                     .padding(10.dp)
             ) {
-                Spacer(modifier = Modifier.height(50.dp))
+                Spacer(modifier = Modifier.height(20.dp))
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
@@ -545,7 +546,7 @@ fun BranchSelector(viewModel: MainViewModel, dataHandler: DataHandlerInterface) 
 
             }) {
             val header = if (selectedBranch.value != "") selectedBranch.value else  "Филиал"
-            Text(header)
+            Text(header, textAlign = TextAlign.Center)
         }
 
         ExposedDropdownMenu(

@@ -12,6 +12,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -59,8 +60,9 @@ fun SplashScreen(alphaAnimation: Float, version: String) {
                 tint = Color.Black
             )
 
-            Text(text = "НОЭ контрольные обходы",  fontSize = 28.sp,
-                modifier = Modifier.alpha(alpha = alphaAnimation))
+            Text(text = "НОЭ контрольные обходы",  fontSize = 23.sp,
+                modifier = Modifier.alpha(alpha = alphaAnimation).fillMaxWidth(),
+                textAlign = TextAlign.Center)
 
             
             Spacer(modifier = Modifier.height(250.dp))
