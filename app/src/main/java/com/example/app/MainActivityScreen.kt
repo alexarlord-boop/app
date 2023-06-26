@@ -281,6 +281,7 @@ fun MainScreen(
     LaunchedEffect(records) {
         if (records.isEmpty()) {
             dataHandler.onAreaChange(dataHandler.defaultArea)
+            viewModel.onStateIdChange("")
         } else {
             sortedListToShow =
                 records.sortedBy { record ->

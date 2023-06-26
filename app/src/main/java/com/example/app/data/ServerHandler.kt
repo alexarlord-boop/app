@@ -180,6 +180,7 @@ class ServerHandler : DataHandlerInterface {
         val urlString = AppStrings.recordsByListId + "?listnumber=$statementId"
         if (File(path).exists()) {
             this.reloadRecordsFromFile(controllerId, statementId, context)
+            Toast.makeText(context, "Загружено с устройства", Toast.LENGTH_SHORT).show()
         } else {
             viewModelScope.launch(exceptionHandler) {
                 try {
@@ -187,6 +188,7 @@ class ServerHandler : DataHandlerInterface {
                         fetchDataFromServer(urlString)
                     }
                     if (prettyJson.isEmpty()) {
+                        onRecordListChange(emptyList())
                         Toast.makeText(context, "Пустая запись", Toast.LENGTH_SHORT).show()
                         return@launch
                     }

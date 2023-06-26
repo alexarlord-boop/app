@@ -72,11 +72,12 @@ class FileSystemHandler : DataHandlerInterface {
 
         try {
             this.reloadRecordsFromFile(controllerId, statementId, context)
-            Toast.makeText(
-                context,
-                "Получена ведомость $statementId",
-                Toast.LENGTH_SHORT
-            ).show()
+            Toast.makeText(context, "Загружено с устройства", Toast.LENGTH_SHORT).show()
+//            Toast.makeText(
+//                context,
+//                "Получена ведомость $statementId",
+//                Toast.LENGTH_SHORT
+//            ).show()
 
         } catch (e: java.lang.Exception) {
             println(e.message)
