@@ -823,16 +823,22 @@ fun RecordItem(id: Int, record: RecordDto, viewModel: MainViewModel) {
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Text(
-                    text = record.street.split(" ")[0],
-                    fontSize = MaterialTheme.typography.h6.fontSize,
-                    fontWeight = FontWeight(300)
-                )
-                Text(
-                    text = record.name,
-                    fontSize = MaterialTheme.typography.h6.fontSize,
-                    fontWeight = FontWeight(500)
-                )
+                Column(Modifier.weight(2f)) {
+                    Text(
+                        text = record.street,
+                        fontSize = MaterialTheme.typography.h6.fontSize,
+                        fontWeight = FontWeight(300)
+                    )
+                }
+                Column(Modifier.weight(2f)) {
+                    Text(
+                        text = record.name,
+                        Modifier.fillMaxWidth(),
+                        fontSize = MaterialTheme.typography.h6.fontSize,
+                        fontWeight = FontWeight(500),
+                        textAlign = TextAlign.End
+                    )
+                }
             }
             Spacer(modifier = Modifier.height(5.dp))
             Row(
