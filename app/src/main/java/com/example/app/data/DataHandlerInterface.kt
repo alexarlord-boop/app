@@ -7,12 +7,17 @@ import com.example.app.AppStrings
 import com.example.app.record.RecordDto
 import com.example.app.ServerHandler
 
+// TODO:- refactor method names
+// TODO:- refactor data classes -> move here
+
 interface DataHandlerInterface {
     val _listOfRecords: MutableLiveData<List<RecordDto>>
     val listOfRecords: LiveData<List<RecordDto>>
 
     fun onRecordListChange(newRecords: List<RecordDto>)
 
+    val defaultArea: String
+        get() = "Район"
     val _area: MutableLiveData<String>
     val area: LiveData<String>
 
@@ -20,12 +25,13 @@ interface DataHandlerInterface {
 
     suspend fun getControllers(): List<ServerHandler.Controller>?
 
-    suspend fun getStatementsForController(id: String): MutableList<ServerHandler.RecordStatement>
+    suspend fun getStatementsForController(controllerId: String, branchId: String): List<ServerHandler.RecordStatement>
 
     fun getRecordsForStatement(controllerId: String, statementId: String, context: Context): List<RecordDto>
 
+    // TODO:- remove to IO ?
     fun reloadRecordsFromFile(controlId: String, stateId: String, context: Context) {
-        val path = AppStrings.deviceDirectory + "control-$controlId-$stateId.json"
+        val path = AppStrings.deviceDirectory + "record-$controlId-$stateId.json"
         val records =
             IOUtils().convertServerListToRecordDtoList(IOUtils().parseRecordsFromJson(IOUtils().readJsonFromFile(path)))
         onRecordListChange(records)
@@ -35,4 +41,10 @@ interface DataHandlerInterface {
         onRecordListChange(emptyList())
     }
 
+    suspend fun getBranchList(): List<Branch>
+
+    suspend fun getControllersForBranch(branchId: String): List<ServerHandler.Controller>
+
 }
+
+class Branch(val companyLnk: String, val companyName: String)

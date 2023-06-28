@@ -5,6 +5,7 @@ import android.util.Log
 import android.widget.Toast
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
+import com.example.app.data.Branch
 import com.example.app.data.DataHandlerInterface
 import com.example.app.data.IOUtils
 import com.example.app.record.RecordDto
@@ -12,12 +13,11 @@ import com.google.gson.Gson
 import com.google.gson.JsonObject
 import com.google.gson.annotations.SerializedName
 import kotlinx.coroutines.*
-import java.io.File
-import java.io.IOException
-import java.io.OutputStreamWriter
+import java.io.*
 import java.net.HttpURLConnection
 import java.net.URL
 import java.net.URLEncoder
+import kotlin.reflect.typeOf
 
 
 class ServerHandler : DataHandlerInterface {
@@ -61,7 +61,7 @@ class ServerHandler : DataHandlerInterface {
             val responseCode = conn.responseCode
             if (responseCode == HttpURLConnection.HTTP_OK) {
                 val response = conn.inputStream.bufferedReader().use { it.readText() }
-                Log.i("DATA",  response)
+                Log.i("DATA", response)
                 return if (response.length > 1) response else ""
             } else {
                 Log.e("SERVER", responseCode.toString())
@@ -118,9 +118,16 @@ class ServerHandler : DataHandlerInterface {
         return response
     }
 
-    suspend fun sendDataToServer(jsonString: String, filePath: String, statementId: String, controllerId: String, context: Context): Boolean {
+    suspend fun sendDataToServer(
+        jsonString: String,
+        filePath: String,
+        statementId: String,
+        controllerId: String,
+        context: Context
+    ): Boolean {
+        Log.w("SERVER", "Sending to server: $jsonString")
         val urlString = AppStrings.updateData
-        val statementPath = AppStrings.deviceDirectory + "statements$controllerId.json"
+        val statementPath = AppStrings.deviceDirectory + "statements-$controllerId.json"
         val parameters = mapOf(
             "ourJSON" to jsonString
         )
@@ -139,11 +146,10 @@ class ServerHandler : DataHandlerInterface {
             if (isSuccessful) {
                 val isDeleted = IOUtils().deleteFile(filePath)
                 if (isDeleted) {
-                    val json = IOUtils().readJsonFromFile(statementPath)
-                    val statements = IOUtils().getStatementsFromJson(json).filter { it.ListNumber != statementId }
-                    IOUtils().saveJsonToFile(Gson().toJson(statements), statementPath)
-                    println(statements)
-                    println(statementPath)
+//                    val json = IOUtils().readJsonFromFile(statementPath)
+//                    val statements = IOUtils().getStatementsFromJson(json)
+//                        .filter { it.ListNumber != statementId }
+//                    IOUtils().saveJsonToFile(Gson().toJson(statements), statementPath)
                     Toast.makeText(context, "Данные успешно отправлены", Toast.LENGTH_LONG).show()
                     isSent = true
                 }
@@ -170,15 +176,21 @@ class ServerHandler : DataHandlerInterface {
         context: Context
     ): List<RecordDto> {
         var records = emptyList<RecordDto>()
-        val path = AppStrings.deviceDirectory + "control-$controllerId-$statementId.json"
+        val path = AppStrings.deviceDirectory + "record-$controllerId-$statementId.json"
         val urlString = AppStrings.recordsByListId + "?listnumber=$statementId"
         if (File(path).exists()) {
             this.reloadRecordsFromFile(controllerId, statementId, context)
+            Toast.makeText(context, "Загружено с устройства", Toast.LENGTH_SHORT).show()
         } else {
             viewModelScope.launch(exceptionHandler) {
                 try {
                     val prettyJson = withContext(Dispatchers.IO) {
                         fetchDataFromServer(urlString)
+                    }
+                    if (prettyJson.isEmpty()) {
+                        onRecordListChange(emptyList())
+                        Toast.makeText(context, "Пустая запись", Toast.LENGTH_SHORT).show()
+                        return@launch
                     }
                     records = IOUtils().convertServerListToRecordDtoList(
                         IOUtils().parseRecordsFromJson(prettyJson)
@@ -192,15 +204,14 @@ class ServerHandler : DataHandlerInterface {
                     ).show()
 
                 } catch (e: java.lang.Exception) {
-                    println(e.message)
-                    Toast.makeText(context, "Сервер недоступен", Toast.LENGTH_SHORT).show()
+                    println(e.stackTraceToString())
                 }
             }
         }
         return records
     }
 
-    data class Controller(val Staff_Lnk: String, val Staff_Name: String) {}
+    data class Controller(val Staff_Lnk: String, val Staff_Name: String, val Company_Lnk: String) {}
 
     override suspend fun getControllers(): List<Controller>? {
         val urlString = AppStrings.controllers
@@ -227,30 +238,80 @@ class ServerHandler : DataHandlerInterface {
         @SerializedName("Source") val source: String,
         @SerializedName("Staff_Lnk") val staffLink: String,
         @SerializedName("Staff_Name") val staffName: String,
+        @SerializedName("Company_Lnk") val companyLnk: String,
 //        @SerializedName("Processed") val processed: String  // removed from API
     )
 
-    override suspend fun getStatementsForController(id: String): MutableList<RecordStatement> {
+    override suspend fun getStatementsForController(controllerId: String, branchId: String): List<RecordStatement> {
         val gson = Gson()
-        val urlString = AppStrings.statementsByControllerId + "?Staff_Lnk=$id"
-        val pathToStatements = AppStrings.deviceDirectory + "statements$id.json"
+        val urlString = AppStrings.statementsByControllerId + controllerId
+        val pathToStatements = AppStrings.deviceDirectory + "statements-$controllerId.json"
         try {
             val statements = withContext(Dispatchers.IO) {
                 fetchDataFromServer(urlString).trimIndent()
             }
 
-            val jsonObject = gson.fromJson(statements, JsonObject::class.java)
-            val statementList = jsonObject.keySet()
-                .map { key -> gson.fromJson(jsonObject[key], RecordStatement::class.java) }
-                .toMutableList().sortedBy { it.listNumber }.toMutableList()
-            IOUtils().saveJsonToFile(gson.toJson(statementList), pathToStatements)
-            return statementList
+            if (statements != "") {
+                val jsonObject = gson.fromJson(statements, JsonObject::class.java)
+                val statementList = jsonObject.keySet()
+                    .map { key -> gson.fromJson(jsonObject[key], RecordStatement::class.java) }
+                    .toMutableList()
+                    .filter { it.companyLnk == branchId } //TODO:- after additional field is added
+                    .sortedBy { it.listNumber }.toMutableList()
+                IOUtils().saveJsonToFile(gson.toJson(statementList), pathToStatements)
+                Log.w("STATEMENTS", statementList.toString())
+                return statementList
+            } else {
+                return emptyList()
+            }
 
         } catch (e: IOException) {
             throw IOException("No Statements")
         }
     }
 
+
+    override suspend fun getBranchList(): List<Branch> {
+        val branchList = fetchDataFromServer(AppStrings.branchList).trimIndent()
+
+        if (branchList != "") {
+            println(branchList)
+            val formattedBranches = branchList.trim()
+                .split("},\"")
+                .map { it.split("\":{")[1] }
+                .map {
+                    val linkname = it.split(",")
+                    val link = linkname[0].split(":")[1].replace("\"", "")
+                    var name = linkname[1].split(":")[1].replace("\"", "").replace("/", "").replace("\\", "")
+                    name = if (name != "АО Новгородоблэлектро") name.split("АО")[0] else name
+                    Branch(link, name)
+                }.toList()
+
+            val json = IOUtils().branchesToJson(formattedBranches)
+            val filePath = AppStrings.branchesFS
+            IOUtils().saveJsonToFile(json, filePath)
+
+            return formattedBranches
+        } else {
+            return emptyList()
+        }
+    }
+
+    override suspend fun getControllersForBranch(branchId: String): List<Controller> {
+        val controllerList = fetchDataFromServer(AppStrings.controllersByBranch + branchId.toInt()).trimIndent()
+        return try {
+            if (controllerList != "") {
+                val filePath = AppStrings.deviceDirectory + "controllers-${branchId}.json"
+                IOUtils().saveJsonToFile(controllerList, filePath)
+                IOUtils().jsonToControllerListFiltered(controllerList)
+            } else {
+                emptyList()
+            }
+        } catch (ex: java.lang.Exception) {
+            Log.e("CONTROLLERS", ex.stackTraceToString())
+            emptyList()
+        }
+    }
 
 }
 
@@ -282,3 +343,47 @@ data class ServerRecord(
         return "ServerRecord(ListNumber='$ListNumber', ListDate='$ListDate', Source='$Source', Staff_Lnk='$Staff_Lnk', Staff_Name='$Staff_Name', AccountUnit_Lnk='$AccountUnit_Lnk', AU_number='$AU_number', AU_type='$AU_type', Area_name='$Area_name', Street_name='$Street_name', House_name='$House_name', Flat_number='$Flat_number', Person_name='$Person_name', Comments='$Comments', LastDate='$LastDate', NewDate='$NewDate', LastDay_value='$LastDay_value', LastNight_value='$LastNight_value', NewDay_value='$NewDay_value', NewNight_value='$NewNight_value')"
     }
 }
+
+//fun main() {
+//
+//
+//    val url = URL("https://indman.nokes.ru/engine/IndManCompanies.php")
+//    val connection = url.openConnection() as HttpURLConnection
+//    connection.requestMethod = "GET"
+//
+//    val responseCode = connection.responseCode
+//    if (responseCode == HttpURLConnection.HTTP_OK) {
+//        val reader = BufferedReader(InputStreamReader(connection.inputStream))
+//        val response = StringBuilder()
+//
+//        var line: String?
+//        while (reader.readLine().also { line = it } != null) {
+//            response.append(line)
+//        }
+//        reader.close()
+//
+//        val responseData = response.toString().trimIndent()
+//        // Process the responseData as needed
+//        println(responseData)
+//
+//        val formattedBranches = responseData.trim()
+//            .split("},\"")
+//            .map { it.split("\":{")[1] }
+//            .map {
+//                val linkname = it.split(",")
+//                val link = linkname[0].split(":")[1]
+//                val name = linkname[1].split(":")[1]
+//                Branch(link, name)
+//            }.toList()
+//
+//
+//        println(formattedBranches)
+//
+//
+//    } else {
+//        println("Request failed. Response Code: $responseCode")
+//    }
+//
+//    connection.disconnect()
+//
+//}

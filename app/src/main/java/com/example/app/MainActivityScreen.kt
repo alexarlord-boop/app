@@ -1,8 +1,10 @@
 package com.example.app
 
 
+import android.Manifest
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
 import android.os.Bundle
@@ -35,13 +37,16 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.app.ActivityCompat
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.navigation.compose.rememberNavController
+import com.example.app.data.Branch
 import com.example.app.data.DataHandlerInterface
 import com.example.app.data.FileSystemHandler
 import com.example.app.data.IOUtils
@@ -50,6 +55,7 @@ import com.example.app.record.RecordDto
 import com.google.gson.Gson
 import kotlinx.coroutines.*
 import java.io.File
+
 
 var FILE_NAME = ""
 var DATA_MODE = MainViewModel.DataMode.SERVER
@@ -75,6 +81,14 @@ class MainActivityScreen : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        val permissionsStorage = arrayOf<String>(Manifest.permission.READ_EXTERNAL_STORAGE)
+        val requestExternalStorage = 1
+        val permission =
+            ActivityCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE)
+        if (permission != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this, permissionsStorage, requestExternalStorage)
+        }
 
         createDirectoryIfNotExists(AppStrings.deviceDirectory)
 
@@ -112,7 +126,8 @@ class MainActivityScreen : AppCompatActivity() {
                         viewModel.stateId.value.toString(),
                         this
                     )
-                } catch (e: Exception) {
+                }
+                catch (e: Exception) {
                     Log.w("LIFECYCLE", e.message.toString())
                 }
             }
@@ -162,10 +177,42 @@ class MainViewModel : ViewModel() {
     private val _selectedOptionText: MutableLiveData<String> = MutableLiveData(defaultOption)
     var selectedOptionText: LiveData<String> = _selectedOptionText
 
+    val defaultBranch = ""
+    private val _selectedBranch: MutableLiveData<String> = MutableLiveData(defaultBranch)
+    var selectedBranch: LiveData<String> = _selectedBranch
+
+    val defaultBranchId = ""
+    private val _selectedBranchId: MutableLiveData<String> = MutableLiveData(defaultBranchId)
+    var selectedBranchId: LiveData<String> = _selectedBranchId
+
+    private val _controllers: MutableLiveData<List<ServerHandler.Controller>> = MutableLiveData(
+        emptyList()
+    )
+    var controllers: LiveData<List<ServerHandler.Controller>> = _controllers
+
+
+    private val _selectedController: MutableLiveData<ServerHandler.Controller> = MutableLiveData(
+        ServerHandler.Controller("-", "-", "-"))
+    var selectedController: LiveData<ServerHandler.Controller> = _selectedController
+
+    fun onControllerChange(controller: ServerHandler.Controller) {
+        _selectedController.value = controller
+    }
+
+    fun onControllerListChange(controllers: List<ServerHandler.Controller>) {
+        _controllers.value = controllers
+    }
+
     fun onOptionChange(newOption: String) {
         _selectedOptionText.value = newOption
     }
 
+    fun onBranchChange(newBranch: String) {
+        _selectedBranch.value = newBranch
+    }
+    fun onBranchIdChange(newBranchId: String) {
+        _selectedBranchId.value = newBranchId
+    }
 
     fun onSourceOptionChange(newSrcOption: DataMode) {
         _sourceOption.value = newSrcOption
@@ -210,10 +257,11 @@ fun MainScreen(
     viewModel: MainViewModel
 ) {
     val records by dataHandler.listOfRecords.observeAsState(emptyList())
+    val controllers by viewModel.controllers.observeAsState(emptyList())
     val lastClicked = viewModel.position.observeAsState(LAST_LIST_POSITION)
     val id by viewModel.fileId.observeAsState(1)
     val stateId by viewModel.stateId.observeAsState("0")
-    val area by dataHandler.area.observeAsState("Район")
+    val area by dataHandler.area.observeAsState(dataHandler.defaultArea)
 
     val listState = rememberLazyListState()
     val coroutineScope = rememberCoroutineScope()
@@ -231,16 +279,21 @@ fun MainScreen(
             }
         }
     LaunchedEffect(records) {
-        sortedListToShow =
-            records.sortedBy { record ->
-                val houseNumber = record.houseNumber
-                val numericPart = houseNumber.split("\\D+".toRegex() )[0].filter { it.isDigit() }
-                if (numericPart.isNotEmpty()) {
-                    numericPart.toInt()
-                } else {
-                    Int.MAX_VALUE
+        if (records.isEmpty()) {
+            dataHandler.onAreaChange(dataHandler.defaultArea)
+            viewModel.onStateIdChange("")
+        } else {
+            sortedListToShow =
+                records.sortedBy { record ->
+                    val houseNumber = record.houseNumber
+                    val numericPart = houseNumber.split("\\D+".toRegex())[0].filter { it.isDigit() }
+                    if (numericPart.isNotEmpty()) {
+                        numericPart.toInt()
+                    } else {
+                        Int.MAX_VALUE
+                    }
                 }
-            }
+        }
 
     }
 
@@ -284,7 +337,7 @@ fun MainScreen(
                 confirmButton = {
                     Button(onClick = {
                         isUploadDialogVisible = false
-                        val filePath = AppStrings.deviceDirectory + "control-$id-$stateId.json"
+                        val filePath = AppStrings.deviceDirectory + "record-$id-$stateId.json"
                         val json = IOUtils().readJsonFromFile(filePath)
                         coroutineScope.launch {
                             val isSent = (dataHandler as ServerHandler).sendDataToServer(
@@ -328,13 +381,20 @@ fun MainScreen(
                     .fillMaxWidth()
                     .padding(10.dp)
             ) {
-                Spacer(modifier = Modifier.height(50.dp))
+                Spacer(modifier = Modifier.height(20.dp))
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Selector(viewModel, dataHandler)
+                    BranchSelector(viewModel, dataHandler)
+                }
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    ControllerSelector(viewModel, dataHandler)
                 }
 
                 Column(
@@ -445,36 +505,139 @@ fun MainScreen(
     }
 }
 
-
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
-fun Selector(viewModel: MainViewModel, dataHandler: DataHandlerInterface) {
+fun BranchSelector(viewModel: MainViewModel, dataHandler: DataHandlerInterface) {
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
     val cs = CoroutineScope(Dispatchers.Main)
     var expanded by remember { mutableStateOf(false) }
-    val selectedOptionText = viewModel.selectedOptionText.observeAsState(viewModel.defaultOption)
-    val selectedStatementId = viewModel.stateId.observeAsState("0")
-    var fetchedData by remember { mutableStateOf(emptyList<ServerHandler.RecordStatement>()) }
+    val selectedBranch = viewModel.selectedBranch.observeAsState(viewModel.defaultBranch)
+    val selectedBranchId = viewModel.selectedBranchId.observeAsState(viewModel.defaultBranchId)
+    val records by dataHandler.listOfRecords.observeAsState(emptyList())
+    val controllers = viewModel.controllers.observeAsState(emptyList())
     var isDialogVisible by remember { mutableStateOf(false) }
+
+
+    var options by remember { mutableStateOf(listOf("филиалы")) } // text names
+    var branches by remember { mutableStateOf(emptyList<Branch>()) } // branch objects
+
+
+    ExposedDropdownMenuBox(
+        expanded = true, onExpandedChange = {
+            expanded = !expanded
+        }, modifier = Modifier.fillMaxWidth()
+    ) {
+
+        Button(
+            modifier = Modifier.fillMaxWidth(),
+            border = BorderStroke(1.dp, color = Color.Black),
+            colors = ButtonDefaults.buttonColors(backgroundColor = Color.White),
+            onClick = {
+
+                coroutineScope.launch {
+                    // server request -> branches
+                    withContext(Dispatchers.IO) {
+                        val data = dataHandler.getBranchList()
+                        branches = data
+                        options = data.map { it.companyName }
+                    }
+
+                }
+
+            }) {
+            val header = if (selectedBranch.value != "") selectedBranch.value else  "Филиал"
+            Text(header, textAlign = TextAlign.Center)
+        }
+
+        ExposedDropdownMenu(
+            expanded = expanded,
+            onDismissRequest = { expanded = false },
+            modifier = Modifier.fillMaxWidth(),
+        ) {
+            options.forEachIndexed { index, optionText ->
+                DropdownMenuItem(onClick = {
+
+                    expanded = false
+
+                    Log.w("SELECTOR", "Branch selected: ${branches[index].companyName}")
+                    viewModel.onBranchChange(branches[index].companyName)
+                    viewModel.onBranchIdChange(branches[index].companyLnk)
+
+                    // Fetching controller lists
+
+                        cs.launch {
+                            withContext(Dispatchers.IO) {
+
+                                    val fetchedControllers =
+                                        dataHandler.getControllersForBranch(branches[index].companyLnk)
+
+                                    withContext(Dispatchers.Main) {
+                                        // Perform UI-related operations here
+                                        if (fetchedControllers.isEmpty()) {
+                                            Toast.makeText(context,"Контролеры не найдены", Toast.LENGTH_SHORT).show()
+                                        }
+                                        viewModel.onControllerListChange(fetchedControllers)
+                                        viewModel.onControllerChange(
+                                            ServerHandler.Controller(
+                                                "-",
+                                                "-",
+                                                "-"
+                                            )
+                                        )
+                                        viewModel.onStateIdChange("")
+                                    }
+                            }
+
+                    }
+
+                    dataHandler.onRecordListChange(emptyList())
+
+                }) {
+                    Text(text = optionText)
+                }
+            }
+        }
+
+//        if (isDialogVisible && fetchedData.isNotEmpty()) {
+//            viewModel.onStateIdChange("")
+//            ShowModalDialog() // Show the modal dialog with fetched data
+//        }
+    }
+}
+
+
+@OptIn(ExperimentalMaterialApi::class)
+@Composable
+fun ControllerSelector(viewModel: MainViewModel, dataHandler: DataHandlerInterface) {
+    val context = LocalContext.current
+    val cs = CoroutineScope(Dispatchers.Main)
+    var expanded by remember { mutableStateOf(false) }
+    val selectedStatementId = viewModel.stateId.observeAsState("0")
+    val selectedController = viewModel.selectedController.observeAsState(ServerHandler.Controller("-", "-", "-"))
+    var statements by remember { mutableStateOf(emptyList<ServerHandler.RecordStatement>()) }
+    var isDialogVisible by remember { mutableStateOf(false) }
+    var isInfoVisible by remember { mutableStateOf(false) }
+
+    val controllers = viewModel.controllers.observeAsState(listOf(ServerHandler.Controller("-","-", "-")))
+    val selectedBranch = viewModel.selectedBranch.observeAsState("")
+    val selectedBranchId = viewModel.selectedBranchId.observeAsState("")
 
     val id by viewModel.fileId.observeAsState("1") // TODO:- check the value
 
-    var options by remember { mutableStateOf(listOf("-")) }
-    var names by remember { mutableStateOf(listOf("нет ведомостей")) }
 
 
     // Function to show the modal dialog with fetched data
     @Composable
     fun ShowModalDialog() {
-        Log.w("DATA", fetchedData.toString())
+        Log.w("DATA", statements.toString())
         AlertDialog(
             shape = RoundedCornerShape(15.dp),
             onDismissRequest = { isDialogVisible = false },
             title = { Text(text = "Ведомости") },
             text = {
                 Column {
-                    fetchedData.sortedBy { it.listNumber.toInt() }.forEach { item ->
+                    statements.sortedBy { it.listNumber.toInt() }.forEach { item ->
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.Start,
@@ -517,6 +680,22 @@ fun Selector(viewModel: MainViewModel, dataHandler: DataHandlerInterface) {
         )
     }
 
+    // Function to show the modal dialog with fetched data
+    @Composable
+    fun ShowInfoDialog() {
+        AlertDialog(
+            shape = RoundedCornerShape(15.dp),
+            onDismissRequest = { isInfoVisible = false },
+            title = { Text(text = "Нет ведомостей") },
+            text = { Text(text = "Для контролера не найдены ведомости.") },
+            confirmButton = {
+                Button(onClick = { isInfoVisible = false }) {
+                    Text(text = "ОК")
+                }
+            }
+        )
+    }
+
 
 
     ExposedDropdownMenuBox(
@@ -531,17 +710,13 @@ fun Selector(viewModel: MainViewModel, dataHandler: DataHandlerInterface) {
             colors = ButtonDefaults.buttonColors(backgroundColor = Color.White),
             onClick = {
 
-                coroutineScope.launch {
-                    val controllers = dataHandler.getControllers()
-                    println(controllers)
-                    if (controllers !== null) {
-                        options = controllers.map { it.Staff_Lnk }
-                        names = controllers.map { it.Staff_Name }
-                    }
-                }
 
             }) {
-            Text("${selectedOptionText.value} | Ведомость ${selectedStatementId.value}")
+            var header = "Контролер | Ведомость"
+            if (selectedController.value.Company_Lnk != "-") {
+                header = "${selectedController.value.Staff_Name} | Ведомость ${selectedStatementId.value}"
+            }
+            Text(header)
         }
 
         ExposedDropdownMenu(
@@ -549,38 +724,59 @@ fun Selector(viewModel: MainViewModel, dataHandler: DataHandlerInterface) {
             onDismissRequest = { expanded = false },
             modifier = Modifier.fillMaxWidth(),
         ) {
-            options.forEachIndexed { index, optionText ->
-                DropdownMenuItem(onClick = {
-                    viewModel.onOptionChange(names[index])
-                    viewModel.onIdChange(optionText)
-                    expanded = false
+            if (controllers.value.isNotEmpty()) {
+                controllers.value.forEachIndexed { index, element ->
+                    DropdownMenuItem(onClick = {
+                        viewModel.onControllerChange(element)
+                        expanded = false
 
-                    // Fetching controller lists
-                    cs.launch {
-                        try {
-                            withContext(Dispatchers.IO) {
-                                val data = dataHandler.getStatementsForController(optionText)
-                                fetchedData = data // Assign fetched data to the variable
+                        // Fetching controller lists
+                        cs.launch {
+                            try {
+                                withContext(Dispatchers.IO) {
+                                    statements = dataHandler.getStatementsForController(element.Staff_Lnk, selectedBranchId.value).toMutableList()
+                                }
+                                if (statements.isNotEmpty()) {
+                                    isDialogVisible = true // Show the dialog
+                                } else {
+                                    isInfoVisible = true
+                                }
+                            } catch (e: Exception) {
+                                viewModel.onStateIdChange("")
+                                dataHandler.onRecordListChange(emptyList())
+                                println("Error occurred: ${e.message}")
+                                Toast.makeText(
+                                    context,
+                                    "Данные не были загружены",
+                                    Toast.LENGTH_LONG
+                                ).show()
                             }
-                            isDialogVisible = true // Show the dialog
-                        } catch (e: Exception) {
-                            println("Error occurred: ${e.message}")
-                            Toast.makeText(
-                                context,
-                                "Не удалось получить ведомости",
-                                Toast.LENGTH_LONG
-                            ).show()
                         }
-                    }
 
+                    }) {
+                        Text(text = element.Staff_Name)
+                    }
+                }
+            } else {
+                DropdownMenuItem(onClick = {
+                    expanded = false
                 }) {
-                    Text(text = names[index])
+                    val text = if (selectedBranch.value != "") "нет контролеров" else "выберите филиал"
+                    Text(text = text)
                 }
             }
         }
-        if (isDialogVisible && fetchedData.isNotEmpty()) {
-            viewModel.onStateIdChange("")
+
+        if (isDialogVisible && statements.isNotEmpty()) {
+//            viewModel.onStateIdChange("")
             ShowModalDialog() // Show the modal dialog with fetched data
+        } else if(statements.isEmpty()) {
+            dataHandler.onRecordListChange(emptyList())
+            dataHandler.onAreaChange(dataHandler.defaultArea)
+            viewModel.onStateIdChange("")
+        }
+        if (isInfoVisible) {
+            ShowInfoDialog()
         }
     }
 }
@@ -597,7 +793,7 @@ fun RecordItem(id: Int, record: RecordDto, viewModel: MainViewModel) {
     val stateId = viewModel.stateId.observeAsState("0").value
 
     val sourceOption = viewModel.sourceOption.value?.id
-    val filename = AppStrings.deviceDirectory + "control-${fid}-${stateId}.json"
+    val filename = AppStrings.deviceDirectory + "record-${fid}-${stateId}.json"
 
     Card(
 
@@ -627,16 +823,22 @@ fun RecordItem(id: Int, record: RecordDto, viewModel: MainViewModel) {
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Text(
-                    text = record.street.split(" ")[0],
-                    fontSize = MaterialTheme.typography.h6.fontSize,
-                    fontWeight = FontWeight(300)
-                )
-                Text(
-                    text = record.name,
-                    fontSize = MaterialTheme.typography.h6.fontSize,
-                    fontWeight = FontWeight(500)
-                )
+                Column(Modifier.weight(2f)) {
+                    Text(
+                        text = record.street,
+                        fontSize = MaterialTheme.typography.h6.fontSize,
+                        fontWeight = FontWeight(300)
+                    )
+                }
+                Column(Modifier.weight(2f)) {
+                    Text(
+                        text = record.name,
+                        Modifier.fillMaxWidth(),
+                        fontSize = MaterialTheme.typography.h6.fontSize,
+                        fontWeight = FontWeight(500),
+                        textAlign = TextAlign.End
+                    )
+                }
             }
             Spacer(modifier = Modifier.height(5.dp))
             Row(
@@ -705,7 +907,7 @@ fun RecordItem(id: Int, record: RecordDto, viewModel: MainViewModel) {
 }
 
 
-//@Preview
+@Preview
 @Composable
 fun showMainScreen() {
     var fsHandler = FileSystemHandler()
@@ -751,8 +953,8 @@ fun showUploadDialog() {
     }
 }
 
-@Preview
-@Composable
-fun showUpload() {
-    showUploadDialog()
-}
+//@Preview
+//@Composable
+//fun showUpload() {
+//    showUploadDialog()
+//}
