@@ -2,12 +2,18 @@ package com.example.app
 
 
 import android.Manifest
+import android.Manifest.permission.WRITE_EXTERNAL_STORAGE
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
+import android.net.Uri
+import android.os.Build
+import android.os.Build.VERSION.SDK_INT
 import android.os.Bundle
+import android.os.Environment
+import android.provider.Settings
 import android.util.Log
 import android.widget.TextView
 import android.widget.Toast
@@ -129,6 +135,7 @@ class MainActivityScreen : AppCompatActivity() {
                 }
                 catch (e: Exception) {
                     Log.w("LIFECYCLE", e.message.toString())
+                    return
                 }
             }
             1 -> {
@@ -140,6 +147,7 @@ class MainActivityScreen : AppCompatActivity() {
                     )
                 } catch (e: Exception) {
                     Log.w("LIFECYCLE", e.message.toString())
+                    return
                 }
             }
         }
@@ -561,6 +569,7 @@ fun BranchSelector(viewModel: MainViewModel, dataHandler: DataHandlerInterface) 
                     expanded = false
 
                     Log.w("SELECTOR", "Branch selected: ${branches[index].companyName}")
+                    Log.w("SELECTOR", "Branch id: ${branches[index].companyLnk}")
                     viewModel.onBranchChange(branches[index].companyName)
                     viewModel.onBranchIdChange(branches[index].companyLnk)
 
@@ -728,6 +737,8 @@ fun ControllerSelector(viewModel: MainViewModel, dataHandler: DataHandlerInterfa
                 controllers.value.forEachIndexed { index, element ->
                     DropdownMenuItem(onClick = {
                         viewModel.onControllerChange(element)
+                        Log.w("SELECTOR", "Controller selected: ${element.Staff_Name}")
+                        Log.w("SELECTOR", "Controller id: ${element.Staff_Lnk}")
                         expanded = false
 
                         // Fetching controller lists

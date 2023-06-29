@@ -115,10 +115,14 @@ class IOUtils {
         val searchTerm = "record-"
         val ids: List<String>
         val directory = File(directoryPath)
-        ids = directory.listFiles { file ->
+        println(directory)
+        println()
+        val names = directory.listFiles { file ->
             file.isFile && file.name.contains(searchTerm)
-        }?.map { file -> file.name.split("-").last().split(".")[0] }?.toList()!!
-
+        }.map { file -> file.name }
+        println(names)
+        ids = names.map { name -> name.split("-").last().split(".")[0] }?.toList()!!
+        Log.w("STATEMENTS", "Statements ids: $ids")
         return ids
 
     }

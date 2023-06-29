@@ -74,14 +74,29 @@ class RecordActivity : AppCompatActivity() {
         val saveBtn: Button = findViewById(R.id.save_btn)
 
         saveBtn.setOnClickListener {
+            val oldDay = lastCheckDateDay.text.toString()
+            val oldNight = lastCheckDateNight.text.toString()
             val day = newDataDay.text.toString().trim()
             val night = newDataNight.text.toString().trim()
-            val inputDay = checkInput(lastCheckDateDay.text.toString(), day)
-            val inputNight = checkInput(lastCheckDateNight.text.toString(), night)
+            val inputDay = checkInput(oldDay, day)
+            val inputNight = checkInput(oldNight, night)
+
+            var dayGreater =  true
+            var nightGreater =  true
+            if (day.isNotEmpty() && night.isNotEmpty()) {
+                if (day.toDouble() > 0) {
+                    dayGreater = checkGreaterValue(oldDay, day)
+                }
+                if (night.toDouble() > 0) {
+                    nightGreater = checkGreaterValue(oldNight, night)
+                }
+            }
 
             when {
-                !inputDay -> newDataDay.error = "Значение должно быть не меньше предыдущего"
-                !inputNight -> newDataNight.error = "Значение должно быть не меньше предыдущего"
+                !inputDay -> newDataDay.error = "Заполните поле или оставьте значение 0"
+                !dayGreater -> newDataDay.error = "Значение должно быть не меньше предыдущего"
+                !inputNight -> newDataNight.error = "Заполните поле или оставьте значение 0"
+                !nightGreater -> newDataNight.error = "Значение должно быть не меньше предыдущего"
                 day.length > 6 -> newDataDay.error = "Значение не должно превышать лимит"
                 night.length > 6 -> newDataNight.error = "Значение не должно превышать лимит"
                 else -> {
@@ -103,9 +118,15 @@ class RecordActivity : AppCompatActivity() {
     }
 
     fun checkInput(oldValue: String, newValue: String): Boolean {
-        return (newValue.isNotEmpty() && newValue.isNotBlank()) &&
-                newValue.toDouble() >= oldValue.toDouble()
+        println(oldValue)
+        println(newValue)
+        return (newValue.isNotEmpty() && newValue.isNotBlank())
     }
+
+    fun checkGreaterValue(oldValue: String, newValue: String): Boolean {
+        return newValue.toDouble() >= oldValue.toDouble()
+    }
+
 
     private fun String.beforeZeroOrBlank(): String {
         return split(".")[0]

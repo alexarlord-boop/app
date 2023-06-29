@@ -54,9 +54,10 @@ class FileSystemHandler : DataHandlerInterface {
                 IO().readJsonFromFile(pathToStatements),
                 Array<ServerHandler.RecordStatement>::class.java
             ).toMutableList()
+            Log.w("FILESYSTEM", "Statements from file: $statements")
             statements =
                 statements.filter { s -> savedStatementIds.contains(s.listNumber) }.toMutableList()
-            println(statements)
+            Log.w("FILESYSTEM", "Statements Filtered: $statements")
             return statements // filter only those, which is present on device (parse filenames...)
         } catch (e: java.lang.Exception) {
             Log.e("FILESYSTEM", e.stackTraceToString())
