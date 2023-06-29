@@ -1,5 +1,6 @@
 package com.example.app
 
+import RecordScreen
 import androidx.compose.runtime.Composable
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
@@ -14,7 +15,10 @@ fun SetupNavGraph(navController: NavHostController, connected: Boolean, dataHand
             AnimatedSplashScreen(navController, AppStrings.version)
         }
         composable(route = Screen.Home.route) {
-            MainScreen(connected = connected, dataHandler = dataHandler, viewModel = viewModel)
+            MainScreen(connected = connected, dataHandler = dataHandler, viewModel = viewModel, navController)
+        }
+        composable(route = Screen.Record.route) {
+            RecordScreen(viewModel = viewModel, navController)
         }
     }
 }

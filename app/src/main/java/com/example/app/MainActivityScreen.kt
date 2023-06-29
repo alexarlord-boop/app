@@ -48,14 +48,18 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.app.ActivityCompat
+import androidx.core.os.bundleOf
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import androidx.navigation.NavController
+import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.example.app.data.Branch
 import com.example.app.data.DataHandlerInterface
 import com.example.app.data.FileSystemHandler
 import com.example.app.data.IOUtils
+import com.example.app.navigation.Screen
 import com.example.app.record.RecordActivity
 import com.example.app.record.RecordDto
 import com.google.gson.Gson
@@ -108,7 +112,6 @@ class MainActivityScreen : AppCompatActivity() {
             setContent {
                 val navController = rememberNavController()
                 SetupNavGraph(navController = navController, true, serverHandler, viewModel)
-//                MainScreen(connected = true, serverHandler, viewModel)
             }
         } else {
             // Show a dialog or handle the case when there is no network connectivity
@@ -118,7 +121,6 @@ class MainActivityScreen : AppCompatActivity() {
             setContent {
                 val navController = rememberNavController()
                 SetupNavGraph(navController = navController, false, fsHandler, viewModel)
-
             }
         }
     }
@@ -203,6 +205,12 @@ class MainViewModel : ViewModel() {
         ServerHandler.Controller("-", "-", "-"))
     var selectedController: LiveData<ServerHandler.Controller> = _selectedController
 
+    private val _selectedRecord: MutableLiveData<RecordDto> = MutableLiveData(null)
+    var selectedRecord: LiveData<RecordDto> = _selectedRecord
+
+    fun onRecordChange(newRecord: RecordDto) {
+        _selectedRecord.value = newRecord
+    }
     fun onControllerChange(controller: ServerHandler.Controller) {
         _selectedController.value = controller
     }
@@ -242,6 +250,11 @@ class MainViewModel : ViewModel() {
         }
     }
 
+    fun onFileChange(newFile: String) {
+        _filename.value = newFile
+        FILE_NAME = _filename.toString()
+    }
+
 
     fun onIdChange(newId: String) {
         _fileId.value = newId
@@ -262,7 +275,8 @@ class MainViewModel : ViewModel() {
 fun MainScreen(
     connected: Boolean,
     dataHandler: DataHandlerInterface,
-    viewModel: MainViewModel
+    viewModel: MainViewModel,
+    navController: NavHostController
 ) {
     val records by dataHandler.listOfRecords.observeAsState(emptyList())
     val controllers by viewModel.controllers.observeAsState(emptyList())
@@ -462,7 +476,7 @@ fun MainScreen(
             itemsIndexed(
                 sortedListToShow
             ) { id, record ->
-                RecordItem(id, record, viewModel)
+                RecordItem(id, record, viewModel, dataHandler, navController)
             }
         }
 
@@ -794,7 +808,7 @@ fun ControllerSelector(viewModel: MainViewModel, dataHandler: DataHandlerInterfa
 
 
 @Composable
-fun RecordItem(id: Int, record: RecordDto, viewModel: MainViewModel) {
+fun RecordItem(id: Int, record: RecordDto, viewModel: MainViewModel, dataHandler: DataHandlerInterface, navController: NavHostController) {
     val padding = 5.dp
     val margin = 10.dp
     val context = LocalContext.current
@@ -805,27 +819,18 @@ fun RecordItem(id: Int, record: RecordDto, viewModel: MainViewModel) {
 
     val sourceOption = viewModel.sourceOption.value?.id
     val filename = AppStrings.deviceDirectory + "record-${fid}-${stateId}.json"
+    viewModel.onFileChange(filename)
+
+    val onClick = {
+        viewModel.onPositionChange(id)
+        viewModel.onRecordChange(record)
+        navController.navigate(route = Screen.Record.route)
+    }
 
     Card(
 
         modifier = Modifier
-            .clickable(onClick = {
-                viewModel.onPositionChange(id)
-
-                val intent = Intent(context, RecordActivity::class.java)
-
-                intent.putExtra("filename", filename)
-
-                intent.putExtra("position", id)
-                intent.putExtra(
-                    "lastDate",
-                    IOUtils().convertDateToFormattedString(record.lastKoDate)
-                )
-                intent.putExtra("dataMode", sourceOption.toString())
-                val gson = Gson()
-                intent.putExtra("recordData", gson.toJson(record))
-                context.startActivity(intent)
-            }),
+            .clickable(onClick = onClick),
         backgroundColor = if (selected) Color(0xFFEEECEC) else Color.White,
         elevation = 3.dp
     ) {
@@ -923,7 +928,7 @@ fun RecordItem(id: Int, record: RecordDto, viewModel: MainViewModel) {
 fun showMainScreen() {
     var fsHandler = FileSystemHandler()
     var viewModel: MainViewModel = MainViewModel()
-    MainScreen(connected = true, dataHandler = fsHandler, viewModel = viewModel)
+    MainScreen(connected = true, dataHandler = fsHandler, viewModel = viewModel, rememberNavController())
 }
 
 
