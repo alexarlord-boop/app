@@ -1,4 +1,5 @@
 import android.util.Log
+import android.view.WindowInsets.Side
 import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.*
@@ -19,6 +20,7 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Color.Companion.Black
+import androidx.compose.ui.graphics.Color.Companion.Red
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
@@ -28,14 +30,19 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
+import androidx.navigation.compose.rememberNavController
 import com.example.app.MainViewModel
 import com.example.app.R
 import com.example.app.ServerHandler
 import com.example.app.data.IOUtils
+import com.example.app.record.RecordDto
+import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
+import kotlin.coroutines.coroutineContext
 
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
@@ -52,9 +59,50 @@ fun RecordScreen(viewModel: MainViewModel, navController: NavHostController) {
     val recordId = viewModel.position.value!!
     val filename = viewModel.filename.value!!
 
-    val dayValue = remember { mutableStateOf(record.ko_D.toString().split(".")[0]) }
-    val nightValue = remember { mutableStateOf(record.ko_N.toString().split(".")[0]) }
-    val comments = remember { mutableStateOf(record.comments) }
+    var dayValue by remember { mutableStateOf(record.ko_D.toString().split(".")[0]) }
+    var isDayValid by remember { mutableStateOf(true) }
+    var nightValue by remember { mutableStateOf(record.ko_N.toString().split(".")[0]) }
+    var isNightValid by remember { mutableStateOf(true) }
+    var comments by remember { mutableStateOf(record.comments) }
+
+    var errorMessage by remember { mutableStateOf("") }
+
+    LaunchedEffect(dayValue) {
+        if (dayValue === "") {
+            isDayValid = false
+            errorMessage = "Заполните поле или оставьте значение 0"
+            return@LaunchedEffect
+        }
+        val d = dayValue.toDouble()
+        if (d == 0.0) {
+            isDayValid = true
+            errorMessage = ""
+            return@LaunchedEffect
+        } else isDayValid = d >= record.lastKo_D
+        errorMessage = if (!isDayValid) {
+            "Значение должно быть не меньше предыдущего"
+        } else {
+            ""
+        }
+    }
+    LaunchedEffect(nightValue) {
+        if (nightValue === "") {
+            isNightValid = false
+            errorMessage = "Заполните поле или оставьте значение 0"
+            return@LaunchedEffect
+        }
+        val n = nightValue.toDouble()
+        if (n == 0.0) {
+            isNightValid = true
+            errorMessage = ""
+            return@LaunchedEffect
+        } else isNightValid = n >= record.lastKo_N
+        errorMessage = if (!isNightValid) {
+            "Значение должно быть не меньше предыдущего"
+        } else {
+            ""
+        }
+    }
 
 
     val keyboardController = LocalSoftwareKeyboardController.current
@@ -105,15 +153,16 @@ fun RecordScreen(viewModel: MainViewModel, navController: NavHostController) {
             Column(Modifier.weight(1f)) {
                 Button(
                     onClick = {
-                        record?.let { record ->
-                            record.ko_D = dayValue.value.toDoubleOrNull() ?: 0.0
-                            record.ko_N = nightValue.value.toDoubleOrNull() ?: 0.0
-                            record.comments = comments.value
+                        if (isDayValid && isNightValid) {
+                            record?.let { record ->
+                                record.ko_D = dayValue.toDoubleOrNull() ?: 0.0
+                                record.ko_N = nightValue.toDoubleOrNull() ?: 0.0
+                                record.comments = comments
 
-                            IOUtils().updateRowData(recordId, record, filename)
-                            Toast.makeText(context, "Сохранено", Toast.LENGTH_SHORT).show()
-                            navController.popBackStack()
-
+                                IOUtils().updateRowData(recordId, record, filename)
+                                Toast.makeText(context, "Сохранено", Toast.LENGTH_SHORT).show()
+                                navController.popBackStack()
+                            }
                         }
                     },
                     modifier = Modifier
@@ -276,14 +325,16 @@ fun RecordScreen(viewModel: MainViewModel, navController: NavHostController) {
             ) {
 
                 TextField(
-                    value = dayValue.value,
-                    onValueChange = { dayValue.value = parseNumberInput(it) },
+                    value = dayValue,
+                    onValueChange = { dayValue = parseNumberInput(it) },
+                    isError = !isDayValid,
+
                     modifier = Modifier
                         .width(150.dp)
                         .height(50.dp)
                         .border(
                             width = 1.dp,
-                            color = MaterialTheme.colors.primary,
+                            color = if (isDayValid) MaterialTheme.colors.primary else MaterialTheme.colors.error,
                             shape = RoundedCornerShape(10.dp)
                         ),
                     textStyle = LocalTextStyle.current.copy(textAlign = TextAlign.Center),
@@ -308,14 +359,15 @@ fun RecordScreen(viewModel: MainViewModel, navController: NavHostController) {
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 TextField(
-                    value = nightValue.value,
-                    onValueChange = { nightValue.value = parseNumberInput(it) },
+                    value = nightValue,
+                    onValueChange = { nightValue = parseNumberInput(it) },
+                    isError = !isNightValid,
                     modifier = Modifier
                         .width(150.dp)
                         .height(50.dp)
                         .border(
                             width = 1.dp,
-                            color = MaterialTheme.colors.primary,
+                            color = if (isNightValid) MaterialTheme.colors.primary else MaterialTheme.colors.error,
                             shape = RoundedCornerShape(10.dp)
                         ),
                     textStyle = LocalTextStyle.current.copy(textAlign = TextAlign.Center),
@@ -340,6 +392,19 @@ fun RecordScreen(viewModel: MainViewModel, navController: NavHostController) {
                 )
             }
         }
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            if (errorMessage != "") {
+                Text(
+                    text = errorMessage,
+                    modifier = Modifier.fillMaxWidth(),
+                    textAlign = TextAlign.Center,
+                    color = Red
+                )
+            }
+        }
 
         // Comments Header
         Row(
@@ -357,9 +422,9 @@ fun RecordScreen(viewModel: MainViewModel, navController: NavHostController) {
 
         // Comments
         TextField(
-            value = comments.value,
+            value = comments,
             placeholder = { Text(text = "Введите комментарий") },
-            onValueChange = { comments.value = it },
+            onValueChange = { comments = it },
             modifier = Modifier
                 .fillMaxWidth()
                 .height(100.dp)
@@ -382,10 +447,29 @@ fun parseNumberInput(value: String): String {
     return value.replace(Regex("[^0-9]"), "")
 }
 
-//@Preview
-//@Composable
-//fun PreviewRecordScreen() {
-//    val viewModel = MainViewModel()
-//    viewModel.onRecordChange(RecordDto("-", "-", "-", 0.0, 464985.0, "Алексеева А. И.", "04185523", "Меркурий 230 ART-01 CLN", LocalDateTime.now(), 17864.0, 0.0, 0.0, 0.0, "628-294", 0.0, 0))
-//    RecordScreen(viewModel = viewModel)
-//}
+@Preview
+@Composable
+fun PreviewRecordScreen() {
+    val viewModel = MainViewModel()
+    viewModel.onRecordChange(
+        RecordDto(
+            "-",
+            "-",
+            "-",
+            0.0,
+            464985.0,
+            "Алексеева А. И.",
+            "04185523",
+            "Меркурий 230 ART-01 CLN",
+            LocalDateTime.now(),
+            17864.0,
+            0.0,
+            0.0,
+            0.0,
+            "628-294",
+            0.0,
+            0
+        )
+    )
+    RecordScreen(viewModel = viewModel, rememberNavController())
+}
