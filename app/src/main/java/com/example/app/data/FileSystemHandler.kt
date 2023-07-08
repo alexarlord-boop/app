@@ -14,23 +14,6 @@ import java.io.IOException
 
 class FileSystemHandler : DataHandlerInterface {
 
-    override val _listOfRecords: MutableLiveData<List<RecordDto>> = MutableLiveData()
-    override val listOfRecords: LiveData<List<RecordDto>> = _listOfRecords
-
-    override fun onRecordListChange(newRecords: List<RecordDto>) {
-        _listOfRecords.value = newRecords
-        if (newRecords.isNotEmpty()) {
-            onAreaChange(newRecords[0].area)
-        }
-    }
-
-    override val _area: MutableLiveData<String> = MutableLiveData()
-    override val area: LiveData<String> = _area
-
-    override fun onAreaChange(newArea: String) {
-        _area.value = newArea
-    }
-
     override suspend fun getControllers(): List<ServerHandler.Controller>? {
         val pathToControllers = AppStrings.deviceDirectory + "controllers.json"
         try {
@@ -65,26 +48,20 @@ class FileSystemHandler : DataHandlerInterface {
         }
     }
 
-    override fun getRecordsForStatement(
+    override fun getRecordsForStatement( // TODO:- check
         controllerId: String,
         statementId: String,
         context: Context
     ): List<RecordDto> {
 
-        try {
-            this.reloadRecordsFromFile(controllerId, statementId, context)
+        return try {
             Toast.makeText(context, "Загружено с устройства", Toast.LENGTH_SHORT).show()
-//            Toast.makeText(
-//                context,
-//                "Получена ведомость $statementId",
-//                Toast.LENGTH_SHORT
-//            ).show()
+            this.reloadRecordsFromFile(controllerId, statementId, context)
 
         } catch (e: java.lang.Exception) {
-            println(e.message)
             Toast.makeText(context, "Сервер недоступен", Toast.LENGTH_SHORT).show()
+            emptyList()
         }
-        return this.listOfRecords.value!!
 
     }
 

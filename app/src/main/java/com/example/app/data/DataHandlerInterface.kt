@@ -1,6 +1,7 @@
 package com.example.app.data
 
 import android.content.Context
+import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import com.example.app.AppStrings
@@ -11,35 +12,40 @@ import com.example.app.ServerHandler
 // TODO:- refactor data classes -> move here
 
 interface DataHandlerInterface {
-    val _listOfRecords: MutableLiveData<List<RecordDto>>
-    val listOfRecords: LiveData<List<RecordDto>>
-
-    fun onRecordListChange(newRecords: List<RecordDto>)
-
-    val defaultArea: String
-        get() = "Район"
-    val _area: MutableLiveData<String>
-    val area: LiveData<String>
-
-    fun onAreaChange(newArea: String)
 
     suspend fun getControllers(): List<ServerHandler.Controller>?
 
-    suspend fun getStatementsForController(controllerId: String, branchId: String): List<ServerHandler.RecordStatement>
+    suspend fun getStatementsForController(
+        controllerId: String,
+        branchId: String
+    ): List<ServerHandler.RecordStatement>
 
-    fun getRecordsForStatement(controllerId: String, statementId: String, context: Context): List<RecordDto>
+    fun getRecordsForStatement(
+        controllerId: String,
+        statementId: String,
+        context: Context
+    ): List<RecordDto>
 
     // TODO:- remove to IO ?
-    fun reloadRecordsFromFile(controlId: String, stateId: String, context: Context) {
-        val path = AppStrings.deviceDirectory + "record-$controlId-$stateId.json"
-        val records =
-            IOUtils().convertServerListToRecordDtoList(IOUtils().parseRecordsFromJson(IOUtils().readJsonFromFile(path)))
-        onRecordListChange(records)
+    fun reloadRecordsFromFile(
+        controlId: String,
+        stateId: String,
+        context: Context
+    ): List<RecordDto> {
+        if (controlId.isNotEmpty() && stateId.isNotEmpty()) {
+            Log.w("RELOAD", "Controller: $controlId, Statement: $stateId")
+            val path = AppStrings.deviceDirectory + "record-$controlId-$stateId.json"
+            val records = IOUtils().convertServerListToRecordDtoList(
+                IOUtils().parseRecordsFromJson(
+                    IOUtils().readJsonFromFile(path)
+                )
+            )
+            Log.w("RELOAD", "RecordList size: ${records?.size}")
+            return records
+        }
+        return emptyList()
     }
 
-    fun clearRecordList() {
-        onRecordListChange(emptyList())
-    }
 
     suspend fun getBranchList(): List<Branch>
 

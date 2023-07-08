@@ -24,24 +24,7 @@ class ServerHandler : DataHandlerInterface {
 
 
     private val viewModelScope = CoroutineScope(Dispatchers.Main)
-    override val _listOfRecords: MutableLiveData<List<RecordDto>> = MutableLiveData()
-    override val listOfRecords: LiveData<List<RecordDto>> = _listOfRecords
 
-    override fun onRecordListChange(newRecords: List<RecordDto>) {
-        _listOfRecords.value = newRecords
-        if (newRecords.isEmpty()) {
-            onAreaChange("Район")
-        } else {
-            onAreaChange(newRecords[0].area)
-        }
-    }
-
-    override val _area: MutableLiveData<String> = MutableLiveData()
-    override val area: LiveData<String> = _area
-
-    override fun onAreaChange(newArea: String) {
-        _area.value = newArea
-    }
 
     val exceptionHandler = CoroutineExceptionHandler { _, exception ->
         Log.e("Coroutine", "Caught an exception: $exception")
@@ -61,7 +44,7 @@ class ServerHandler : DataHandlerInterface {
             val responseCode = conn.responseCode
             if (responseCode == HttpURLConnection.HTTP_OK) {
                 val response = conn.inputStream.bufferedReader().use { it.readText() }
-                Log.i("DATA", response)
+                Log.i("SERVER RESPONSE", response)
                 return if (response.length > 1) response else ""
             } else {
                 Log.e("SERVER", responseCode.toString())
@@ -179,34 +162,59 @@ class ServerHandler : DataHandlerInterface {
         val path = AppStrings.deviceDirectory + "record-$controllerId-$statementId.json"
         val urlString = AppStrings.recordsByListId + "?listnumber=$statementId"
         if (File(path).exists()) {
-            this.reloadRecordsFromFile(controllerId, statementId, context)
-            Toast.makeText(context, "Загружено с устройства", Toast.LENGTH_SHORT).show()
+            records = this.reloadRecordsFromFile(controllerId, statementId, context)
+//            Toast.makeText(context, "Загружено с устройства", Toast.LENGTH_SHORT).show()
         } else {
+//            viewModelScope.launch(exceptionHandler) {
+//                try {
+//                    val prettyJson = withContext(Dispatchers.IO) {
+//                        fetchDataFromServer(urlString)
+//                    }
+//                    if (prettyJson.isEmpty()) {
+//                        Toast.makeText(context, "Пустая запись", Toast.LENGTH_SHORT).show()
+//                        return@launch
+//                    }
+//                    records = IOUtils().convertServerListToRecordDtoList(
+//                        IOUtils().parseRecordsFromJson(prettyJson)
+//                    )
+//                    IOUtils().saveJsonToFile(prettyJson, path)
+//                    Toast.makeText(
+//                        context,
+//                        "Получена ведомость $statementId",
+//                        Toast.LENGTH_SHORT
+//                    ).show()
+//                    return@launch
+//
+//
+//                } catch (e: java.lang.Exception) {
+//                    println(e.stackTraceToString())
+//                }
+//
+//            }
             viewModelScope.launch(exceptionHandler) {
                 try {
                     val prettyJson = withContext(Dispatchers.IO) {
                         fetchDataFromServer(urlString)
                     }
                     if (prettyJson.isEmpty()) {
-                        onRecordListChange(emptyList())
-                        Toast.makeText(context, "Пустая запись", Toast.LENGTH_SHORT).show()
+                        withContext(Dispatchers.Main) {
+                            Toast.makeText(context, "Пустая запись", Toast.LENGTH_SHORT).show()
+                        }
                         return@launch
                     }
                     records = IOUtils().convertServerListToRecordDtoList(
                         IOUtils().parseRecordsFromJson(prettyJson)
                     )
-                    onRecordListChange(records)
                     IOUtils().saveJsonToFile(prettyJson, path)
-                    Toast.makeText(
-                        context,
-                        "Получена ведомость $statementId",
-                        Toast.LENGTH_SHORT
-                    ).show()
-
-                } catch (e: java.lang.Exception) {
+                    withContext(Dispatchers.Main) {
+                        Toast.makeText(context, "Получена ведомость $statementId", Toast.LENGTH_SHORT).show()
+                    }
+                } catch (e: Exception) {
                     println(e.stackTraceToString())
                 }
             }
+
+            return records
         }
         return records
     }
@@ -298,19 +306,22 @@ class ServerHandler : DataHandlerInterface {
     }
 
     override suspend fun getControllersForBranch(branchId: String): List<Controller> {
-        val controllerList = fetchDataFromServer(AppStrings.controllersByBranch + branchId.toInt()).trimIndent()
-        return try {
-            if (controllerList != "") {
-                val filePath = AppStrings.deviceDirectory + "controllers-${branchId}.json"
-                IOUtils().saveJsonToFile(controllerList, filePath)
-                IOUtils().jsonToControllerListFiltered(controllerList)
-            } else {
+        if (branchId.isNotEmpty()) {
+            val controllerList = fetchDataFromServer(AppStrings.controllersByBranch + branchId.toInt()).trimIndent()
+            return try {
+                if (controllerList != "") {
+                    val filePath = AppStrings.deviceDirectory + "controllers-${branchId}.json"
+                    IOUtils().saveJsonToFile(controllerList, filePath)
+                    IOUtils().jsonToControllerListFiltered(controllerList)
+                } else {
+                    emptyList()
+                }
+            } catch (ex: java.lang.Exception) {
+                Log.e("CONTROLLERS", ex.stackTraceToString())
                 emptyList()
             }
-        } catch (ex: java.lang.Exception) {
-            Log.e("CONTROLLERS", ex.stackTraceToString())
-            emptyList()
         }
+        return emptyList()
     }
 
 }

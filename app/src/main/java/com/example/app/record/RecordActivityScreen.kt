@@ -35,8 +35,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
-import com.example.app.MainViewModel
 import com.example.app.R
+import com.example.app.SavedStateViewModel
 import com.example.app.ServerHandler
 import com.example.app.data.IOUtils
 import com.example.app.record.RecordDto
@@ -46,12 +46,13 @@ import kotlin.coroutines.coroutineContext
 
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
-fun RecordScreen(viewModel: MainViewModel, navController: NavHostController) {
+fun RecordScreen(viewModel: SavedStateViewModel, navController: NavHostController) {
     val context = LocalContext.current
 
 
     BackHandler(true) {
-        Log.d("TAG", "OnBackPressed")
+
+        Log.d("OnBackPressed", "Controller: ${viewModel.selectedControllerName}. Statement: ${viewModel.statementId.value}")
         navController.popBackStack()
     }
 
@@ -160,8 +161,10 @@ fun RecordScreen(viewModel: MainViewModel, navController: NavHostController) {
                                 record.comments = comments
 
                                 IOUtils().updateRowData(recordId, record, filename)
+                                viewModel.onPositionChange(-1)
                                 Toast.makeText(context, "Сохранено", Toast.LENGTH_SHORT).show()
                                 navController.popBackStack()
+
                             }
                         }
                     },
@@ -447,29 +450,29 @@ fun parseNumberInput(value: String): String {
     return value.replace(Regex("[^0-9]"), "")
 }
 
-@Preview
-@Composable
-fun PreviewRecordScreen() {
-    val viewModel = MainViewModel()
-    viewModel.onRecordChange(
-        RecordDto(
-            "-",
-            "-",
-            "-",
-            0.0,
-            464985.0,
-            "Алексеева А. И.",
-            "04185523",
-            "Меркурий 230 ART-01 CLN",
-            LocalDateTime.now(),
-            17864.0,
-            0.0,
-            0.0,
-            0.0,
-            "628-294",
-            0.0,
-            0
-        )
-    )
-    RecordScreen(viewModel = viewModel, rememberNavController())
-}
+//@Preview
+//@Composable
+//fun PreviewRecordScreen() {
+//    val viewModel = MainViewModel()
+//    viewModel.onRecordChange(
+//        RecordDto(
+//            "-",
+//            "-",
+//            "-",
+//            0.0,
+//            464985.0,
+//            "Алексеева А. И.",
+//            "04185523",
+//            "Меркурий 230 ART-01 CLN",
+//            LocalDateTime.now(),
+//            17864.0,
+//            0.0,
+//            0.0,
+//            0.0,
+//            "628-294",
+//            0.0,
+//            0
+//        )
+//    )
+//    RecordScreen(viewModel = viewModel, rememberNavController())
+//}

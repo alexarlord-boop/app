@@ -78,7 +78,7 @@ class IOUtils {
 
     fun parseRecordsFromJson(json: String): MutableList<ServerRecord> {
         val gson = Gson()
-        return gson.fromJson(json, Array<ServerRecord>::class.java).toMutableList()
+        return if (json == "") emptyList<ServerRecord>().toMutableList() else gson.fromJson(json, Array<ServerRecord>::class.java).toMutableList()
     }
 
     fun convertServerListToRecordDtoList(serverRecords: List<ServerRecord>): List<RecordDto> {
