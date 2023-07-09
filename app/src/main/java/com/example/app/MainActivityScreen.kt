@@ -63,7 +63,7 @@ import com.example.app.data.DataHandlerInterface
 import com.example.app.data.FileSystemHandler
 import com.example.app.data.IOUtils
 import com.example.app.navigation.Screen
-import com.example.app.record.RecordActivity
+//import com.example.app.record.RecordActivity
 import com.example.app.record.RecordDto
 import com.google.gson.Gson
 import kotlinx.coroutines.*
@@ -80,9 +80,9 @@ class SavedStateViewModelFactory(private val savedStateRegistryOwner: SavedState
 }
 
 class MainActivityScreen : AppCompatActivity() {
-    var serverHandler = ServerHandler()
     var fsHandler = FileSystemHandler()
     val viewModel: SavedStateViewModel by viewModels { SavedStateViewModelFactory(this) }
+    lateinit var serverHandler: DataHandlerInterface
 
 
 
@@ -98,6 +98,8 @@ class MainActivityScreen : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        serverHandler = ServerHandler(viewModel)
 
         val permissionsStorage = arrayOf<String>(Manifest.permission.READ_EXTERNAL_STORAGE)
         val requestExternalStorage = 1
@@ -221,7 +223,7 @@ class SavedStateViewModel(private val savedStateHandle: SavedStateHandle) : View
     val position: LiveData<Int> = _position
 
     private val _filename: MutableLiveData<String> =
-        savedStateHandle.getLiveData("filename", AppStrings.deviceDirectory + "control1.xls")
+        savedStateHandle.getLiveData("filename", "")
     val filename: LiveData<String> = _filename
 
     private val _controllerId: MutableLiveData<String> =
@@ -267,6 +269,9 @@ class SavedStateViewModel(private val savedStateHandle: SavedStateHandle) : View
         savedStateHandle.getLiveData("loadedStatements", emptyList())
     var loadedStatements: LiveData<List<ServerHandler.RecordStatement>> = _loadedStatements
 
+    fun onFileNameChange(filename: String) {
+        _filename.value = filename
+    }
     fun onStatementsChange(statements: List<ServerHandler.RecordStatement>) {
         _loadedStatements.value = statements
     }
@@ -779,14 +784,16 @@ fun ControllerSelector(viewModel: SavedStateViewModel, dataHandler: DataHandlerI
 
                                     cs.launch {
                                         try {
-                                            val data: List<RecordDto>? = selectedControllerId.value?.let { controllerId ->
+                                            selectedControllerId.value?.let { controllerId ->
                                                 withContext(Dispatchers.IO) {
-                                                    dataHandler.getRecordsForStatement(controllerId, item.listNumber, context)
+                                                    val data: List<RecordDto> = dataHandler.getRecordsForStatement(controllerId, item.listNumber, context)
+                                                    withContext(Dispatchers.Main) {
+                                                        viewModel.onRecordListChange(data)
+                                                    }
                                                 }
                                             }
-                                            data?.let {
-                                                viewModel.onRecordListChange(it)
-                                            }
+
+
                                         } catch (e: Exception) {
                                             println(e.stackTraceToString())
                                         }
@@ -990,11 +997,11 @@ fun RecordItem(id: Int, record: RecordDto, viewModel: SavedStateViewModel, dataH
     val context = LocalContext.current
     val lastPosition = viewModel.position.observeAsState(-1)
     val selected = id == lastPosition.value
-    val controllerId = viewModel.selectedControllerId.observeAsState()
+    val controllerId = viewModel.selectedControllerId.observeAsState().value
     val statementId = viewModel.statementId.observeAsState("0").value
 
     val filename = AppStrings.deviceDirectory + "record-${controllerId}-${statementId}.json"
-
+    viewModel.onFileNameChange(filename)
 
     val onClick = {
         viewModel.onPositionChange(id)

@@ -20,7 +20,7 @@ import java.net.URLEncoder
 import kotlin.reflect.typeOf
 
 
-class ServerHandler : DataHandlerInterface {
+class ServerHandler(val viewModel: SavedStateViewModel) : DataHandlerInterface {
 
 
     private val viewModelScope = CoroutineScope(Dispatchers.Main)
@@ -163,34 +163,7 @@ class ServerHandler : DataHandlerInterface {
         val urlString = AppStrings.recordsByListId + "?listnumber=$statementId"
         if (File(path).exists()) {
             records = this.reloadRecordsFromFile(controllerId, statementId, context)
-//            Toast.makeText(context, "Загружено с устройства", Toast.LENGTH_SHORT).show()
         } else {
-//            viewModelScope.launch(exceptionHandler) {
-//                try {
-//                    val prettyJson = withContext(Dispatchers.IO) {
-//                        fetchDataFromServer(urlString)
-//                    }
-//                    if (prettyJson.isEmpty()) {
-//                        Toast.makeText(context, "Пустая запись", Toast.LENGTH_SHORT).show()
-//                        return@launch
-//                    }
-//                    records = IOUtils().convertServerListToRecordDtoList(
-//                        IOUtils().parseRecordsFromJson(prettyJson)
-//                    )
-//                    IOUtils().saveJsonToFile(prettyJson, path)
-//                    Toast.makeText(
-//                        context,
-//                        "Получена ведомость $statementId",
-//                        Toast.LENGTH_SHORT
-//                    ).show()
-//                    return@launch
-//
-//
-//                } catch (e: java.lang.Exception) {
-//                    println(e.stackTraceToString())
-//                }
-//
-//            }
             viewModelScope.launch(exceptionHandler) {
                 try {
                     val prettyJson = withContext(Dispatchers.IO) {
@@ -207,6 +180,7 @@ class ServerHandler : DataHandlerInterface {
                     )
                     IOUtils().saveJsonToFile(prettyJson, path)
                     withContext(Dispatchers.Main) {
+                        viewModel.onRecordListChange(records)
                         Toast.makeText(context, "Получена ведомость $statementId", Toast.LENGTH_SHORT).show()
                     }
                 } catch (e: Exception) {
@@ -219,24 +193,24 @@ class ServerHandler : DataHandlerInterface {
         return records
     }
 
-    data class Controller(val Staff_Lnk: String, val Staff_Name: String, val Company_Lnk: String) {}
+    data class Controller(val Staff_Lnk: String, val Staff_Name: String, val Company_Lnk: String)
 
     override suspend fun getControllers(): List<Controller>? {
         val urlString = AppStrings.controllers
         val pathToControllers = AppStrings.deviceDirectory + "controllers.json"
-        try {
+        return try {
             val controllers = withContext(Dispatchers.IO) {
                 fetchDataFromServer(urlString)
             }
             if (controllers.isNotEmpty()) {
                 IOUtils().saveJsonToFile(controllers, pathToControllers)
-                return IOUtils().jsonToControllerListFiltered(controllers)
+                IOUtils().jsonToControllerListFiltered(controllers)
             } else {
-                return null
+                null
             }
 
         } catch (e: IOException) {
-            return null
+            null
         }
     }
 
