@@ -174,6 +174,7 @@ class IOUtils {
 
     fun deleteFile(filePath: String): Boolean {
         val file = File(filePath)
+        Log.w("FILESYSTEM", "Deleting $filePath")
         return file.delete()
     }
 

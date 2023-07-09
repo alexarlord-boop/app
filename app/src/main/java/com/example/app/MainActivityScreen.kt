@@ -37,6 +37,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowUpward
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.MoveUp
 import androidx.compose.runtime.*
 import androidx.compose.runtime.livedata.observeAsState
@@ -73,8 +74,13 @@ import java.io.File
 var DATA_MODE = SavedStateViewModel.DataMode.SERVER
 var LAST_LIST_POSITION = -1
 
-class SavedStateViewModelFactory(private val savedStateRegistryOwner: SavedStateRegistryOwner) : AbstractSavedStateViewModelFactory(savedStateRegistryOwner, null) {
-    override fun <T : ViewModel?> create(key: String, modelClass: Class<T>, handle: SavedStateHandle): T {
+class SavedStateViewModelFactory(private val savedStateRegistryOwner: SavedStateRegistryOwner) :
+    AbstractSavedStateViewModelFactory(savedStateRegistryOwner, null) {
+    override fun <T : ViewModel?> create(
+        key: String,
+        modelClass: Class<T>,
+        handle: SavedStateHandle
+    ): T {
         return SavedStateViewModel(handle) as T
     }
 }
@@ -83,7 +89,6 @@ class MainActivityScreen : AppCompatActivity() {
     var fsHandler = FileSystemHandler()
     val viewModel: SavedStateViewModel by viewModels { SavedStateViewModelFactory(this) }
     lateinit var serverHandler: DataHandlerInterface
-
 
 
     fun createDirectoryIfNotExists(directoryPath: String) {
@@ -130,16 +135,40 @@ class MainActivityScreen : AppCompatActivity() {
         if (networkCapabilities != null && networkCapabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)) {
             setContent {
                 val navController = rememberNavController()
-                viewModel.onRecordListChange(serverHandler.reloadRecordsFromFile(controllerId, statementId, this))
-                SetupNavGraph(navController = navController, true, serverHandler, viewModel, sharedPref)
+                viewModel.onRecordListChange(
+                    serverHandler.reloadRecordsFromFile(
+                        controllerId,
+                        statementId,
+                        this
+                    )
+                )
+                SetupNavGraph(
+                    navController = navController,
+                    true,
+                    serverHandler,
+                    viewModel,
+                    sharedPref
+                )
             }
         } else {
             Toast.makeText(this, "Нет подключения к сети.", Toast.LENGTH_LONG).show()
             DATA_MODE = SavedStateViewModel.DataMode.FILE
             setContent {
                 val navController = rememberNavController()
-                viewModel.onRecordListChange(fsHandler.reloadRecordsFromFile(controllerId, statementId, this))
-                SetupNavGraph(navController = navController, false, fsHandler, viewModel, sharedPref)
+                viewModel.onRecordListChange(
+                    fsHandler.reloadRecordsFromFile(
+                        controllerId,
+                        statementId,
+                        this
+                    )
+                )
+                SetupNavGraph(
+                    navController = navController,
+                    false,
+                    fsHandler,
+                    viewModel,
+                    sharedPref
+                )
             }
         }
     }
@@ -157,10 +186,15 @@ class MainActivityScreen : AppCompatActivity() {
                     with(sharedPref) {
                         val controllerId = this.getString("controllerId", "") ?: ""
                         val statementId = this.getString("statementId", "") ?: ""
-                        viewModel.onRecordListChange(fsHandler.reloadRecordsFromFile(controllerId, statementId, context))
+                        viewModel.onRecordListChange(
+                            fsHandler.reloadRecordsFromFile(
+                                controllerId,
+                                statementId,
+                                context
+                            )
+                        )
                     }
-                }
-                catch (e: Exception) {
+                } catch (e: Exception) {
                     Log.w("ON_RESUME", e.message.toString())
                     return
                 }
@@ -171,7 +205,13 @@ class MainActivityScreen : AppCompatActivity() {
                     with(sharedPref) {
                         val controllerId = this.getString("controllerId", "") ?: ""
                         val statementId = this.getString("statementId", "") ?: ""
-                        viewModel.onRecordListChange(serverHandler.reloadRecordsFromFile(controllerId, statementId, context))
+                        viewModel.onRecordListChange(
+                            serverHandler.reloadRecordsFromFile(
+                                controllerId,
+                                statementId,
+                                context
+                            )
+                        )
                     }
 
                 } catch (e: Exception) {
@@ -272,6 +312,7 @@ class SavedStateViewModel(private val savedStateHandle: SavedStateHandle) : View
     fun onFileNameChange(filename: String) {
         _filename.value = filename
     }
+
     fun onStatementsChange(statements: List<ServerHandler.RecordStatement>) {
         _loadedStatements.value = statements
     }
@@ -337,6 +378,8 @@ fun MainScreen(
     val lastClicked = viewModel.position.observeAsState(LAST_LIST_POSITION)
     val statementId by viewModel.statementId.observeAsState("0")
     val area by viewModel.area.observeAsState("Район")
+    val filename by viewModel.filename.observeAsState("")
+    val showDeleteBtn by remember { derivedStateOf { (records != null && records!!.isNotEmpty()) } }
 
 
     Log.w("MAIN SCREEN", "Records: $records")
@@ -344,7 +387,7 @@ fun MainScreen(
     var sortedListToShow =
         records?.sortedBy { record ->
             val houseNumber = record.houseNumber
-            val numericPart = houseNumber.split("\\D+".toRegex() )[0].filter { it.isDigit() }
+            val numericPart = houseNumber.split("\\D+".toRegex())[0].filter { it.isDigit() }
             if (numericPart.isNotEmpty()) {
                 numericPart.toInt()
             } else {
@@ -364,7 +407,7 @@ fun MainScreen(
                 }
 
                 withContext(Dispatchers.Main) {
-                    with (sharedPreferences) {
+                    with(sharedPreferences) {
                         val branchId = this.getString("branchId", "") ?: ""
                         val branchIdInSelector = this.getInt("branchIdInSelector", 0) ?: 0
                         val controllerId = this.getString("controllerId", "") ?: ""
@@ -383,58 +426,13 @@ fun MainScreen(
         }
     }
 
-//    LaunchedEffect(records) {
-//        if (records.isEmpty()) {
-//            /* preload records if exists */
-//            var branches = emptyList<Branch>()
-//            coroutineScope.launch {
-//                // server request -> branches
-//                withContext(Dispatchers.IO) {
-//                    val data = dataHandler.getBranchList()
-//                    branches = data
-//                }
-//
-//                withContext(Dispatchers.Main) {
-//                    with (sharedPreferences) {
-//                        val branchId = this.getString("branchId", "") ?: ""
-//                        val branchIdInSelector = this.getInt("branchIdInSelector", 0) ?: 0
-//                        val controllerId = this.getString("controllerId", "") ?: ""
-//                        val controllerName = this.getString("controllerName", "") ?: ""
-//                        val statement = this.getString("statementId", "") ?: ""
-//                        viewModel.onBranchIdChange(branchId)
-//                        viewModel.onBranchNameChange(branches[branchIdInSelector].companyName)
-//                        viewModel.onControllerIdChange(controllerId)
-//                        viewModel.onControllerNameChange(controllerName)
-//                        viewModel.onStatementIdChange(statement)
-//
-//                    }
-//                    dataHandler.onAreaChange(dataHandler.defaultArea)
-//                }
-//
-//            }
-//
-//
-//
-//        } else {
-//            sortedListToShow =
-//                records.sortedBy { record ->
-//                    val houseNumber = record.houseNumber
-//                    val numericPart = houseNumber.split("\\D+".toRegex())[0].filter { it.isDigit() }
-//                    if (numericPart.isNotEmpty()) {
-//                        numericPart.toInt()
-//                    } else {
-//                        Int.MAX_VALUE
-//                    }
-//                }
-//        }
-//
-//    }
 
 
     val showUpButton by remember { derivedStateOf { listState.firstVisibleItemIndex > 0 } }
     val showLastButton by remember { derivedStateOf { lastClicked.value > 0 } }
     val showUploadButton by remember { derivedStateOf { records?.isNotEmpty() } }
     var isUploadDialogVisible by remember { mutableStateOf(false) }
+    var isDeleteDialogVisible by remember { mutableStateOf(false) }
 
     @Composable
     fun showUploadDialog() {
@@ -471,12 +469,12 @@ fun MainScreen(
                     Button(onClick = {
                         isUploadDialogVisible = false
                         val id = selectedControllerId
-                        val filePath = AppStrings.deviceDirectory + "record-$id-$statementId.json"
-                        val json = IOUtils().readJsonFromFile(filePath)
+
+                        val json = IOUtils().readJsonFromFile(filename)
                         coroutineScope.launch {
                             val isSent = (dataHandler as ServerHandler).sendDataToServer(
                                 json,
-                                filePath,
+                                filename,
                                 statementId,
                                 id.toString(),
                                 context
@@ -503,6 +501,48 @@ fun MainScreen(
                     }
                 })
         }
+    }
+
+    @Composable
+    fun showDeleteDialog() {
+            AlertDialog(onDismissRequest = { isDeleteDialogVisible = false },
+                shape = RoundedCornerShape(15.dp),
+                title = {
+                    Column() {
+                        Text(
+                            text = "Удаление записи",
+                            fontSize = 20.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+//                        Text(text = "Ведомость $statementId", fontSize = 15.sp)
+                    }
+                },
+                text = {
+                    Column() {
+                        Text(text = "Удаление записи")
+                        Text(text = "Вы хотите продолжить?")
+                    }
+                },
+                confirmButton = {
+                    Button(onClick = {
+                        val isDelete = IOUtils().deleteFile(filename)
+                        if (isDelete) {
+                            Log.w("FILESYSTEM", "Deleted $filename")
+                            viewModel.onRecordListChange(emptyList())
+                            viewModel.onFileNameChange("")
+                            viewModel.onStatementIdChange("")
+                        }
+                        isDeleteDialogVisible = false
+                    }) {
+                        Text(text = "Да")
+                    }
+                },
+                dismissButton = {
+                    Button(onClick = { isDeleteDialogVisible = false }) {
+                        Text(text = "Нет")
+                    }
+                })
+
     }
 
 
@@ -566,10 +606,29 @@ fun MainScreen(
                                 )
                             }
                         }
+                        if (showDeleteBtn) {
+                            Button(
+                                shape = CircleShape,
+                                onClick = {
+                                    isDeleteDialogVisible = true
+                                })
+                            {
+
+                                Icon(
+                                    Icons.Default.Delete,
+                                    contentDescription = "Delete record file",
+                                    modifier = Modifier.size(24.dp)
+                                )
+                            }
+                        }
+
                     }
                 }
                 if (isUploadDialogVisible) {
                     showUploadDialog()
+                }
+                if (isDeleteDialogVisible) {
+                    showDeleteDialog()
                 }
             }
         }
@@ -643,7 +702,11 @@ fun MainScreen(
 
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
-fun BranchSelector(viewModel: SavedStateViewModel, dataHandler: DataHandlerInterface, sharedPreferences: SharedPreferences) {
+fun BranchSelector(
+    viewModel: SavedStateViewModel,
+    dataHandler: DataHandlerInterface,
+    sharedPreferences: SharedPreferences
+) {
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
     var expanded by remember { mutableStateOf(false) }
@@ -676,7 +739,7 @@ fun BranchSelector(viewModel: SavedStateViewModel, dataHandler: DataHandlerInter
                 }
 
             }) {
-            val header = if (selectedBranch.value != "") selectedBranch.value else  "Филиал"
+            val header = if (selectedBranch.value != "") selectedBranch.value else "Филиал"
             Text(header, textAlign = TextAlign.Center)
         }
 
@@ -733,7 +796,11 @@ fun BranchSelector(viewModel: SavedStateViewModel, dataHandler: DataHandlerInter
 
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
-fun ControllerSelector(viewModel: SavedStateViewModel, dataHandler: DataHandlerInterface, sharedPreferences: SharedPreferences) {
+fun ControllerSelector(
+    viewModel: SavedStateViewModel,
+    dataHandler: DataHandlerInterface,
+    sharedPreferences: SharedPreferences
+) {
     val context = LocalContext.current
     val cs = CoroutineScope(Dispatchers.Main)
     var expanded by remember { mutableStateOf(false) }
@@ -741,15 +808,22 @@ fun ControllerSelector(viewModel: SavedStateViewModel, dataHandler: DataHandlerI
     val selectedControllerName = viewModel.selectedControllerName.observeAsState()
     val selectedControllerId = viewModel.selectedControllerId.observeAsState()
     val selectedControllerCompany = viewModel.selectedControllerCompany.observeAsState()
+    val controllerId = viewModel.selectedControllerId.observeAsState().value
+    val statementId = viewModel.statementId.observeAsState("0").value
+
     var statements = viewModel.loadedStatements.observeAsState(emptyList())
     var isDialogVisible by remember { mutableStateOf(false) }
     var isInfoVisible by remember { mutableStateOf(false) }
 
-    val controllers = viewModel.controllers.observeAsState(listOf(ServerHandler.Controller("-","-", "-")))
+    LaunchedEffect(statementId) {
+        val filename = AppStrings.deviceDirectory + "record-${controllerId}-${statementId}.json"
+        viewModel.onFileNameChange(filename)
+    }
+
+    val controllers =
+        viewModel.controllers.observeAsState(listOf(ServerHandler.Controller("-", "-", "-")))
     val selectedBranch = viewModel.selectedBranch.observeAsState("")
     val selectedBranchId = viewModel.selectedBranchId.observeAsState("")
-
-
 
 
     // Function to show the modal dialog with fetched data
@@ -786,7 +860,12 @@ fun ControllerSelector(viewModel: SavedStateViewModel, dataHandler: DataHandlerI
                                         try {
                                             selectedControllerId.value?.let { controllerId ->
                                                 withContext(Dispatchers.IO) {
-                                                    val data: List<RecordDto> = dataHandler.getRecordsForStatement(controllerId, item.listNumber, context)
+                                                    val data: List<RecordDto> =
+                                                        dataHandler.getRecordsForStatement(
+                                                            controllerId,
+                                                            item.listNumber,
+                                                            context
+                                                        )
                                                     withContext(Dispatchers.Main) {
                                                         viewModel.onRecordListChange(data)
                                                     }
@@ -863,12 +942,15 @@ fun ControllerSelector(viewModel: SavedStateViewModel, dataHandler: DataHandlerI
                     withContext(Dispatchers.IO) {
 
                         val fetchedControllers =
-                            dataHandler.getControllersForBranch(viewModel.selectedBranchId.value ?: "0")
+                            dataHandler.getControllersForBranch(
+                                viewModel.selectedBranchId.value ?: "0"
+                            )
 
                         withContext(Dispatchers.Main) {
                             // Perform UI-related operations here
                             if (fetchedControllers.isEmpty()) {
-                                Toast.makeText(context,"Контролеры не найдены", Toast.LENGTH_SHORT).show()
+                                Toast.makeText(context, "Контролеры не найдены", Toast.LENGTH_SHORT)
+                                    .show()
                                 viewModel.onStatementIdChange("")
                                 with(sharedPreferences.edit()) {
                                     putString("statementId", "")
@@ -931,13 +1013,15 @@ fun ControllerSelector(viewModel: SavedStateViewModel, dataHandler: DataHandlerI
                         expanded = false
 
 
-
                         // Fetching controller statements
                         cs.launch {
                             try {
                                 var data: MutableList<ServerHandler.RecordStatement>
                                 withContext(Dispatchers.IO) {
-                                    data = dataHandler.getStatementsForController(element.Staff_Lnk, selectedBranchId.value).toMutableList()
+                                    data = dataHandler.getStatementsForController(
+                                        element.Staff_Lnk,
+                                        selectedBranchId.value
+                                    ).toMutableList()
                                 }
                                 viewModel.onStatementsChange(data)
                                 if (statements.value.isNotEmpty()) {
@@ -969,7 +1053,8 @@ fun ControllerSelector(viewModel: SavedStateViewModel, dataHandler: DataHandlerI
                 DropdownMenuItem(onClick = {
                     expanded = false
                 }) {
-                    val text = if (selectedBranch.value != "") "нет контролеров" else "выберите филиал"
+                    val text =
+                        if (selectedBranch.value != "") "нет контролеров" else "выберите филиал"
                     Text(text = text)
                 }
             }
@@ -978,7 +1063,7 @@ fun ControllerSelector(viewModel: SavedStateViewModel, dataHandler: DataHandlerI
         if (isDialogVisible && statements.value.isNotEmpty()) {
 //            viewModel.onStateIdChange("")
             ShowModalDialog() // Show the modal dialog with fetched data
-        } else if(statements.value.isEmpty()) {
+        } else if (statements.value.isEmpty()) {
             Log.w("DELETING RECORDS", "after modal dialog")
 //            viewModel.onRecordListChange(emptyList())
 //            viewModel.onAreaChange("") // TODO
@@ -991,17 +1076,19 @@ fun ControllerSelector(viewModel: SavedStateViewModel, dataHandler: DataHandlerI
 
 
 @Composable
-fun RecordItem(id: Int, record: RecordDto, viewModel: SavedStateViewModel, dataHandler: DataHandlerInterface, navController: NavHostController) {
+fun RecordItem(
+    id: Int,
+    record: RecordDto,
+    viewModel: SavedStateViewModel,
+    dataHandler: DataHandlerInterface,
+    navController: NavHostController
+) {
     val padding = 5.dp
     val margin = 10.dp
     val context = LocalContext.current
     val lastPosition = viewModel.position.observeAsState(-1)
     val selected = id == lastPosition.value
-    val controllerId = viewModel.selectedControllerId.observeAsState().value
-    val statementId = viewModel.statementId.observeAsState("0").value
 
-    val filename = AppStrings.deviceDirectory + "record-${controllerId}-${statementId}.json"
-    viewModel.onFileNameChange(filename)
 
     val onClick = {
         viewModel.onPositionChange(id)
@@ -1103,8 +1190,6 @@ fun RecordItem(id: Int, record: RecordDto, viewModel: SavedStateViewModel, dataH
     }
     Spacer(modifier = Modifier.height(margin))
 }
-
-
 
 
 @Composable
