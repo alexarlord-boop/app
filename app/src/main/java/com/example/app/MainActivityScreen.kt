@@ -465,8 +465,8 @@ fun MainScreen(
                 },
                 text = {
                     Column() {
-                        Text(text = "При выгрузке данных, файлы с записями удаляются с устройства.")
-                        Text(text = "Вы хотите продолжить?")
+                        Text(text = "При выгрузке данных файлы с записями удаляются с устройства.")
+                        Text(text = "Продолжить?")
 
                     }
                 },
@@ -515,7 +515,7 @@ fun MainScreen(
                 title = {
                     Column() {
                         Text(
-                            text = "Удаление записи",
+                            text = "Удаление ведомости",
                             fontSize = 20.sp,
                             fontWeight = FontWeight.Bold
                         )
@@ -524,8 +524,8 @@ fun MainScreen(
                 },
                 text = {
                     Column() {
-                        Text(text = "Удаление записи")
-                        Text(text = "Вы хотите продолжить?")
+                        Text(text = "При удалении вы теряете файл и все изменения в нем.")
+                        Text(text = "Продолжить?")
                     }
                 },
                 confirmButton = {
@@ -1204,46 +1204,3 @@ fun RecordItem(
     Spacer(modifier = Modifier.height(margin))
 }
 
-
-@Composable
-fun showUploadDialog() {
-    val connected = true
-    var isUploadDialogVisible = true
-    val stateId = 1
-    if (!connected) {
-        AlertDialog(onDismissRequest = { isUploadDialogVisible = false },
-            title = { Text(text = "Выгрузка данных") },
-            text = { Text(text = "Нет подключения к серверу. Выгрузка недоступна.") },
-            confirmButton = {
-                Button(onClick = { isUploadDialogVisible = false }) {
-                    Text(text = "Закрыть")
-                }
-            })
-    } else {
-        AlertDialog(onDismissRequest = { isUploadDialogVisible = false },
-            shape = RoundedCornerShape(15.dp),
-            title = {
-                Column() {
-                    Text(text = "Выгрузка данных", fontSize = 20.sp, fontWeight = FontWeight.Bold)
-                    Text(text = "Ведомость $stateId", fontSize = 15.sp)
-                }
-            },
-            text = { Text(text = "При выгрузке данных, файлы с записями удаляются с устройства. Вы хотите продолжить?") },
-            confirmButton = {
-                Button(onClick = { isUploadDialogVisible = false }) {
-                    Text(text = "Да")
-                }
-            },
-            dismissButton = {
-                Button(onClick = { isUploadDialogVisible = false }) {
-                    Text(text = "Нет")
-                }
-            })
-    }
-}
-
-//@Preview
-//@Composable
-//fun showUpload() {
-//    showUploadDialog()
-//}
