@@ -55,11 +55,9 @@ class FileSystemHandler : DataHandlerInterface {
     ): List<RecordDto> {
 
         return try {
-            Toast.makeText(context, "Загружено с устройства", Toast.LENGTH_SHORT).show()
-            this.reloadRecordsFromFile(controllerId, statementId, context)
-
-        } catch (e: java.lang.Exception) {
-            Toast.makeText(context, "Сервер недоступен", Toast.LENGTH_SHORT).show()
+            val records = this.reloadRecordsFromFile(controllerId, statementId, context)
+            records.ifEmpty { emptyList() }
+        } catch (e: Exception) {
             emptyList()
         }
 
