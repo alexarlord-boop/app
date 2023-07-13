@@ -161,7 +161,6 @@ fun RecordScreen(viewModel: SavedStateViewModel, navController: NavHostControlle
                                 record.comments = comments
 
                                 IOUtils().updateRowData(recordId, record, filename)
-                                viewModel.onPositionChange(-1)
                                 Toast.makeText(context, "Сохранено", Toast.LENGTH_SHORT).show()
                                 navController.popBackStack()
 

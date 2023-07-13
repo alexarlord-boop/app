@@ -131,6 +131,7 @@ class MainActivityScreen : AppCompatActivity() {
         val networkCapabilities =
             connectivityManager.getNetworkCapabilities(connectivityManager.activeNetwork)
 
+       //TODO:- add test server connection and use it in the condition below
 
         if (networkCapabilities != null && networkCapabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)) {
             setContent {
@@ -178,6 +179,10 @@ class MainActivityScreen : AppCompatActivity() {
         val context = this
 
         val sharedPref = this.getPreferences(Context.MODE_PRIVATE)
+        with(sharedPref) {
+            val lastClickedPosition = this.getInt("positionCLicked", -1)
+            viewModel.onPositionChange(lastClickedPosition)
+        }
 
         when (DATA_MODE.id) {
             0 -> {
@@ -634,7 +639,9 @@ fun MainScreen(
         }
 
         // when record list is updated, it triggers launch -> scroll
-        LaunchedEffect(records) {
+        LaunchedEffect(sortedListToShow) {
+            println("Scroll to: ${viewModel.position.value}")
+            println("Scroll to: ${LAST_LIST_POSITION}")
             if (LAST_LIST_POSITION != -1) {
                 listState.animateScrollToItem(index = LAST_LIST_POSITION)
             } else {
@@ -649,7 +656,7 @@ fun MainScreen(
                 .padding(10.dp)
         ) {
             itemsIndexed(sortedListToShow ?: emptyList()) { id, record ->
-                RecordItem(id, record, viewModel, dataHandler, navController)
+                RecordItem(id, record, viewModel, dataHandler, navController, sharedPreferences)
             }
         }
 
@@ -1081,7 +1088,8 @@ fun RecordItem(
     record: RecordDto,
     viewModel: SavedStateViewModel,
     dataHandler: DataHandlerInterface,
-    navController: NavHostController
+    navController: NavHostController,
+    sharedPreferences: SharedPreferences
 ) {
     val padding = 5.dp
     val margin = 10.dp
@@ -1092,6 +1100,11 @@ fun RecordItem(
 
     val onClick = {
         viewModel.onPositionChange(id)
+        with(sharedPreferences.edit()) {
+            this.putInt("positionCLicked", id)
+            apply()
+        }
+
         viewModel.onRecordChange(record)
         navController.navigate(route = Screen.Record.route)
     }
