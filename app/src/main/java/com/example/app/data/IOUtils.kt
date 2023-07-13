@@ -78,7 +78,7 @@ class IOUtils {
 
     fun parseRecordsFromJson(json: String): MutableList<ServerRecord> {
         val gson = Gson()
-        return gson.fromJson(json, Array<ServerRecord>::class.java).toMutableList()
+        return if (json == "") emptyList<ServerRecord>().toMutableList() else gson.fromJson(json, Array<ServerRecord>::class.java).toMutableList()
     }
 
     fun convertServerListToRecordDtoList(serverRecords: List<ServerRecord>): List<RecordDto> {
@@ -153,27 +153,67 @@ class IOUtils {
 
     fun updateRowData(position: Int, recordDto: RecordDto, filename: String) {
 
-        val json = IOUtils().readJsonFromFile(filename)
-        val records = parseRecordsFromJson(json).sortedBy { it ->
-            it.House_name.split("/")[0].filter { it.isDigit() }.toInt()
-        }.toMutableList()
+        Log.w("RECORDS UPDATE ROW", recordDto.toString())
 
-        val oldRecord = records[position]
+        try {
+            val json = IOUtils().readJsonFromFile(filename)
+            val records = parseRecordsFromJson(json).sortedBy { it ->
+                val houseNumber = it.House_name.split("/")[0]
 
-        oldRecord.Comments = recordDto.comments
-        oldRecord.NewDay_value = recordDto.ko_D.toString()
-        oldRecord.NewNight_value = recordDto.ko_N.toString()
-        oldRecord.NewDate = LocalDateTime.now().toString().replace("T", " ")
+                val number = when {
+                    houseNumber.contains(Regex("""\d+-\d+(-\d+)?[a-zA-Z]?""")) -> {
+                        // Handle house numbers like "1-3-5s3"
+                        val digits = houseNumber.substringBefore("-")
+                        val additionalDigits = houseNumber.substringAfterLast("-").filter { it.isDigit() }
+                        "$digits$additionalDigits".toIntOrNull()
+                    }
+                    houseNumber.contains(Regex("""\d+(/[а-яА-Яa-zA-Z]+)?""")) -> {
+                        // Handle house numbers like "2/23", "2/в"
+                        val digits = houseNumber.substringBefore("/")
+                        digits.toIntOrNull()
+                    }
+                    houseNumber.contains(Regex("""\d+[а-яА-Я]+""")) -> {
+                        // Handle house numbers like "1б", "3к2", "12к7"
+                        val digits = houseNumber.filter { it.isDigit() }
+                        digits.toIntOrNull()
+                    }
+                    houseNumber.contains(Regex("""\d+[a-zA-Z]+""")) -> {
+                        // Handle house numbers like "12Ак7", "12АблокА", "дв12Асоор10"
+                        val digits = houseNumber.filter { it.isDigit() }
+                        digits.toIntOrNull()
+                    }
+                    else -> {
+                        null
+                    }
+                }
 
-        records[position] = oldRecord
+                number
+            }.toMutableList()
 
-        val newJson = IOUtils().listToJson(records)
-        IOUtils().saveJsonToFile(newJson, filename)
+
+            val oldRecord = records[position]
+
+            oldRecord.Comments = recordDto.comments
+            oldRecord.NewDay_value = recordDto.ko_D.toString()
+            oldRecord.NewNight_value = recordDto.ko_N.toString()
+            oldRecord.NewDate = LocalDateTime.now().toString().replace("T", " ")
+
+            records[position] = oldRecord
+
+            val newJson = IOUtils().listToJson(records)
+            IOUtils().saveJsonToFile(newJson, filename)
+        } catch (e: Exception) {
+            Log.e("RECORDS UPDATE ROW", e.stackTraceToString())
+        }
+
+
+
 
     }
 
     fun deleteFile(filePath: String): Boolean {
         val file = File(filePath)
+        Log.w("FILESYSTEM", "Deleting $filePath")
         return file.delete()
     }
 

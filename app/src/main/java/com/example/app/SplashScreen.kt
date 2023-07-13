@@ -44,7 +44,6 @@ fun SplashScreen(alphaAnimation: Float, version: String) {
             .background(Color.White)
             .fillMaxSize(),
         contentAlignment = Alignment.Center,
-
     ) {
         Column(modifier = Modifier.fillMaxSize().padding(top = 100.dp),
             verticalArrangement = Arrangement.Center,
