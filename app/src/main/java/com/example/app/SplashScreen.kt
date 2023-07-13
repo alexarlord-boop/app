@@ -24,12 +24,12 @@ import kotlinx.coroutines.delay
 fun AnimatedSplashScreen(navController: NavHostController, version: String) {
     var startAnimation by remember { mutableStateOf(false) }
     val alphaAnimation = animateFloatAsState(targetValue = if(startAnimation) 1f else 0f,
-    animationSpec = tween(durationMillis = 3000)
+    animationSpec = tween(durationMillis = 500)
     )
 
     LaunchedEffect(key1 = true) {
         startAnimation = true
-        delay(4000)
+        delay(1000)
         navController.popBackStack()
         navController.navigate(Screen.Home.route)
     }
