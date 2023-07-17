@@ -1,10 +1,8 @@
 package com.example.app.data
 
 import android.util.Log
-import com.example.app.AppStrings
+import com.example.app.*
 import com.example.app.record.RecordDto
-import com.example.app.ServerHandler
-import com.example.app.ServerRecord
 import com.google.gson.Gson
 import java.io.File
 import java.io.IOException
@@ -78,7 +76,10 @@ class IOUtils {
 
     fun parseRecordsFromJson(json: String): MutableList<ServerRecord> {
         val gson = Gson()
-        return if (json == "") emptyList<ServerRecord>().toMutableList() else gson.fromJson(json, Array<ServerRecord>::class.java).toMutableList()
+        return if (json == "") emptyList<ServerRecord>().toMutableList() else gson.fromJson(
+            json,
+            Array<ServerRecord>::class.java
+        ).toMutableList()
     }
 
     fun convertServerListToRecordDtoList(serverRecords: List<ServerRecord>): List<RecordDto> {
@@ -157,38 +158,8 @@ class IOUtils {
 
         try {
             val json = IOUtils().readJsonFromFile(filename)
-            val records = parseRecordsFromJson(json).sortedBy { it ->
-                val houseNumber = it.House_name.split("/")[0]
-
-                val number = when {
-                    houseNumber.contains(Regex("""\d+-\d+(-\d+)?[a-zA-Z]?""")) -> {
-                        // Handle house numbers like "1-3-5s3"
-                        val digits = houseNumber.substringBefore("-")
-                        val additionalDigits = houseNumber.substringAfterLast("-").filter { it.isDigit() }
-                        "$digits$additionalDigits".toIntOrNull()
-                    }
-                    houseNumber.contains(Regex("""\d+(/[а-яА-Яa-zA-Z]+)?""")) -> {
-                        // Handle house numbers like "2/23", "2/в"
-                        val digits = houseNumber.substringBefore("/")
-                        digits.toIntOrNull()
-                    }
-                    houseNumber.contains(Regex("""\d+[а-яА-Я]+""")) -> {
-                        // Handle house numbers like "1б", "3к2", "12к7"
-                        val digits = houseNumber.filter { it.isDigit() }
-                        digits.toIntOrNull()
-                    }
-                    houseNumber.contains(Regex("""\d+[a-zA-Z]+""")) -> {
-                        // Handle house numbers like "12Ак7", "12АблокА", "дв12Асоор10"
-                        val digits = houseNumber.filter { it.isDigit() }
-                        digits.toIntOrNull()
-                    }
-                    else -> {
-                        null
-                    }
-                }
-
-                number
-            }.toMutableList()
+            var records = parseRecordsFromJson(json)
+            records = sortRecordsByHouseNumber(records) { it.House_name }.toMutableList()
 
 
             val oldRecord = records[position]
@@ -205,8 +176,6 @@ class IOUtils {
         } catch (e: Exception) {
             Log.e("RECORDS UPDATE ROW", e.stackTraceToString())
         }
-
-
 
 
     }
