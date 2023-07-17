@@ -7,6 +7,7 @@ import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
 import android.content.pm.PackageManager
+import android.icu.text.AlphabeticIndex.Record
 import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
 import android.net.Uri
@@ -389,16 +390,13 @@ fun MainScreen(
 
     Log.w("MAIN SCREEN", "Records: $records")
 
-    var sortedListToShow =
-        records?.sortedBy { record ->
-            val houseNumber = record.houseNumber
-            val numericPart = houseNumber.split("\\D+".toRegex())[0].filter { it.isDigit() }
-            if (numericPart.isNotEmpty()) {
-                numericPart.toInt()
-            } else {
-                Int.MAX_VALUE
-            }
-        }
+    var sortedListToShow: List<RecordDto> = if (records !== null) {
+        sortRecordsByHouseNumber(records!!) { it.houseNumber }
+    } else {
+        emptyList()
+    }
+
+
 
     if ((sortedListToShow ?: emptyList()).isNotEmpty()) {
 

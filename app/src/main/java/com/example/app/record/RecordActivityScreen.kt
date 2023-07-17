@@ -18,6 +18,7 @@ import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Color.Companion.Black
 import androidx.compose.ui.graphics.Color.Companion.Red
@@ -26,9 +27,11 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -59,6 +62,8 @@ fun RecordScreen(viewModel: SavedStateViewModel, navController: NavHostControlle
     val record = viewModel.selectedRecord.value!!
     val recordId = viewModel.position.value!!
     val filename = viewModel.filename.value!!
+
+    val focusManager = LocalFocusManager.current
 
     var dayValue by remember { mutableStateOf(record.ko_D.toString().split(".")[0]) }
     var isDayValid by remember { mutableStateOf(true) }
@@ -326,6 +331,7 @@ fun RecordScreen(viewModel: SavedStateViewModel, navController: NavHostControlle
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
 
+                // CURRENT DAY VALUE
                 TextField(
                     value = dayValue,
                     onValueChange = { dayValue = parseNumberInput(it) },
@@ -360,6 +366,8 @@ fun RecordScreen(viewModel: SavedStateViewModel, navController: NavHostControlle
                 modifier = Modifier.weight(1f),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
+
+                // CURRENT NIGHT VALUE
                 TextField(
                     value = nightValue,
                     onValueChange = { nightValue = parseNumberInput(it) },
