@@ -2,28 +2,17 @@ package com.example.app
 
 
 import android.Manifest
-import android.Manifest.permission.WRITE_EXTERNAL_STORAGE
 import android.content.Context
-import android.content.Intent
 import android.content.SharedPreferences
 import android.content.pm.PackageManager
-import android.icu.text.AlphabeticIndex.Record
 import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
-import android.net.Uri
-import android.os.Build
-import android.os.Build.VERSION.SDK_INT
 import android.os.Bundle
-import android.os.Environment
-import android.provider.Settings
-import android.provider.Settings.Global.putInt
 import android.util.Log
-import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
-import androidx.camera.core.impl.utils.ContextUtil.getApplicationContext
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -50,13 +39,10 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.app.ActivityCompat
-import androidx.core.os.bundleOf
 import androidx.lifecycle.*
-import androidx.navigation.NavController
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import androidx.savedstate.SavedStateRegistryOwner
@@ -65,9 +51,7 @@ import com.example.app.data.DataHandlerInterface
 import com.example.app.data.FileSystemHandler
 import com.example.app.data.IOUtils
 import com.example.app.navigation.Screen
-//import com.example.app.record.RecordActivity
 import com.example.app.record.RecordDto
-import com.google.gson.Gson
 import kotlinx.coroutines.*
 import java.io.File
 
@@ -87,12 +71,12 @@ class SavedStateViewModelFactory(private val savedStateRegistryOwner: SavedState
 }
 
 class MainActivityScreen : AppCompatActivity() {
-    var fsHandler = FileSystemHandler()
-    val viewModel: SavedStateViewModel by viewModels { SavedStateViewModelFactory(this) }
-    lateinit var serverHandler: DataHandlerInterface
+    private var fsHandler = FileSystemHandler()
+    private val viewModel: SavedStateViewModel by viewModels { SavedStateViewModelFactory(this) }
+    private lateinit var serverHandler: DataHandlerInterface
 
 
-    fun createDirectoryIfNotExists(directoryPath: String) {
+    private fun createDirectoryIfNotExists(directoryPath: String) {
         val directory = File(directoryPath)
         if (!directory.exists()) {
             directory.mkdirs()
@@ -115,8 +99,8 @@ class MainActivityScreen : AppCompatActivity() {
             ActivityCompat.requestPermissions(this, permissionsStorage, requestExternalStorage)
         }
         val sharedPref = this.getPreferences(Context.MODE_PRIVATE)
-        var controllerId: String = ""
-        var statementId: String = ""
+        var controllerId: String
+        var statementId: String
 
         with(sharedPref) {
             controllerId = getString("controllerId", "") ?: ""
@@ -256,7 +240,7 @@ class SavedStateViewModel(private val savedStateHandle: SavedStateHandle) : View
         savedStateHandle.getLiveData("area")
     val area: LiveData<String> = _area
 
-    fun onAreaChange(newArea: String) {
+    private fun onAreaChange(newArea: String) {
         _area.value = newArea
     }
 
@@ -272,9 +256,6 @@ class SavedStateViewModel(private val savedStateHandle: SavedStateHandle) : View
         savedStateHandle.getLiveData("filename", "")
     val filename: LiveData<String> = _filename
 
-    private val _controllerId: MutableLiveData<String> =
-        savedStateHandle.getLiveData("controllerId", "0")
-    val controllerId: LiveData<String> = _controllerId
 
     val defaultOption = "Выбрать контролера"
     private val _selectedOptionText: MutableLiveData<String> =
@@ -286,7 +267,7 @@ class SavedStateViewModel(private val savedStateHandle: SavedStateHandle) : View
         savedStateHandle.getLiveData("selectedBranch", defaultBranch)
     var selectedBranch: LiveData<String> = _selectedBranch
 
-    val defaultBranchId = ""
+    private val defaultBranchId = ""
     private val _selectedBranchId: MutableLiveData<String> =
         savedStateHandle.getLiveData("selectedBranchId", defaultBranchId)
     var selectedBranchId: LiveData<String> = _selectedBranchId
@@ -390,7 +371,7 @@ fun MainScreen(
 
     Log.w("MAIN SCREEN", "Records: $records")
 
-    var sortedListToShow: List<RecordDto> = if (records !== null) {
+    val sortedListToShow: List<RecordDto> = if (records !== null) {
         sortRecordsByHouseNumber(records!!) { it.houseNumber }
     } else {
         emptyList()
@@ -398,9 +379,9 @@ fun MainScreen(
 
 
 
-    if ((sortedListToShow ?: emptyList()).isNotEmpty()) {
+    if ((sortedListToShow).isNotEmpty()) {
 
-        var branches = emptyList<Branch>()
+        var branches: List<Branch>
         LaunchedEffect(sortedListToShow) {
             coroutineScope.launch {
 
@@ -412,7 +393,7 @@ fun MainScreen(
                 withContext(Dispatchers.Main) {
                     with(sharedPreferences) {
                         val branchId = this.getString("branchId", "") ?: ""
-                        val branchIdInSelector = this.getInt("branchIdInSelector", 0) ?: 0
+                        val branchIdInSelector = this.getInt("branchIdInSelector", 0)
                         val controllerId = this.getString("controllerId", "") ?: ""
                         val controllerName = this.getString("controllerName", "") ?: ""
                         val statement = this.getString("statementId", "") ?: ""
@@ -452,7 +433,7 @@ fun MainScreen(
             AlertDialog(onDismissRequest = { isUploadDialogVisible = false },
                 shape = RoundedCornerShape(15.dp),
                 title = {
-                    Column() {
+                    Column {
                         Text(
                             text = "Выгрузка данных",
                             fontSize = 20.sp,
@@ -462,7 +443,7 @@ fun MainScreen(
                     }
                 },
                 text = {
-                    Column() {
+                    Column {
                         Text(text = "При выгрузке данных файлы с записями удаляются с устройства.")
                         Text(text = "Продолжить?")
 
@@ -511,7 +492,7 @@ fun MainScreen(
             AlertDialog(onDismissRequest = { isDeleteDialogVisible = false },
                 shape = RoundedCornerShape(15.dp),
                 title = {
-                    Column() {
+                    Column {
                         Text(
                             text = "Удаление ведомости",
                             fontSize = 20.sp,
@@ -521,7 +502,7 @@ fun MainScreen(
                     }
                 },
                 text = {
-                    Column() {
+                    Column {
                         Text(text = "При удалении вы теряете файл и все изменения в нем.")
                         Text(text = "Продолжить?")
                     }
@@ -653,7 +634,7 @@ fun MainScreen(
                 .weight(10F)
                 .padding(10.dp)
         ) {
-            itemsIndexed(sortedListToShow ?: emptyList()) { id, record ->
+            itemsIndexed(sortedListToShow) { id, record ->
                 RecordItem(id, record, viewModel, dataHandler, navController, sharedPreferences)
             }
         }
@@ -816,7 +797,7 @@ fun ControllerSelector(
     val controllerId = viewModel.selectedControllerId.observeAsState().value
     val statementId = viewModel.statementId.observeAsState("0").value
 
-    var statements = viewModel.loadedStatements.observeAsState(emptyList())
+    val statements = viewModel.loadedStatements.observeAsState(emptyList())
     var isDialogVisible by remember { mutableStateOf(false) }
     var isInfoVisible by remember { mutableStateOf(false) }
 
