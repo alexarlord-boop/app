@@ -143,9 +143,9 @@ class ServerHandler(val viewModel: SavedStateViewModel) : DataHandlerInterface {
 
 
         } catch (e: java.lang.Exception) {
-            println(filePath)
-            println(jsonString)
-            Log.e("SERVER", e.stackTraceToString())
+            Log.w("POST", filePath)
+            Log.w("POST", jsonString)
+            Log.e("POST", e.stackTraceToString())
             Toast.makeText(context, "Данные не отправлены", Toast.LENGTH_LONG).show()
             isSent = false
         }
@@ -257,7 +257,6 @@ class ServerHandler(val viewModel: SavedStateViewModel) : DataHandlerInterface {
         val branchList = fetchDataFromServer(AppStrings.branchList).trimIndent()
 
         if (branchList != "") {
-            println(branchList)
             val formattedBranches = branchList.trim()
                 .split("},\"")
                 .map { it.split("\":{")[1] }
