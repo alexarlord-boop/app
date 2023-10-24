@@ -1,9 +1,7 @@
 package com.example.app.record
 
-import android.os.Parcelable
-import kotlinx.android.parcel.Parcelize
+
 import java.time.LocalDateTime
-import java.util.Date
 
 /*
     Data Transfer Object для записи из файла
@@ -28,7 +26,7 @@ data class RecordDto(
     val ID: Double,
 
     val positionInView: Int
-) {
+): java.io.Serializable {
 
     override fun toString(): String {
         return "RecordDto(area='$area', street='$street', houseNumber='$houseNumber', flatNumber=$flatNumber, account=$account, name='$name', puNumber='$puNumber', puType='$puType', lastKoDate=$lastKoDate, lastKo_D=$lastKo_D, lastKo_N=$lastKo_N, ko_D=$ko_D, ko_N=$ko_N, comments='$comments', ID=$ID, positionInView=$positionInView)"

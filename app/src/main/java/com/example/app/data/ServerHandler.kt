@@ -193,7 +193,7 @@ class ServerHandler(val viewModel: SavedStateViewModel) : DataHandlerInterface {
         return records
     }
 
-    data class Controller(val Staff_Lnk: String, val Staff_Name: String, val Company_Lnk: String)
+    data class Controller(val Staff_Lnk: String, val Staff_Name: String, val Company_Lnk: String): Serializable
 
     override suspend fun getControllers(): List<Controller>? {
         val urlString = AppStrings.controllers
@@ -222,7 +222,7 @@ class ServerHandler(val viewModel: SavedStateViewModel) : DataHandlerInterface {
         @SerializedName("Staff_Name") val staffName: String,
         @SerializedName("Company_Lnk") val companyLnk: String,
 //        @SerializedName("Processed") val processed: String  // removed from API
-    )
+    ): Serializable
 
     override suspend fun getStatementsForController(controllerId: String, branchId: String): List<RecordStatement> {
         val gson = Gson()
@@ -321,7 +321,7 @@ data class ServerRecord(
     var NewDay_value: String,
     var NewNight_value: String
 
-) {
+): Serializable {
 
     override fun toString(): String {
         return "ServerRecord(ListNumber='$ListNumber', ListDate='$ListDate', Source='$Source', Staff_Lnk='$Staff_Lnk', Staff_Name='$Staff_Name', AccountUnit_Lnk='$AccountUnit_Lnk', AU_number='$AU_number', AU_type='$AU_type', Area_name='$Area_name', Street_name='$Street_name', House_name='$House_name', Flat_number='$Flat_number', Person_name='$Person_name', Comments='$Comments', LastDate='$LastDate', NewDate='$NewDate', LastDay_value='$LastDay_value', LastNight_value='$LastNight_value', NewDay_value='$NewDay_value', NewNight_value='$NewNight_value')"
