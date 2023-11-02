@@ -20,6 +20,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.app.ServerHandler
+import com.example.app.data.RecordStatement
 import com.example.app.record.RecordDto
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -27,7 +28,7 @@ import kotlinx.coroutines.withContext
 
 
 val statements = mutableListOf(
-    ServerHandler.RecordStatement(
+    RecordStatement(
         listNumber = "40",
         listDate = "26.10.2023",
         source = "Test",
@@ -35,7 +36,7 @@ val statements = mutableListOf(
         staffName = "Быкова Н.Н.",
         companyLnk = "3",
         firstAddress = "Колхозный переулок, 10"
-    ), ServerHandler.RecordStatement(
+    ), RecordStatement(
         listNumber = "41",
         listDate = "26.10.2023",
         source = "Test",
@@ -44,7 +45,7 @@ val statements = mutableListOf(
         companyLnk = "3",
         firstAddress = "Торговый переулок, 11"
     ),
-    ServerHandler.RecordStatement(
+    RecordStatement(
         listNumber = "42",
         listDate = "26.10.2023",
         source = "Test",

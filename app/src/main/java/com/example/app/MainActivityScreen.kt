@@ -47,10 +47,7 @@ import androidx.lifecycle.*
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import androidx.savedstate.SavedStateRegistryOwner
-import com.example.app.data.Branch
-import com.example.app.data.DataHandlerInterface
-import com.example.app.data.FileSystemHandler
-import com.example.app.data.IOUtils
+import com.example.app.data.*
 import com.example.app.navigation.Screen
 import com.example.app.record.RecordDto
 import kotlinx.coroutines.*
@@ -273,9 +270,9 @@ class SavedStateViewModel(private val savedStateHandle: SavedStateHandle) : View
         savedStateHandle.getLiveData("selectedBranchId", defaultBranchId)
     var selectedBranchId: LiveData<String> = _selectedBranchId
 
-    private val _controllers: MutableLiveData<List<ServerHandler.Controller>> =
+    private val _controllers: MutableLiveData<List<Controller>> =
         savedStateHandle.getLiveData("controllers", emptyList())
-    var controllers: LiveData<List<ServerHandler.Controller>> = _controllers
+    var controllers: LiveData<List<Controller>> = _controllers
 
     private val _selectedControllerName: MutableLiveData<String> =
         savedStateHandle.getLiveData("selectedControllerName", "")
@@ -293,15 +290,15 @@ class SavedStateViewModel(private val savedStateHandle: SavedStateHandle) : View
         savedStateHandle.getLiveData("selectedRecord")
     var selectedRecord: LiveData<RecordDto> = _selectedRecord
 
-    private val _loadedStatements: MutableLiveData<List<ServerHandler.RecordStatement>> =
+    private val _loadedStatements: MutableLiveData<List<RecordStatement>> =
         savedStateHandle.getLiveData("loadedStatements", emptyList())
-    var loadedStatements: LiveData<List<ServerHandler.RecordStatement>> = _loadedStatements
+    var loadedStatements: LiveData<List<RecordStatement>> = _loadedStatements
 
     fun onFileNameChange(filename: String) {
         _filename.value = filename
     }
 
-    fun onStatementsChange(statements: List<ServerHandler.RecordStatement>) {
+    fun onStatementsChange(statements: List<RecordStatement>) {
         _loadedStatements.value = statements
     }
 
@@ -321,7 +318,7 @@ class SavedStateViewModel(private val savedStateHandle: SavedStateHandle) : View
         _selectedControllerId.value = controllerId
     }
 
-    fun onControllerListChange(controllers: List<ServerHandler.Controller>) {
+    fun onControllerListChange(controllers: List<Controller>) {
         _controllers.value = controllers
     }
 
@@ -807,7 +804,7 @@ fun ControllerSelector(
     }
 
     val controllers =
-        viewModel.controllers.observeAsState(listOf(ServerHandler.Controller("-", "-", "-")))
+        viewModel.controllers.observeAsState(listOf(Controller("-", "-", "-")))
     val selectedBranch = viewModel.selectedBranch.observeAsState("")
     val selectedBranchId = viewModel.selectedBranchId.observeAsState("")
 
@@ -823,7 +820,7 @@ fun ControllerSelector(
             text = {
                 Column {
 
-                    com.example.app.Modals.statements.sortedBy { it.listNumber.toInt() }.forEach { item ->
+                    statements.value.sortedBy { it.listNumber.toInt() }.forEach { item ->
 
                         // TODO:- add 1st list address for each row(=list)
 
@@ -1025,7 +1022,7 @@ fun ControllerSelector(
                         // Fetching controller statements
                         cs.launch {
                             try {
-                                var data: MutableList<ServerHandler.RecordStatement>
+                                var data: MutableList<RecordStatement>
                                 withContext(Dispatchers.IO) {
                                     data = dataHandler.getStatementsForController(
                                         element.Staff_Lnk,

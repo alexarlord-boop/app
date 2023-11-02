@@ -5,9 +5,7 @@ import android.util.Log
 import android.widget.Toast
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
-import com.example.app.data.Branch
-import com.example.app.data.DataHandlerInterface
-import com.example.app.data.IOUtils
+import com.example.app.data.*
 import com.example.app.record.RecordDto
 import com.google.gson.Gson
 import com.google.gson.JsonObject
@@ -193,7 +191,6 @@ class ServerHandler(val viewModel: SavedStateViewModel) : DataHandlerInterface {
         return records
     }
 
-    data class Controller(val Staff_Lnk: String, val Staff_Name: String, val Company_Lnk: String): Serializable
 
     override suspend fun getControllers(): List<Controller>? {
         val urlString = AppStrings.controllers
@@ -214,15 +211,6 @@ class ServerHandler(val viewModel: SavedStateViewModel) : DataHandlerInterface {
         }
     }
 
-    data class RecordStatement(
-        @SerializedName("ListNumber") val listNumber: String,
-        @SerializedName("ListDate") val listDate: String,
-        @SerializedName("Source") val source: String,
-        @SerializedName("Staff_Lnk") val staffLink: String,
-        @SerializedName("Staff_Name") val staffName: String,
-        @SerializedName("Company_Lnk") val companyLnk: String,
-        @SerializedName("FirstAddress") val firstAddress: String,
-    ): Serializable
 
     override suspend fun getStatementsForController(controllerId: String, branchId: String): List<RecordStatement> {
         val gson = Gson()
@@ -299,34 +287,7 @@ class ServerHandler(val viewModel: SavedStateViewModel) : DataHandlerInterface {
 
 }
 
-data class ServerRecord(
-    val ListNumber: String,
-    val ListDate: String,
-    val Source: String,
-    val Staff_Lnk: String,
-    val Staff_Name: String,
-    val AccountUnit_Lnk: String,
-    val AU_number: String,
-    val AU_type: String,
-    val Area_name: String,
-    val Street_name: String,
-    val House_name: String,
-    val Flat_number: String,
-    val Person_name: String,
-    var Comments: String,
-    val LastDate: String,
-    var NewDate: String,
-    val LastDay_value: String,
-    val LastNight_value: String,
-    var NewDay_value: String,
-    var NewNight_value: String
 
-): Serializable {
-
-    override fun toString(): String {
-        return "ServerRecord(ListNumber='$ListNumber', ListDate='$ListDate', Source='$Source', Staff_Lnk='$Staff_Lnk', Staff_Name='$Staff_Name', AccountUnit_Lnk='$AccountUnit_Lnk', AU_number='$AU_number', AU_type='$AU_type', Area_name='$Area_name', Street_name='$Street_name', House_name='$House_name', Flat_number='$Flat_number', Person_name='$Person_name', Comments='$Comments', LastDate='$LastDate', NewDate='$NewDate', LastDay_value='$LastDay_value', LastNight_value='$LastNight_value', NewDay_value='$NewDay_value', NewNight_value='$NewNight_value')"
-    }
-}
 
 //fun main() {
 //

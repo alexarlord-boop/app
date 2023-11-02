@@ -2,9 +2,6 @@ package com.example.app.data
 
 import android.content.Context
 import android.util.Log
-import android.widget.Toast
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
 import com.example.app.AppStrings
 import com.example.app.record.RecordDto
 import com.example.app.ServerHandler
@@ -14,7 +11,7 @@ import java.io.IOException
 
 class FileSystemHandler : DataHandlerInterface {
 
-    override suspend fun getControllers(): List<ServerHandler.Controller>? {
+    override suspend fun getControllers(): List<Controller>? {
         val pathToControllers = AppStrings.deviceDirectory + "controllers.json"
         try {
             val controllers =
@@ -28,14 +25,14 @@ class FileSystemHandler : DataHandlerInterface {
 
     }
 
-    override suspend fun getStatementsForController(controllerId: String, branchId: String): MutableList<ServerHandler.RecordStatement> {
+    override suspend fun getStatementsForController(controllerId: String, branchId: String): MutableList<RecordStatement> {
         val pathToStatements = AppStrings.deviceDirectory + "statements-$controllerId.json"
         val savedStatementIds = IO().getSavedStatementIds()
         println(savedStatementIds)
         try {
             var statements = Gson().fromJson(
                 IO().readJsonFromFile(pathToStatements),
-                Array<ServerHandler.RecordStatement>::class.java
+                Array<RecordStatement>::class.java
             ).toMutableList()
             Log.w("FILESYSTEM", "Statements from file: $statements")
             statements =
@@ -76,7 +73,7 @@ class FileSystemHandler : DataHandlerInterface {
 
     }
 
-    override suspend fun getControllersForBranch(branchId: String): List<ServerHandler.Controller> {
+    override suspend fun getControllersForBranch(branchId: String): List<Controller> {
         val filePath = AppStrings.deviceDirectory + "controllers-${branchId}.json"
 
         return try {

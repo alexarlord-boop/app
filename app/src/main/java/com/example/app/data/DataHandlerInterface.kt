@@ -13,12 +13,12 @@ import com.example.app.ServerHandler
 
 interface DataHandlerInterface {
 
-    suspend fun getControllers(): List<ServerHandler.Controller>?
+    suspend fun getControllers(): List<Controller>?
 
     suspend fun getStatementsForController(
         controllerId: String,
         branchId: String
-    ): List<ServerHandler.RecordStatement>
+    ): List<RecordStatement>
 
     fun getRecordsForStatement(
         controllerId: String,
@@ -49,7 +49,7 @@ interface DataHandlerInterface {
 
     suspend fun getBranchList(): List<Branch>
 
-    suspend fun getControllersForBranch(branchId: String): List<ServerHandler.Controller>
+    suspend fun getControllersForBranch(branchId: String): List<Controller>
 
 }
 
