@@ -17,6 +17,7 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -116,7 +117,7 @@ class MainActivityScreen : AppCompatActivity() {
         val networkCapabilities =
             connectivityManager.getNetworkCapabilities(connectivityManager.activeNetwork)
 
-       //TODO:- add test server connection and use it in the condition below
+        //TODO:- add test server connection and use it in the condition below
 
         if (networkCapabilities != null && networkCapabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)) {
             setContent {
@@ -411,7 +412,6 @@ fun MainScreen(
     }
 
 
-
     val showUpButton by remember { derivedStateOf { listState.firstVisibleItemIndex > 0 } }
     val showLastButton by remember { derivedStateOf { lastClicked.value > 0 } }
     val showUploadButton by remember { derivedStateOf { records?.isNotEmpty() } }
@@ -489,43 +489,43 @@ fun MainScreen(
 
     @Composable
     fun showDeleteDialog() {
-            AlertDialog(onDismissRequest = { isDeleteDialogVisible = false },
-                shape = RoundedCornerShape(15.dp),
-                title = {
-                    Column {
-                        Text(
-                            text = "Удаление ведомости",
-                            fontSize = 20.sp,
-                            fontWeight = FontWeight.Bold
-                        )
+        AlertDialog(onDismissRequest = { isDeleteDialogVisible = false },
+            shape = RoundedCornerShape(15.dp),
+            title = {
+                Column {
+                    Text(
+                        text = "Удаление ведомости",
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.Bold
+                    )
 //                        Text(text = "Ведомость $statementId", fontSize = 15.sp)
+                }
+            },
+            text = {
+                Column {
+                    Text(text = "При удалении вы теряете файл и все изменения в нем.")
+                    Text(text = "Продолжить?")
+                }
+            },
+            confirmButton = {
+                Button(onClick = {
+                    val isDelete = IOUtils().deleteFile(filename)
+                    if (isDelete) {
+                        Log.w("FILESYSTEM", "Deleted $filename")
+                        viewModel.onRecordListChange(emptyList())
+                        viewModel.onFileNameChange("")
+                        viewModel.onStatementIdChange("")
                     }
-                },
-                text = {
-                    Column {
-                        Text(text = "При удалении вы теряете файл и все изменения в нем.")
-                        Text(text = "Продолжить?")
-                    }
-                },
-                confirmButton = {
-                    Button(onClick = {
-                        val isDelete = IOUtils().deleteFile(filename)
-                        if (isDelete) {
-                            Log.w("FILESYSTEM", "Deleted $filename")
-                            viewModel.onRecordListChange(emptyList())
-                            viewModel.onFileNameChange("")
-                            viewModel.onStatementIdChange("")
-                        }
-                        isDeleteDialogVisible = false
-                    }) {
-                        Text(text = "Да")
-                    }
-                },
-                dismissButton = {
-                    Button(onClick = { isDeleteDialogVisible = false }) {
-                        Text(text = "Нет")
-                    }
-                })
+                    isDeleteDialogVisible = false
+                }) {
+                    Text(text = "Да")
+                }
+            },
+            dismissButton = {
+                Button(onClick = { isDeleteDialogVisible = false }) {
+                    Text(text = "Нет")
+                }
+            })
 
     }
 
@@ -812,7 +812,7 @@ fun ControllerSelector(
     val selectedBranchId = viewModel.selectedBranchId.observeAsState("")
 
 
-    // Function to show the modal dialog with fetched data
+    // Function to show the modal dialog with all controller's lists
     @Composable
     fun ShowModalDialog() {
         Log.w("DATA", statements.toString())
@@ -822,63 +822,86 @@ fun ControllerSelector(
             title = { Text(text = "Ведомости") },
             text = {
                 Column {
-                    statements.value.sortedBy { it.listNumber.toInt() }.forEach { item ->
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.Start,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Text(
-                                text = item.listDate,
-                                fontSize = MaterialTheme.typography.h6.fontSize,
-                                fontWeight = FontWeight(300),
-                                modifier = Modifier.padding(12.dp)
-                            )
-                            Button(
-                                onClick = {
-                                    viewModel.onStatementIdChange(item.listNumber)
-                                    with(sharedPreferences.edit()) {
-                                        putString("statementId", item.listNumber)
-                                        apply()
-                                    }
 
-                                    cs.launch {
-                                        try {
-                                            selectedControllerId.value?.let { controllerId ->
-                                                withContext(Dispatchers.IO) {
-                                                    val data: List<RecordDto> =
-                                                        dataHandler.getRecordsForStatement(
-                                                            controllerId,
-                                                            item.listNumber,
-                                                            context
-                                                        )
-                                                    withContext(Dispatchers.Main) {
-                                                        viewModel.onRecordListChange(data)
+                    com.example.app.Modals.statements.sortedBy { it.listNumber.toInt() }.forEach { item ->
+
+                        // TODO:- add 1st list address for each row(=list)
+
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(bottom = 10.dp)
+                                .border(
+                                    2.dp,
+                                    color = Color.LightGray,
+                                    shape = RoundedCornerShape(10.dp)
+                                ),
+                            horizontalAlignment = Alignment.Start
+                        ) {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(55.dp),
+                                horizontalArrangement = Arrangement.Start,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    text = item.listDate,
+                                    fontSize = MaterialTheme.typography.h6.fontSize,
+                                    fontWeight = FontWeight(300),
+                                    modifier = Modifier.padding(10.dp)
+                                )
+
+                                Button(
+                                    onClick = {
+                                        viewModel.onStatementIdChange(item.listNumber)
+                                        with(sharedPreferences.edit()) {
+                                            putString("statementId", item.listNumber)
+                                            apply()
+                                        }
+
+                                        cs.launch {
+                                            try {
+                                                selectedControllerId.value?.let { controllerId ->
+                                                    withContext(Dispatchers.IO) {
+                                                        val data: List<RecordDto> =
+                                                            dataHandler.getRecordsForStatement(
+                                                                controllerId,
+                                                                item.listNumber,
+                                                                context
+                                                            )
+                                                        withContext(Dispatchers.Main) {
+                                                            viewModel.onRecordListChange(data)
+                                                        }
                                                     }
                                                 }
+
+
+                                            } catch (e: Exception) {
+                                                println(e.stackTraceToString())
                                             }
-
-
-                                        } catch (e: Exception) {
-                                            println(e.stackTraceToString())
                                         }
-                                    }
 
-
-
-                                    viewModel.onPositionChange(-1)
-                                    isDialogVisible = false
-                                },
-                                modifier = Modifier
-                                    .width(200.dp)
-                                    .padding(12.dp)
-                            ) {
-                                Text(text = item.listNumber)
+                                        viewModel.onPositionChange(-1)
+                                        isDialogVisible = false
+                                    },
+                                    modifier = Modifier
+                                        .width(200.dp)
+                                        .padding(12.dp)
+                                ) {
+                                    Text(text = item.listNumber)
+                                }
                             }
-
+                            Text(
+                                text = item.firstAddress.split(", ")[0],
+                                fontSize = MaterialTheme.typography.h6.fontSize,
+                                fontWeight = FontWeight(300),
+                                modifier = Modifier.padding(horizontal = 10.dp).padding(bottom = 5.dp)
+                            )
                         }
                     }
                 }
+
             },
             confirmButton = {
                 Button(onClick = { isDialogVisible = false }) {
@@ -888,7 +911,7 @@ fun ControllerSelector(
         )
     }
 
-    // Function to show the modal dialog with fetched data
+    // Function to show the warning dialog (empty list)
     @Composable
     fun ShowInfoDialog() {
         viewModel.onStatementIdChange("")
@@ -1109,7 +1132,9 @@ fun RecordItem(
                 }
                 Column(Modifier.weight(2f)) {
                     Text(
-                        text = record.name,
+                        // text = record.name,
+                        //TODO:- check this changes
+                        text = record.puNumber,
                         Modifier.fillMaxWidth(),
                         fontSize = MaterialTheme.typography.h6.fontSize,
                         fontWeight = FontWeight(500),

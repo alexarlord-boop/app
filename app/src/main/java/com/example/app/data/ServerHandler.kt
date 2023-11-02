@@ -221,7 +221,7 @@ class ServerHandler(val viewModel: SavedStateViewModel) : DataHandlerInterface {
         @SerializedName("Staff_Lnk") val staffLink: String,
         @SerializedName("Staff_Name") val staffName: String,
         @SerializedName("Company_Lnk") val companyLnk: String,
-//        @SerializedName("Processed") val processed: String  // removed from API
+        @SerializedName("FirstAddress") val firstAddress: String,
     ): Serializable
 
     override suspend fun getStatementsForController(controllerId: String, branchId: String): List<RecordStatement> {
