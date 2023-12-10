@@ -811,18 +811,18 @@ fun ControllerSelector(
 
     // Function to show the modal dialog with all controller's lists
     @Composable
-    fun ShowModalDialog() {
-        Log.w("DATA", statements.toString())
+    fun ShowStatementsDialog() {
+        Log.w("DATA", com.example.app.ModalsWithoutMethodsPreviewOnly.statements.toString())
         AlertDialog(
             shape = RoundedCornerShape(15.dp),
             onDismissRequest = { isDialogVisible = false },
+            //onDismissRequest = {  },
             title = { Text(text = "Ведомости") },
             text = {
                 Column {
+                statements.value.sortedBy { it.listNumber.toInt() }.forEach { item ->
+                    com.example.app.ModalsWithoutMethodsPreviewOnly.statements.sortedBy { it.listNumber.toInt() }.forEach { item ->
 
-                    statements.value.sortedBy { it.listNumber.toInt() }.forEach { item ->
-
-                        // TODO:- add 1st list address for each row(=list)
 
                         Column(
                             modifier = Modifier
@@ -838,6 +838,7 @@ fun ControllerSelector(
                             Row(
                                 modifier = Modifier
                                     .fillMaxWidth()
+                                    .padding(vertical = 0.dp)
                                     .height(55.dp),
                                 horizontalArrangement = Arrangement.Start,
                                 verticalAlignment = Alignment.CenterVertically
@@ -846,47 +847,47 @@ fun ControllerSelector(
                                     text = item.listDate,
                                     fontSize = MaterialTheme.typography.h6.fontSize,
                                     fontWeight = FontWeight(300),
-                                    modifier = Modifier.padding(10.dp)
+                                    modifier = Modifier.padding(horizontal = 10.dp)
                                 )
 
                                 Button(
                                     onClick = {
-                                        viewModel.onStatementIdChange(item.listNumber)
-                                        with(sharedPreferences.edit()) {
-                                            putString("statementId", item.listNumber)
-                                            apply()
-                                        }
+                                    viewModel.onStatementIdChange(item.listNumber)
+                                    with(sharedPreferences.edit()) {
+                                        putString("statementId", item.listNumber)
+                                        apply()
+                                    }
 
-                                        cs.launch {
-                                            try {
-                                                selectedControllerId.value?.let { controllerId ->
-                                                    withContext(Dispatchers.IO) {
-                                                        val data: List<RecordDto> =
-                                                            dataHandler.getRecordsForStatement(
-                                                                controllerId,
-                                                                item.listNumber,
-                                                                context
-                                                            )
-                                                        withContext(Dispatchers.Main) {
-                                                            viewModel.onRecordListChange(data)
-                                                        }
+                                    cs.launch {
+                                        try {
+                                            selectedControllerId.value?.let { controllerId ->
+                                                withContext(Dispatchers.IO) {
+                                                    val data: List<RecordDto> =
+                                                        dataHandler.getRecordsForStatement(
+                                                            controllerId,
+                                                            item.listNumber,
+                                                            context
+                                                        )
+                                                    withContext(Dispatchers.Main) {
+                                                        viewModel.onRecordListChange(data)
                                                     }
                                                 }
-
-
-                                            } catch (e: Exception) {
-                                                println(e.stackTraceToString())
                                             }
-                                        }
 
-                                        viewModel.onPositionChange(-1)
-                                        isDialogVisible = false
+
+                                        } catch (e: Exception) {
+                                            println(e.stackTraceToString())
+                                        }
+                                    }
+
+                                    viewModel.onPositionChange(-1)
+                                    isDialogVisible = false
                                     },
+                                    contentPadding = PaddingValues(),
                                     modifier = Modifier
                                         .width(200.dp)
-                                        .padding(12.dp)
                                 ) {
-                                    Text(text = item.listNumber)
+                                    Text(text = item.listNumber, fontSize = MaterialTheme.typography.h6.fontSize)
                                 }
                             }
                             Text(
@@ -899,9 +900,10 @@ fun ControllerSelector(
                     }
                 }
 
-            },
+            }},
             confirmButton = {
-                Button(onClick = { isDialogVisible = false }) {
+            Button(onClick = { isDialogVisible = false }) {
+                //Button(onClick = {  }) {
                     Text(text = "Закрыть")
                 }
             }
@@ -930,7 +932,6 @@ fun ControllerSelector(
     }
 
 
-
     ExposedDropdownMenuBox(
         expanded = true, onExpandedChange = {
             expanded = !expanded
@@ -955,7 +956,11 @@ fun ControllerSelector(
                         withContext(Dispatchers.Main) {
                             // Perform UI-related operations here
                             if (fetchedControllers.isEmpty()) {
-                                Toast.makeText(context, "Контролеры не найдены", Toast.LENGTH_SHORT)
+                                Toast.makeText(
+                                    context,
+                                    "Контролеры не найдены",
+                                    Toast.LENGTH_SHORT
+                                )
                                     .show()
                                 viewModel.onStatementIdChange("")
                                 with(sharedPreferences.edit()) {
@@ -964,8 +969,6 @@ fun ControllerSelector(
                                 }
                             }
                             viewModel.onControllerListChange(fetchedControllers)
-
-
                         }
                     }
 
@@ -974,7 +977,8 @@ fun ControllerSelector(
             }) {
             var header = "Контролер | Ведомость"
             if (selectedControllerName.value != "") {
-                header = "${selectedControllerName.value} | Ведомость ${selectedStatementId.value}"
+                header =
+                    "${selectedControllerName.value} | Ведомость ${selectedStatementId.value}"
             }
             Text(header)
         }
@@ -1068,7 +1072,7 @@ fun ControllerSelector(
 
         if (isDialogVisible && statements.value.isNotEmpty()) {
 //            viewModel.onStateIdChange("")
-            ShowModalDialog() // Show the modal dialog with fetched data
+            ShowStatementsDialog() // Show the modal dialog with fetched data
         } else if (statements.value.isEmpty()) {
             Log.w("DELETING RECORDS", "after modal dialog")
 //            viewModel.onRecordListChange(emptyList())
