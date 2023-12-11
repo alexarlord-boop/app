@@ -812,7 +812,7 @@ fun ControllerSelector(
     // Function to show the modal dialog with all controller's lists
     @Composable
     fun ShowStatementsDialog() {
-        Log.w("DATA", com.example.app.ModalsWithoutMethodsPreviewOnly.statements.toString())
+        Log.w("DATA", statements.toString())
         AlertDialog(
             shape = RoundedCornerShape(15.dp),
             onDismissRequest = { isDialogVisible = false },
@@ -821,8 +821,7 @@ fun ControllerSelector(
             text = {
                 Column {
                 statements.value.sortedBy { it.listNumber.toInt() }.forEach { item ->
-                    com.example.app.ModalsWithoutMethodsPreviewOnly.statements.sortedBy { it.listNumber.toInt() }.forEach { item ->
-
+//                    com.example.app.ModalsWithoutMethodsPreviewOnly.statements.sortedBy { it.listNumber.toInt() }.forEach { item ->
 
                         Column(
                             modifier = Modifier
@@ -899,8 +898,7 @@ fun ControllerSelector(
                         }
                     }
                 }
-
-            }},
+            },
             confirmButton = {
             Button(onClick = { isDialogVisible = false }) {
                 //Button(onClick = {  }) {
