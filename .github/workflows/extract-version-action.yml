@@ -2,9 +2,9 @@ name: Extract Version Action
 
 on:
   push:
-    branches: [ main ]
+    branches: [main]
   pull_request:
-    branches: [ main ]
+    branches: [main]
   workflow_dispatch:
 
 jobs:
@@ -24,15 +24,14 @@ jobs:
         run: |
           extracted_version=$(cat "${{ github.workspace }}/app-version.txt")
           echo "Extracted version: $extracted_version"
-          echo "extracted_version=$extracted_version" >> $GITHUB_ENV
+          echo "extracted_version=$extracted_version" >> $GITHUB_OUTPUT
+         
 
-      - name: Set output variable
-        run: echo "extracted_version=${{ steps.extract_version.outputs.extracted_version }}" >> $GITHUB_ENV
-
-      - name: Show extracted version
-        run: |
-          echo "Extracted version from output: ${{steps.extract_version.outputs.extracted_version}}"
-
-      - name: Use extracted version in another workflow
-        run: |
-          echo "Using version ${{ steps.extract_version.outputs.extracted_version }}"  # Replace this with your actual usage
+# Example of how to use the extracted version in another job
+# jobs:
+#   use_version:
+#     runs-on: ubuntu-latest
+#     needs: extract_version
+#     steps:
+#       - name: Use extracted version
+#         run: echo "The extracted version is ${{ needs.extract_version.outputs.extracted_version }}"
