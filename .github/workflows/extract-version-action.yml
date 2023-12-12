@@ -25,7 +25,7 @@ jobs:
           extracted_version=$(cat "${{ github.workspace }}/app-version.txt")
           echo "Extracted version: $extracted_version"
           echo "extracted_version=$extracted_version" >> $GITHUB_OUTPUT
-          echo "[${{steps.extract_version.outputs.extracted_version}}]"
+          echo "[${{steps.extract_version.outputs}}]"
          
 
 # Example of how to use the extracted version in another job
