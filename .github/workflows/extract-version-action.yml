@@ -1,0 +1,28 @@
+# .github/actions/extract-version-action.yml
+
+name: Extract Version Action
+
+inputs:
+  version-file-path:
+    description: 'Path to the version file'
+    required: true
+    default: 'app-version.txt'
+
+outputs:
+  extracted-version:
+    description: 'Extracted version from the file'
+
+runs:
+  using: 'docker'
+  image: 'ubuntu-latest'
+
+  steps:
+    - name: Checkout repository
+      uses: actions/checkout@v2
+
+    - name: Extract version from file
+      id: extract_version
+      run: |
+        extracted_version=$(cat "${{ inputs.version-file-path }}")
+        echo "Extracted version: $extracted_version"
+        echo "::set-output name=extracted-version::$extracted_version"
