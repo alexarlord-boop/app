@@ -24,11 +24,16 @@ jobs:
         run: |
           extracted_version=$(cat "${{ github.workspace }}/app-version.txt")
           echo "Extracted version: $extracted_version"
-          echo "::set-output name=extracted_version::$extracted_version"
+         
 
       - name: Set extracted version as output
+        id: output_version
         if: success()
-        run: echo "extracted_version=${{ steps.extract_version.outputs.extracted_version }}" >> $GITHUB_ENV
+        run:  echo "extracted_version=$extracted_version" >> $GITHUB_OUTPUT
+
+      - name: Getting result from $GITHUB_OUTPUT
+        run:  |
+              echo "Output: [steps.output_version.outputs.extracted_version]"
 
 # Example of how to use the extracted version in another job
 # jobs:
