@@ -65,7 +65,7 @@ jobs:
       # Get app version
       - name: Get app version
         id: extract_version
-          run: extracted_version=$(cat "${{ github.workspace }}/app-version.txt")
+        run: extracted_version=$(cat "${{ github.workspace }}/app-version.txt")
 
       # Upload Artifact Build
       # Noted For Output [main_project_module]/build/outputs/apk/debug/
