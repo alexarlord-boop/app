@@ -1,6 +1,11 @@
-# .github/actions/extract-version-action.yml
-
 name: Extract Version Action
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
 
 inputs:
   version-file-path:
