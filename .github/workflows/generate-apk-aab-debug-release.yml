@@ -53,21 +53,19 @@ jobs:
       - name: Build apk debug project (APK) - ${{ env.main_project_module }} module
         run: ./gradlew assembleDebug
 
-#      # Create APK Release
-#      - name: Build apk release project (APK) - ${{ env.main_project_module }} module
-#        run: ./gradlew assemble
+      #      # Create APK Release
+      #      - name: Build apk release project (APK) - ${{ env.main_project_module }} module
+      #        run: ./gradlew assemble
 
-#      # Create Bundle AAB Release
-#      # Noted for main module build [main_project_module]:bundleRelease
-#      - name: Build app bundle release (AAB) - ${{ env.main_project_module }} module
-#        run: ./gradlew ${{ env.main_project_module }}:bundleRelease
+      #      # Create Bundle AAB Release
+      #      # Noted for main module build [main_project_module]:bundleRelease
+      #      - name: Build app bundle release (AAB) - ${{ env.main_project_module }} module
+      #        run: ./gradlew ${{ env.main_project_module }}:bundleRelease
 
       # Get app version
       - name: Get app version
         id: extract_version
-          run: |
-            extracted_version=$(cat "${{ github.workspace }}/app-version.txt")
-            echo "Extracted version: $extracted_version"
+          run: extracted_version=$(cat "${{ github.workspace }}/app-version.txt")
 
       # Upload Artifact Build
       # Noted For Output [main_project_module]/build/outputs/apk/debug/
