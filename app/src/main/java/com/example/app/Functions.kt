@@ -15,3 +15,11 @@ fun <T> sortRecordsByHouseNumber(records: List<T>, houseNumberExtractor: (T) -> 
     )
 }
 
+
+fun parseNumberInput(value: String): String {
+    // The Regex("[^0-9]") specifies a regular expression pattern that matches any character that is not a digit (0-9).
+    // The replace function is then used to replace all occurrences of non-digit characters with an empty string.
+    return value.replace(Regex("[^0-9]"), "")
+}
+
+

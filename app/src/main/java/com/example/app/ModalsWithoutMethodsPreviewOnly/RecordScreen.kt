@@ -1,9 +1,8 @@
-import android.util.Log
-import android.view.WindowInsets.Side
-import android.widget.Toast
-import androidx.activity.compose.BackHandler
-import androidx.activity.viewModels
-import androidx.compose.foundation.*
+package com.example.app.ModalsWithoutMethodsPreviewOnly
+
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -14,106 +13,122 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.WbSunny
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.Alignment.Companion.CenterHorizontally
-import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
-import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Color.Companion.Black
-import androidx.compose.ui.graphics.Color.Companion.Red
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
-import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.navigation.NavHostController
-import androidx.navigation.compose.rememberNavController
-import com.example.app.data.IOUtils
+import com.example.app.R
+import com.example.app.parseNumberInput
 import com.example.app.record.RecordDto
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
-import kotlin.coroutines.coroutineContext
-import androidx.activity.viewModels
-import com.example.app.*
-import com.example.app.ModalsWithoutMethodsPreviewOnly.record
-import com.example.app.R
 
 
-@OptIn(ExperimentalComposeUiApi::class)
+val record = RecordDto(
+    "-",
+    "-",
+    "-",
+    0.0,
+    464985.0,
+    "Алексеева А. И.",
+    "04185523",
+    "Меркурий 230 ART-01 CLN",
+    LocalDateTime.now(),
+    17864.0,
+    0.0,
+    0.0,
+    0.0,
+    "628-294",
+    0.0,
+    0
+)
+
+@Preview
 @Composable
-fun RecordScreen(viewModel: SavedStateViewModel, navController: NavHostController) {
+fun PreviewRecordScreen() {
+
     val context = LocalContext.current
 
 
-    BackHandler(true) {
+//    BackHandler(true) {
+//
+//        Log.d("OnBackPressed", "Controller: ${viewModel.selectedControllerName}. Statement: ${viewModel.statementId.value}")
+//        navController.popBackStack()
+//    }
 
-        Log.d("OnBackPressed", "Controller: ${viewModel.selectedControllerName}. Statement: ${viewModel.statementId.value}")
-        navController.popBackStack()
-    }
+//    val record = viewModel.selectedRecord.value!!
+//    val recordId = viewModel.position.value!!
+//    val filename = viewModel.filename.value!!
+    val record = record
+    val recordId = 1
 
-    val record = viewModel.selectedRecord.value!!
-    val recordId = viewModel.position.value!!
-    val filename = viewModel.filename.value!!
 
     val focusManager = LocalFocusManager.current
 
-    var dayValue by remember { mutableStateOf(record.ko_D.toString().split(".")[0]) }
-    var isDayValid by remember { mutableStateOf(true) }
-    var nightValue by remember { mutableStateOf(record.ko_N.toString().split(".")[0]) }
-    var isNightValid by remember { mutableStateOf(true) }
-    var comments by remember { mutableStateOf(record.comments) }
+//    var dayValue by remember { mutableStateOf(record.ko_D.toString().split(".")[0]) }
+//    var isDayValid by remember { mutableStateOf(true) }
+//    var nightValue by remember { mutableStateOf(record.ko_N.toString().split(".")[0]) }
+//    var isNightValid by remember { mutableStateOf(true) }
+//    var comments by remember { mutableStateOf(record.comments) }
+
+    var dayValue  = "test"
+    var isDayValid = true
+    var nightValue  = "test"
+    var isNightValid = true
+    var comments  = "test"
+
     var errorMessage by remember { mutableStateOf("") }
 
-    LaunchedEffect(dayValue) {
-        if (dayValue === "") {
-            isDayValid = false
-            errorMessage = "Заполните поле или оставьте значение 0"
-            return@LaunchedEffect
-        }
-        val d = dayValue.toDouble()
-        if (d == 0.0) {
-            isDayValid = true
-            errorMessage = ""
-            return@LaunchedEffect
-        } else isDayValid = d >= record.lastKo_D
-        errorMessage = if (!isDayValid) {
-            "Значение должно быть не меньше предыдущего"
-        } else {
-            ""
-        }
-    }
-    LaunchedEffect(nightValue) {
-        if (nightValue === "") {
-            isNightValid = false
-            errorMessage = "Заполните поле или оставьте значение 0"
-            return@LaunchedEffect
-        }
-        val n = nightValue.toDouble()
-        if (n == 0.0) {
-            isNightValid = true
-            errorMessage = ""
-            return@LaunchedEffect
-        } else isNightValid = n >= record.lastKo_N
-        errorMessage = if (!isNightValid) {
-            "Значение должно быть не меньше предыдущего"
-        } else {
-            ""
-        }
-    }
+//    LaunchedEffect(dayValue) {
+//        if (dayValue === "") {
+//            isDayValid = false
+//            errorMessage = "Заполните поле или оставьте значение 0"
+//            return@LaunchedEffect
+//        }
+//        val d = dayValue.toDouble()
+//        if (d == 0.0) {
+//            isDayValid = true
+//            errorMessage = ""
+//            return@LaunchedEffect
+//        } else isDayValid = d >= record.lastKo_D
+//        errorMessage = if (!isDayValid) {
+//            "Значение должно быть не меньше предыдущего"
+//        } else {
+//            ""
+//        }
+//    }
+//    LaunchedEffect(nightValue) {
+//        if (nightValue === "") {
+//            isNightValid = false
+//            errorMessage = "Заполните поле или оставьте значение 0"
+//            return@LaunchedEffect
+//        }
+//        val n = nightValue.toDouble()
+//        if (n == 0.0) {
+//            isNightValid = true
+//            errorMessage = ""
+//            return@LaunchedEffect
+//        } else isNightValid = n >= record.lastKo_N
+//        errorMessage = if (!isNightValid) {
+//            "Значение должно быть не меньше предыдущего"
+//        } else {
+//            ""
+//        }
+//    }
 
 
-    val keyboardController = LocalSoftwareKeyboardController.current
+//    val keyboardController = LocalSoftwareKeyboardController.current
     val interactionSource = remember { MutableInteractionSource() }
 
     Column(
@@ -126,7 +141,7 @@ fun RecordScreen(viewModel: SavedStateViewModel, navController: NavHostControlle
                 interactionSource = interactionSource,
                 indication = null
             ) {
-                keyboardController?.hide()
+//                keyboardController?.hide()
             },
 
         verticalArrangement = Arrangement.spacedBy(16.dp),
@@ -162,18 +177,18 @@ fun RecordScreen(viewModel: SavedStateViewModel, navController: NavHostControlle
             Column(modifier=Modifier.weight(1f).padding(0.dp)) {
                 Button(
                     onClick = {
-                        if (isDayValid && isNightValid) {
-                            record?.let { record ->
-                                record.ko_D = dayValue.toDoubleOrNull() ?: 0.0
-                                record.ko_N = nightValue.toDoubleOrNull() ?: 0.0
-                                record.comments = comments
-
-                                IOUtils().updateRowData(recordId, record, filename)
-                                Toast.makeText(context, "Сохранено", Toast.LENGTH_SHORT).show()
-                                navController.popBackStack()
-
-                            }
-                        }
+//                        if (isDayValid && isNightValid) {
+//                            record?.let { record ->
+//                                record.ko_D = dayValue.toDoubleOrNull() ?: 0.0
+//                                record.ko_N = nightValue.toDoubleOrNull() ?: 0.0
+//                                record.comments = comments
+//
+//                                IOUtils().updateRowData(recordId, record, filename)
+//                                Toast.makeText(context, "Сохранено", Toast.LENGTH_SHORT).show()
+//                                navController.popBackStack()
+//
+//                            }
+//                        }
                     },
                     contentPadding = PaddingValues(),
                     modifier = Modifier
@@ -359,7 +374,7 @@ fun RecordScreen(viewModel: SavedStateViewModel, navController: NavHostControlle
                         keyboardType = KeyboardType.Number
                     ),
                     keyboardActions = KeyboardActions(onDone = {
-                        keyboardController?.hide()
+//                        keyboardController?.hide()
                     }),
                     colors = TextFieldDefaults.textFieldColors(
                         backgroundColor = Color.White,
@@ -400,7 +415,7 @@ fun RecordScreen(viewModel: SavedStateViewModel, navController: NavHostControlle
                         keyboardType = KeyboardType.Number
                     ),
                     keyboardActions = KeyboardActions(onDone = {
-                        keyboardController?.hide()
+//                        keyboardController?.hide()
                     }),
                     colors = TextFieldDefaults.textFieldColors(
                         backgroundColor = Color.White,

@@ -3,7 +3,7 @@ package com.example.app
 class AppStrings {
     companion object {
 //        const val version = "1.2.1"
-        const val version = "1.3.1" // обновлен темплейт модального окна для ведомостей
+        const val version = "1.3.2" // обновлен темплейт ведомости
         const val deviceDirectory = "storage/emulated/0/download/noe/"
         const val branchesFS = AppStrings.deviceDirectory + "branches.json"
 
