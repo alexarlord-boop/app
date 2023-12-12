@@ -33,7 +33,7 @@ jobs:
 
       - name: Getting result from $GITHUB_OUTPUT
         run:  |
-              echo "Output: [steps.output_version.outputs.extracted_version]"
+              echo "Output: [${{steps.output_version.outputs.extracted_version}}]"
 
 # Example of how to use the extracted version in another job
 # jobs:
