@@ -1,34 +1,34 @@
-name: Extract Version Action
-
-on:
-  push:
-    branches: [main]
-  pull_request:
-    branches: [main]
-  workflow_dispatch:
-
-jobs:
-  extract_version:
-    runs-on: ubuntu-latest
-
-    outputs:
-      id: extracted_version
-      settable: ${{ github.event_name == 'push' }}
-
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v2
-
-      - name: Extract version from file
-        id: extract_version
-        run: |
-          extracted_version=$(cat "${{ github.workspace }}/app-version.txt")
-          echo "Extracted version: $extracted_version"
-          echo "extracted_version=$extracted_version" >> $GITHUB_ENV
-
-      - name: Show extracted version
-        run: |
-          echo "Extracted version from output: ${{ steps.extract_version.outputs.extracted_version }}"
-
-      - name: Use extracted version in another step
-        run: echo "Using version ${{ steps.extract_version.outputs.extracted_version }}"
+#name: Extract Version Action
+#
+#on:
+#  push:
+#    branches: [main]
+#  pull_request:
+#    branches: [main]
+#  workflow_dispatch:
+#
+#jobs:
+#  extract_version:
+#    runs-on: ubuntu-latest
+#
+#    outputs:
+#      id: extracted_version
+#      settable: ${{ github.event_name == 'push' }}
+#
+#    steps:
+#      - name: Checkout repository
+#        uses: actions/checkout@v2
+#
+#      - name: Extract version from file
+#        id: extract_version
+#        run: |
+#          extracted_version=$(cat "${{ github.workspace }}/app-version.txt")
+#          echo "Extracted version: $extracted_version"
+#          echo "extracted_version=$extracted_version" >> $GITHUB_ENV
+#
+#      - name: Show extracted version
+#        run: |
+#          echo "Extracted version from output: ${{ steps.extract_version.outputs.extracted_version }}"
+#
+#      - name: Use extracted version in another step
+#        run: echo "Using version ${{ steps.extract_version.outputs.extracted_version }}"
