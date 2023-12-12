@@ -7,27 +7,27 @@ on:
     branches: [main]
   workflow_dispatch:
 
-inputs:
-  version-file-path:
-    description: 'Path to the version file'
-    required: true
-    default: 'app-version.txt'
+jobs:
+  extract_version:
+    runs-on: ubuntu-latest
 
-outputs:
-  extracted-version:
-    description: 'Extracted version from the file'
+    inputs:
+      version-file-path:
+        description: 'Path to the version file'
+        required: true
+        default: 'app-version.txt'
 
-runs:
-  using: 'docker'
-  image: 'ubuntu-latest'
+    outputs:
+      extracted-version:
+        description: 'Extracted version from the file'
 
-  steps:
-    - name: Checkout repository
-      uses: actions/checkout@v2
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
 
-    - name: Extract version from file
-      id: extract_version
-      run: |
-        extracted_version=$(cat "${{ inputs.version-file-path }}")
-        echo "Extracted version: $extracted_version"
-        echo "::set-output name=extracted-version::$extracted_version"
+      - name: Extract version from file
+        id: extract_version
+        run: |
+          extracted_version=$(cat "${{ inputs.version-file-path }}")
+          echo "Extracted version: $extracted_version"
+          echo "::set-output name=extracted-version::$extracted_version"
