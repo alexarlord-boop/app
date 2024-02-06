@@ -87,7 +87,7 @@ class MainActivityScreen : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        serverHandler = ServerHandler(viewModel)
+        serverHandler = ServerHandler(viewModel, DefaultServerHandlerDelegate(this))
 
         val permissionsStorage = arrayOf<String>(Manifest.permission.READ_EXTERNAL_STORAGE)
         val requestExternalStorage = 1
@@ -457,8 +457,7 @@ fun MainScreen(
                                 json,
                                 filename,
                                 statementId,
-                                id.toString(),
-                                context
+                                id.toString()
                             )
                             if (isSent) {
                                 Log.w("DELETING RECORDS", "after sending")
@@ -813,100 +812,146 @@ fun ControllerSelector(
     @Composable
     fun ShowStatementsDialog() {
         Log.w("DATA", statements.toString())
-        AlertDialog(
-            shape = RoundedCornerShape(15.dp),
-            onDismissRequest = { isDialogVisible = false },
-            //onDismissRequest = {  },
-            title = { Text(text = "Ведомости") },
-            text = {
-                Column {
-                statements.value.sortedBy { it.listNumber.toInt() }.forEach { item ->
-//                    com.example.app.ModalsWithoutMethodsPreviewOnly.statements.sortedBy { it.listNumber.toInt() }.forEach { item ->
+        StatementDialog(
+            statements = statements,
+            isDialogVisible = true,
+            onDismiss = { isDialogVisible = false },
+            onStatementSelected = {
+                viewModel.onStatementIdChange(it)
+                with(sharedPreferences.edit()) {
+                    putString("statementId", it)
+                    apply()
+                }
 
-                        Column(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(bottom = 10.dp)
-                                .border(
-                                    2.dp,
-                                    color = Color.LightGray,
-                                    shape = RoundedCornerShape(10.dp)
-                                ),
-                            horizontalAlignment = Alignment.Start
-                        ) {
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(vertical = 0.dp)
-                                    .height(55.dp),
-                                horizontalArrangement = Arrangement.Start,
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Text(
-                                    text = item.listDate,
-                                    fontSize = MaterialTheme.typography.h6.fontSize,
-                                    fontWeight = FontWeight(300),
-                                    modifier = Modifier.padding(horizontal = 10.dp)
-                                )
-
-                                Button(
-                                    onClick = {
-                                    viewModel.onStatementIdChange(item.listNumber)
-                                    with(sharedPreferences.edit()) {
-                                        putString("statementId", item.listNumber)
-                                        apply()
-                                    }
-
-                                    cs.launch {
-                                        try {
-                                            selectedControllerId.value?.let { controllerId ->
-                                                withContext(Dispatchers.IO) {
-                                                    val data: List<RecordDto> =
-                                                        dataHandler.getRecordsForStatement(
-                                                            controllerId,
-                                                            item.listNumber,
-                                                            context
-                                                        )
-                                                    withContext(Dispatchers.Main) {
-                                                        viewModel.onRecordListChange(data)
-                                                    }
-                                                }
-                                            }
-
-
-                                        } catch (e: Exception) {
-                                            println(e.stackTraceToString())
-                                        }
-                                    }
-
-                                    viewModel.onPositionChange(-1)
-                                    isDialogVisible = false
-                                    },
-                                    contentPadding = PaddingValues(),
-                                    modifier = Modifier
-                                        .width(200.dp)
-                                ) {
-                                    Text(text = item.listNumber, fontSize = MaterialTheme.typography.h6.fontSize)
+                cs.launch {
+                    try {
+                        selectedControllerId.value?.let { controllerId ->
+                            withContext(Dispatchers.IO) {
+                                val data: List<RecordDto> =
+                                    dataHandler.getRecordsForStatement(
+                                        controllerId,
+                                        it,
+                                        context
+                                    )
+                                withContext(Dispatchers.Main) {
+                                    viewModel.onRecordListChange(data)
                                 }
                             }
-                            Text(
-                                text = item.firstAddress.split(", ")[0],
-                                fontSize = MaterialTheme.typography.h6.fontSize,
-                                fontWeight = FontWeight(300),
-                                modifier = Modifier.padding(horizontal = 10.dp).padding(bottom = 5.dp)
-                            )
                         }
+
+
+                    } catch (e: Exception) {
+                        println(e.stackTraceToString())
                     }
                 }
-            },
-            confirmButton = {
-            Button(onClick = { isDialogVisible = false }) {
-                //Button(onClick = {  }) {
-                    Text(text = "Закрыть")
-                }
+
+                viewModel.onPositionChange(-1)
+                isDialogVisible = false
             }
         )
+
+
+
+//        AlertDialog(
+//            shape = RoundedCornerShape(15.dp),
+//            onDismissRequest = { isDialogVisible = false },
+//            //onDismissRequest = {  },
+//            title = { Text(text = "Ведомости") },
+//            text = {
+//                Column {
+//                statements.value.sortedBy { it.listNumber.toInt() }.forEach { item ->
+//
+//                        Column(
+//                            modifier = Modifier
+//                                .fillMaxWidth()
+//                                .padding(bottom = 10.dp)
+//                                .border(
+//                                    2.dp,
+//                                    color = Color.LightGray,
+//                                    shape = RoundedCornerShape(10.dp)
+//                                ),
+//                            horizontalAlignment = Alignment.Start
+//                        ) {
+//                            Row(
+//                                modifier = Modifier
+//                                    .fillMaxWidth()
+//                                    .padding(vertical = 0.dp)
+//                                    .height(55.dp),
+//                                horizontalArrangement = Arrangement.Start,
+//                                verticalAlignment = Alignment.CenterVertically
+//                            ) {
+//                                Text(
+//                                    text = item.listDate,
+//                                    fontSize = MaterialTheme.typography.h6.fontSize,
+//                                    fontWeight = FontWeight(300),
+//                                    modifier = Modifier.padding(horizontal = 10.dp)
+//                                )
+//
+//                                Button(
+//                                    onClick = {
+//                                    viewModel.onStatementIdChange(item.listNumber)
+//                                    with(sharedPreferences.edit()) {
+//                                        putString("statementId", item.listNumber)
+//                                        apply()
+//                                    }
+//
+//                                    cs.launch {
+//                                        try {
+//                                            selectedControllerId.value?.let { controllerId ->
+//                                                withContext(Dispatchers.IO) {
+//                                                    val data: List<RecordDto> =
+//                                                        dataHandler.getRecordsForStatement(
+//                                                            controllerId,
+//                                                            item.listNumber,
+//                                                            context
+//                                                        )
+//                                                    withContext(Dispatchers.Main) {
+//                                                        viewModel.onRecordListChange(data)
+//                                                    }
+//                                                }
+//                                            }
+//
+//
+//                                        } catch (e: Exception) {
+//                                            println(e.stackTraceToString())
+//                                        }
+//                                    }
+//
+//                                    viewModel.onPositionChange(-1)
+//                                    isDialogVisible = false
+//                                    },
+//                                    contentPadding = PaddingValues(),
+//                                    modifier = Modifier
+//                                        .width(200.dp)
+//                                ) {
+//                                    Text(text = item.listNumber, fontSize = MaterialTheme.typography.h6.fontSize)
+//                                }
+//                            }
+//                            Text(
+//                                text = item.firstAddress?.split(", ")?.getOrNull(0) ?: "N/A",
+//                                fontSize = MaterialTheme.typography.h6.fontSize,
+//                                fontWeight = FontWeight(300),
+//                                modifier = Modifier.padding(horizontal = 10.dp).padding(bottom = 5.dp)
+//                            )
+//                        }
+//                    }
+//                }
+//            },
+//            confirmButton = {
+//            Button(onClick = { isDialogVisible = false }) {
+//                //Button(onClick = {  }) {
+//                    Text(text = "Закрыть")
+//                }
+//            }
+//        )
     }
+
+
+
+
+
+
+
 
     // Function to show the warning dialog (empty list)
     @Composable
