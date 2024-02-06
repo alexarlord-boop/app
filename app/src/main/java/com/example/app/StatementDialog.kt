@@ -38,7 +38,7 @@ fun StatementItem(
                 .fillMaxWidth()
                 .padding(vertical = 0.dp)
                 .height(55.dp),
-            horizontalArrangement = Arrangement.Start,
+            horizontalArrangement = Arrangement.SpaceBetween, // Align items to the start and end
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
@@ -47,6 +47,8 @@ fun StatementItem(
                 fontWeight = FontWeight(300),
                 modifier = Modifier.padding(horizontal = 10.dp)
             )
+
+            Spacer(modifier = Modifier.weight(1f)) // Spacer to push the button to the right
 
             StatementButton(item = item, onStatementSelected = onStatementSelected)
         }
@@ -60,6 +62,7 @@ fun StatementItem(
         )
     }
 }
+
 
 @Composable
 fun StatementButton(item: RecordStatement, onStatementSelected: (String) -> Unit) {
