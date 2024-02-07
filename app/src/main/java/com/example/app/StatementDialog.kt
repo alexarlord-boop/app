@@ -116,10 +116,6 @@ fun StatementDialog(
 }
 
 
-
-
-
-
 @Preview
 @Composable
 fun StatementDialogPreview() {

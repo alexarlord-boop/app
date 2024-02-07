@@ -17,7 +17,6 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -187,6 +186,7 @@ class MainActivityScreen : AppCompatActivity() {
                     return
                 }
             }
+
             1 -> {
                 Log.w("MODE", "SERVER")
                 try {
@@ -418,68 +418,45 @@ fun MainScreen(
     @Composable
     fun showUploadDialog() {
         if (!connected) {
-            AlertDialog(onDismissRequest = { isUploadDialogVisible = false },
-                title = { Text(text = "Выгрузка данных") },
-                text = { Text(text = "Нет подключения к серверу. Выгрузка недоступна.") },
-                confirmButton = {
-                    Button(onClick = { isUploadDialogVisible = false }) {
-                        Text(text = "Закрыть")
-                    }
-                })
+            UploadDialog(
+                dialogStrings = DisconnectedUploadDialogStrings(),
+                onDismissRequest = { isUploadDialogVisible = false },
+                onConfirm = {},
+
+            )
         } else {
-            AlertDialog(onDismissRequest = { isUploadDialogVisible = false },
-                shape = RoundedCornerShape(15.dp),
-                title = {
-                    Column {
-                        Text(
-                            text = "Выгрузка данных",
-                            fontSize = 20.sp,
-                            fontWeight = FontWeight.Bold
+            val currentDialogStrings = ConnectedUploadDialogStrings().apply { title += ". Ведомость $statementId" }
+
+            UploadDialog(dialogStrings = currentDialogStrings,
+                onDismissRequest = { isUploadDialogVisible = false },
+                onConfirm = {
+                    isUploadDialogVisible = false
+                    val id = selectedControllerId
+
+                    val json = IOUtils().readJsonFromFile(filename)
+                    coroutineScope.launch {
+                        val isSent = (dataHandler as ServerHandler).sendDataToServer(
+                            json,
+                            filename,
+                            statementId,
+                            id.toString()
                         )
-                        Text(text = "Ведомость $statementId", fontSize = 15.sp)
-                    }
-                },
-                text = {
-                    Column {
-                        Text(text = "При выгрузке данных файлы с записями удаляются с устройства.")
-                        Text(text = "Продолжить?")
-
-                    }
-                },
-                confirmButton = {
-                    Button(onClick = {
-                        isUploadDialogVisible = false
-                        val id = selectedControllerId
-
-                        val json = IOUtils().readJsonFromFile(filename)
-                        coroutineScope.launch {
-                            val isSent = (dataHandler as ServerHandler).sendDataToServer(
-                                json,
-                                filename,
-                                statementId,
-                                id.toString()
-                            )
-                            if (isSent) {
-                                Log.w("DELETING RECORDS", "after sending")
-                                viewModel.onRecordListChange(emptyList())
-                                viewModel.onOptionChange(viewModel.defaultOption)
-                                viewModel.onStatementIdChange("")
-                                with(sharedPreferences.edit()) {
-                                    putString("statementId", "")
-                                    apply()
-                                }
-                                viewModel.onPositionChange(-1)
+                        if (isSent) {
+                            Log.w("DELETING RECORDS", "after sending")
+                            viewModel.onRecordListChange(emptyList())
+                            viewModel.onOptionChange(viewModel.defaultOption)
+                            viewModel.onStatementIdChange("")
+                            with(sharedPreferences.edit()) {
+                                putString("statementId", "")
+                                apply()
                             }
+                            viewModel.onPositionChange(-1)
                         }
-                    }) {
-                        Text(text = "Да")
                     }
                 },
-                dismissButton = {
-                    Button(onClick = { isUploadDialogVisible = false }) {
-                        Text(text = "Нет")
-                    }
-                })
+
+            )
+
         }
     }
 
@@ -851,7 +828,6 @@ fun ControllerSelector(
         )
 
 
-
 //        AlertDialog(
 //            shape = RoundedCornerShape(15.dp),
 //            onDismissRequest = { isDialogVisible = false },
@@ -945,12 +921,6 @@ fun ControllerSelector(
 //            }
 //        )
     }
-
-
-
-
-
-
 
 
     // Function to show the warning dialog (empty list)
