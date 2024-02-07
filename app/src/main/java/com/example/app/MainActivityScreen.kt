@@ -67,11 +67,157 @@ class SavedStateViewModelFactory(private val savedStateRegistryOwner: SavedState
     }
 }
 
-class MainActivityScreen : AppCompatActivity() {
-    private var fsHandler = FileSystemHandler()
-    private val viewModel: SavedStateViewModel by viewModels { SavedStateViewModelFactory(this) }
-    private lateinit var serverHandler: DataHandlerInterface
+//class MainActivityScreen : AppCompatActivity() {
+//    private var fsHandler = FileSystemHandler()
+//    private val viewModel: SavedStateViewModel by viewModels { SavedStateViewModelFactory(this) }
+//    private lateinit var serverHandler: DataHandlerInterface
+//
+//
+//    private fun createDirectoryIfNotExists(directoryPath: String) {
+//        val directory = File(directoryPath)
+//        if (!directory.exists()) {
+//            directory.mkdirs()
+//            println("Directory created: $directoryPath")
+//        } else {
+//            println("Directory already exists: $directoryPath")
+//        }
+//    }
+//
+//    override fun onCreate(savedInstanceState: Bundle?) {
+//        super.onCreate(savedInstanceState)
+//
+//        serverHandler = ServerHandler(viewModel, DefaultServerHandlerDelegate(this))
+//
+//        val permissionsStorage = arrayOf<String>(Manifest.permission.READ_EXTERNAL_STORAGE)
+//        val requestExternalStorage = 1
+//        val permission =
+//            ActivityCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE)
+//        if (permission != PackageManager.PERMISSION_GRANTED) {
+//            ActivityCompat.requestPermissions(this, permissionsStorage, requestExternalStorage)
+//        }
+//        val sharedPref = this.getPreferences(Context.MODE_PRIVATE)
+//        var controllerId: String
+//        var statementId: String
+//
+//        with(sharedPref) {
+//            controllerId = getString("controllerId", "") ?: ""
+//            statementId = getString("statementId", "") ?: ""
+//        }
+//        Log.w("ON_CREATE", "Controller id: $controllerId")
+//        Log.w("ON_CREATE", "Statement id: $statementId")
+//
+//        createDirectoryIfNotExists(AppStrings.deviceDirectory)
+//
+//        val connectivityManager =
+//            getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+//        val networkCapabilities =
+//            connectivityManager.getNetworkCapabilities(connectivityManager.activeNetwork)
+//
+//        //TODO:- add test server connection and use it in the condition below
+//
+//        if (networkCapabilities != null && networkCapabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)) {
+//            setContent {
+//                val navController = rememberNavController()
+//                viewModel.onRecordListChange(
+//                    serverHandler.reloadRecordsFromFile(
+//                        controllerId,
+//                        statementId,
+//                        this
+//                    )
+//                )
+//                SetupNavGraph(
+//                    navController = navController,
+//                    true,
+//                    serverHandler,
+//                    viewModel,
+//                    sharedPref
+//                )
+//            }
+//        } else {
+//            Toast.makeText(this, "Нет подключения к сети.", Toast.LENGTH_LONG).show()
+//            DATA_MODE = SavedStateViewModel.DataMode.FILE
+//            setContent {
+//                val navController = rememberNavController()
+//                viewModel.onRecordListChange(
+//                    fsHandler.reloadRecordsFromFile(
+//                        controllerId,
+//                        statementId,
+//                        this
+//                    )
+//                )
+//                SetupNavGraph(
+//                    navController = navController,
+//                    false,
+//                    fsHandler,
+//                    viewModel,
+//                    sharedPref
+//                )
+//            }
+//        }
+//    }
+//
+//    override fun onResume() {
+//        super.onResume()
+//        val context = this
+//
+//        val sharedPref = this.getPreferences(Context.MODE_PRIVATE)
+//        with(sharedPref) {
+//            val lastClickedPosition = this.getInt("positionCLicked", -1)
+//            viewModel.onPositionChange(lastClickedPosition)
+//        }
+//
+//        when (DATA_MODE.id) {
+//            0 -> {
+//                Log.w("MODE", "FILESYSTEM")
+//                try {
+//                    with(sharedPref) {
+//                        val controllerId = this.getString("controllerId", "") ?: ""
+//                        val statementId = this.getString("statementId", "") ?: ""
+//                        viewModel.onRecordListChange(
+//                            fsHandler.reloadRecordsFromFile(
+//                                controllerId,
+//                                statementId,
+//                                context
+//                            )
+//                        )
+//                    }
+//                } catch (e: Exception) {
+//                    Log.w("ON_RESUME", e.message.toString())
+//                    return
+//                }
+//            }
+//
+//            1 -> {
+//                Log.w("MODE", "SERVER")
+//                try {
+//                    with(sharedPref) {
+//                        val controllerId = this.getString("controllerId", "") ?: ""
+//                        val statementId = this.getString("statementId", "") ?: ""
+//                        viewModel.onRecordListChange(
+//                            serverHandler.reloadRecordsFromFile(
+//                                controllerId,
+//                                statementId,
+//                                context
+//                            )
+//                        )
+//                    }
+//
+//                } catch (e: Exception) {
+//                    Log.w("ON_RESUME", e.message.toString())
+//                    return
+//                }
+//            }
+//        }
+//    }
+//
+//
+//}
 
+class MainActivityScreen : AppCompatActivity() {
+
+    private val fsHandler = FileSystemHandler()
+    private lateinit var serverHandler: DataHandlerInterface
+    private val viewModel: SavedStateViewModel by viewModels { SavedStateViewModelFactory(this) }
 
     private fun createDirectoryIfNotExists(directoryPath: String) {
         val directory = File(directoryPath)
@@ -83,135 +229,105 @@ class MainActivityScreen : AppCompatActivity() {
         }
     }
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-
-        serverHandler = ServerHandler(viewModel, DefaultServerHandlerDelegate(this))
-
-        val permissionsStorage = arrayOf<String>(Manifest.permission.READ_EXTERNAL_STORAGE)
+    private fun checkStoragePermission() {
+        val permissionsStorage = arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE)
         val requestExternalStorage = 1
-        val permission =
-            ActivityCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE)
+        val permission = ActivityCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE)
+
         if (permission != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(this, permissionsStorage, requestExternalStorage)
         }
-        val sharedPref = this.getPreferences(Context.MODE_PRIVATE)
-        var controllerId: String
-        var statementId: String
+    }
 
-        with(sharedPref) {
-            controllerId = getString("controllerId", "") ?: ""
-            statementId = getString("statementId", "") ?: ""
-        }
-        Log.w("ON_CREATE", "Controller id: $controllerId")
-        Log.w("ON_CREATE", "Statement id: $statementId")
+    private fun handleInternetConnection() {
+        val connectivityManager = getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+        val networkInfo = connectivityManager.activeNetworkInfo
 
-        createDirectoryIfNotExists(AppStrings.deviceDirectory)
-
-        val connectivityManager =
-            getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
-        val networkCapabilities =
-            connectivityManager.getNetworkCapabilities(connectivityManager.activeNetwork)
-
-        //TODO:- add test server connection and use it in the condition below
-
-        if (networkCapabilities != null && networkCapabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)) {
-            setContent {
-                val navController = rememberNavController()
-                viewModel.onRecordListChange(
-                    serverHandler.reloadRecordsFromFile(
-                        controllerId,
-                        statementId,
-                        this
-                    )
-                )
-                SetupNavGraph(
-                    navController = navController,
-                    true,
-                    serverHandler,
-                    viewModel,
-                    sharedPref
-                )
+        if (networkInfo != null && networkInfo.isConnectedOrConnecting) {
+            if (isInternetAvailable(context = this)) {
+                setContentWithNavController(true)
+            } else {
+                handleNoInternet()
             }
         } else {
-            Toast.makeText(this, "Нет подключения к сети.", Toast.LENGTH_LONG).show()
-            DATA_MODE = SavedStateViewModel.DataMode.FILE
-            setContent {
-                val navController = rememberNavController()
-                viewModel.onRecordListChange(
-                    fsHandler.reloadRecordsFromFile(
-                        controllerId,
-                        statementId,
-                        this
-                    )
-                )
-                SetupNavGraph(
-                    navController = navController,
-                    false,
-                    fsHandler,
-                    viewModel,
-                    sharedPref
-                )
-            }
+            handleNoNetwork()
         }
+    }
+
+    private fun setContentWithNavController(isServerMode: Boolean) {
+        setContent {
+            val navController = rememberNavController()
+            val sharedPref = getPreferences(Context.MODE_PRIVATE)
+            val dataHandler = if (isServerMode) serverHandler else fsHandler
+
+            SetupNavGraph(
+                navController = navController,
+                connected = isServerMode,
+                dataHandler = dataHandler,
+                viewModel = viewModel,
+                sharedPreferences = sharedPref
+            )
+        }
+    }
+
+    private fun isInternetAvailable(context: Context): Boolean {
+        val connectivityManager =
+            context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager?
+
+        connectivityManager?.let {
+            val network = it.activeNetwork
+            val capabilities = it.getNetworkCapabilities(network)
+
+            // Check if the device has a network connection and internet is available
+            return capabilities?.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET) == true
+        }
+
+        return false
+    }
+
+    private fun handleNoInternet() {
+        Toast.makeText(this, AppUIResponses.noInternetConnection, Toast.LENGTH_LONG).show()
+        handleOfflineMode()
+    }
+
+    private fun handleNoNetwork() {
+        Toast.makeText(this, AppUIResponses.noNetworkAvailable, Toast.LENGTH_LONG).show()
+        handleOfflineMode()
+    }
+
+    private fun handleOfflineMode() {
+        DATA_MODE = SavedStateViewModel.DataMode.FILE
+        setContentWithNavController(false)
+    }
+
+//    private fun getLastControllerId(): String {
+//        return getPreferences(Context.MODE_PRIVATE).getString("controllerId", "") ?: ""
+//    }
+//
+//    private fun getLastStatementId(): String {
+//        return getPreferences(Context.MODE_PRIVATE).getString("statementId", "") ?: ""
+//    }
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        serverHandler = ServerHandler(viewModel, DefaultServerHandlerDelegate(this))
+
+        checkStoragePermission()
+        createDirectoryIfNotExists(AppStrings.deviceDirectory)
+
+        handleInternetConnection()
     }
 
     override fun onResume() {
         super.onResume()
-        val context = this
-
-        val sharedPref = this.getPreferences(Context.MODE_PRIVATE)
-        with(sharedPref) {
-            val lastClickedPosition = this.getInt("positionCLicked", -1)
-            viewModel.onPositionChange(lastClickedPosition)
-        }
-
         when (DATA_MODE.id) {
-            0 -> {
-                Log.w("MODE", "FILESYSTEM")
-                try {
-                    with(sharedPref) {
-                        val controllerId = this.getString("controllerId", "") ?: ""
-                        val statementId = this.getString("statementId", "") ?: ""
-                        viewModel.onRecordListChange(
-                            fsHandler.reloadRecordsFromFile(
-                                controllerId,
-                                statementId,
-                                context
-                            )
-                        )
-                    }
-                } catch (e: Exception) {
-                    Log.w("ON_RESUME", e.message.toString())
-                    return
-                }
-            }
-
-            1 -> {
-                Log.w("MODE", "SERVER")
-                try {
-                    with(sharedPref) {
-                        val controllerId = this.getString("controllerId", "") ?: ""
-                        val statementId = this.getString("statementId", "") ?: ""
-                        viewModel.onRecordListChange(
-                            serverHandler.reloadRecordsFromFile(
-                                controllerId,
-                                statementId,
-                                context
-                            )
-                        )
-                    }
-
-                } catch (e: Exception) {
-                    Log.w("ON_RESUME", e.message.toString())
-                    return
-                }
-            }
+            0 -> handleOfflineMode()
+            1 -> setContentWithNavController(true)
         }
     }
-
-
 }
+
+
 
 class SavedStateViewModel(private val savedStateHandle: SavedStateHandle) : ViewModel() {
 
@@ -418,11 +534,11 @@ fun MainScreen(
     @Composable
     fun showUploadDialog() {
         if (!connected) {
+            //TODO check buttons in all cases
             UploadDialog(
                 dialogStrings = DisconnectedUploadDialogStrings(),
                 onDismissRequest = { isUploadDialogVisible = false },
-                onConfirm = {},
-
+                onConfirm = null
             )
         } else {
             val currentDialogStrings = ConnectedUploadDialogStrings().apply { title += ". Ведомость $statementId" }
