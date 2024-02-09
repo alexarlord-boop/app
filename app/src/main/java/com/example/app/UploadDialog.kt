@@ -66,7 +66,7 @@ fun previewUploadDialog() {
     UploadDialog(
         dialogStrings = DisconnectedUploadDialogStrings(),
         onDismissRequest = {},
-        onConfirm = {},
+        onConfirm = null,
         onDismiss = {}
     )
 }

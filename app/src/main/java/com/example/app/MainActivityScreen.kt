@@ -240,17 +240,13 @@ class MainActivityScreen : AppCompatActivity() {
     }
 
     private fun handleInternetConnection() {
-        val connectivityManager = getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
-        val networkInfo = connectivityManager.activeNetworkInfo
+//        val connectivityManager = getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+//        val networkInfo = connectivityManager.activeNetworkInfo // deprecated
 
-        if (networkInfo != null && networkInfo.isConnectedOrConnecting) {
-            if (isInternetAvailable(context = this)) {
-                setContentWithNavController(true)
-            } else {
-                handleNoInternet()
-            }
+        if (isInternetAvailable(context = this)) {
+            handleOnlineMode()
         } else {
-            handleNoNetwork()
+            handleNoInternet()
         }
     }
 
@@ -295,18 +291,16 @@ class MainActivityScreen : AppCompatActivity() {
         handleOfflineMode()
     }
 
+    private fun handleOnlineMode() {
+        Toast.makeText(this, AppUIResponses.internetConnection, Toast.LENGTH_LONG).show()
+        setContentWithNavController(true)
+    }
+
     private fun handleOfflineMode() {
         DATA_MODE = SavedStateViewModel.DataMode.FILE
         setContentWithNavController(false)
     }
 
-//    private fun getLastControllerId(): String {
-//        return getPreferences(Context.MODE_PRIVATE).getString("controllerId", "") ?: ""
-//    }
-//
-//    private fun getLastStatementId(): String {
-//        return getPreferences(Context.MODE_PRIVATE).getString("statementId", "") ?: ""
-//    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)

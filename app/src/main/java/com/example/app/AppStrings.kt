@@ -23,7 +23,8 @@ class AppStrings {
 
 class AppUIResponses {
     companion object {
-        const val noInternetConnection: String = "No internet connection"
+        const val internetConnection: String = "Есть подключение к интернету"
+        const val noInternetConnection: String = "Нет подключения к интернету"
         const val noNetworkAvailable: String = "No network available"
     }
 }
