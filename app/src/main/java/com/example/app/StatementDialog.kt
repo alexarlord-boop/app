@@ -1,9 +1,58 @@
 package com.example.app
 
 
+import android.Manifest
+import android.content.Context
+import android.content.SharedPreferences
+import android.content.pm.PackageManager
+import android.net.ConnectivityManager
+import android.net.NetworkCapabilities
+import android.os.Bundle
+import android.util.Log
+import android.widget.Toast
+import androidx.activity.compose.setContent
+import androidx.activity.viewModels
+import androidx.appcompat.app.AppCompatActivity
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowUpward
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.MoveUp
+import androidx.compose.runtime.*
+import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.core.app.ActivityCompat
+import androidx.lifecycle.*
+import androidx.navigation.NavHostController
+import androidx.navigation.compose.rememberNavController
+import androidx.savedstate.SavedStateRegistryOwner
+import com.example.app.data.*
+import com.example.app.navigation.Screen
+import com.example.app.record.RecordDto
+import kotlinx.coroutines.*
+import java.io.File
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -19,6 +68,7 @@ import kotlinx.coroutines.*
 
 @Composable
 fun StatementItem(
+    id: Int,
     item: RecordStatement,
     onStatementSelected: (String) -> Unit
 ) {
@@ -83,11 +133,33 @@ fun AlertDialogContent(
     statements: State<List<RecordStatement>>,
     onStatementSelected: (String) -> Unit
 ) {
-    Column {
-        statements.value.sortedBy { it.listNumber.toInt() }.forEach { item ->
-            StatementItem(item = item, onStatementSelected = onStatementSelected)
+//    Column {
+//        statements.value.sortedBy { it.listNumber.toInt() }.forEach { item ->
+//            StatementItem(item = item, onStatementSelected = onStatementSelected)
+//        }
+//    }
+
+    val sortedStatements = statements.value.sortedBy { it.listNumber.toInt() }
+    LazyColumn (modifier = Modifier) {
+//        item {
+//            Text(text = "Ведомости", fontWeight = FontWeight.Bold, fontSize = 20.sp)
+//        }
+        itemsIndexed(sortedStatements) { id, item ->
+            StatementItem(id, item = item, onStatementSelected = onStatementSelected)
         }
     }
+
+//    Box(
+//        modifier = Modifier
+//            .fillMaxSize()
+//            .verticalScroll(rememberScrollState())
+//    ) {
+//        Column {
+//            statements.value.sortedBy { it.listNumber.toInt() }.forEach { item ->
+//                StatementItem(item = item, onStatementSelected = onStatementSelected)
+//            }
+//        }
+//    }
 }
 
 
@@ -101,8 +173,15 @@ fun StatementDialog(
     AlertDialog(
         shape = RoundedCornerShape(15.dp),
         onDismissRequest = { onDismiss() },
-        title = { Text(text = "Ведомости") },
-        text = { AlertDialogContent(statements = statements, onStatementSelected = onStatementSelected) },
+        title = {Text(text = "Ведомости", fontWeight = FontWeight.Bold, fontSize = 20.sp)},
+        text = {
+            Column (modifier = Modifier.padding(5.dp)) {
+                AlertDialogContent(
+                    statements = statements,
+                    onStatementSelected = onStatementSelected
+                )
+            }
+        },
         confirmButton = {
             Button(onClick = { onDismiss() }) {
                 Text(text = "Закрыть")
@@ -111,7 +190,8 @@ fun StatementDialog(
 
         modifier = Modifier
             .fillMaxWidth()
-            .padding(16.dp),
+            .height(450.dp)
+
     )
 }
 
@@ -122,8 +202,14 @@ fun StatementDialogPreview() {
     val statements = remember {
      mutableStateOf(listOf(
         RecordStatement("1", "2024-02-06", "Source1", "StaffLink1", "StaffName1", "CompanyLink1", "Address1"),
-        RecordStatement("2", "2024-02-07", "Source2", "StaffLink2", "StaffName2", "CompanyLink2", null)
-    ))
+        RecordStatement("2", "2024-02-07", "Source2", "StaffLink2", "StaffName2", "CompanyLink2", null),
+        RecordStatement("2", "2024-02-07", "Source2", "StaffLink2", "StaffName2", "CompanyLink2", null),
+        RecordStatement("2", "2024-02-07", "Source2", "StaffLink2", "StaffName2", "CompanyLink2", null),
+        RecordStatement("2", "2024-02-07", "Source2", "StaffLink2", "StaffName2", "CompanyLink2", null),
+        RecordStatement("2", "2024-02-07", "Source2", "StaffLink2", "StaffName2", "CompanyLink2", null),
+        RecordStatement("2", "2024-02-07", "Source2", "StaffLink2", "StaffName2", "CompanyLink2", null),
+        RecordStatement("2", "2024-02-07", "Source2", "StaffLink2", "StaffName2", "CompanyLink2", null),
+       ))
     }
 
     StatementDialog(

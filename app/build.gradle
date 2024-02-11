@@ -1,7 +1,7 @@
 plugins {
     id 'com.android.application'
     id 'org.jetbrains.kotlin.android'
-    id 'org.jetbrains.kotlin.android.extensions'
+//    id 'org.jetbrains.kotlin.android.extensions'
 }
 
 android {
@@ -11,9 +11,9 @@ android {
         }
     }
 
-    androidExtensions {
-        experimental = true
-    }
+//    androidExtensions {
+//        experimental = true
+//    }
     namespace 'com.example.app'
     compileSdk 33
 
