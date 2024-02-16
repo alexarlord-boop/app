@@ -51,6 +51,9 @@ android {
 
 dependencies {
 
+    // vertical scrollbar
+
+
     implementation 'com.android.volley:volley:1.2.1'
     implementation 'com.google.firebase:firebase-crashlytics-buildtools:2.9.4'
     implementation 'junit:junit:4.12'

@@ -9,6 +9,7 @@ import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
 import android.os.Bundle
 import android.util.Log
+import android.view.ViewGroup
 import android.widget.Toast
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
@@ -62,6 +63,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.viewinterop.AndroidView
 import androidx.lifecycle.*
 import com.example.app.data.*
 import kotlinx.coroutines.*
@@ -127,41 +129,72 @@ fun StatementButton(item: RecordStatement, onStatementSelected: (String) -> Unit
         Text(text = item.listNumber, fontSize = MaterialTheme.typography.h6.fontSize)
     }
 }
-
-@Composable
-fun AlertDialogContent(
-    statements: State<List<RecordStatement>>,
-    onStatementSelected: (String) -> Unit
-) {
-//    Column {
-//        statements.value.sortedBy { it.listNumber.toInt() }.forEach { item ->
-//            StatementItem(item = item, onStatementSelected = onStatementSelected)
+//
+//@Composable
+//fun AlertDialogContent(
+//    statements: State<List<RecordStatement>>,
+//    onStatementSelected: (String) -> Unit
+//) {
+////    Column {
+////        statements.value.sortedBy { it.listNumber.toInt() }.forEach { item ->
+////            StatementItem(item = item, onStatementSelected = onStatementSelected)
+////        }
+////    }
+//
+//    val sortedStatements = statements.value.sortedBy { it.listNumber.toInt() }
+//    LazyColumn (modifier = Modifier) {
+////        item {
+////            Text(text = "Ведомости", fontWeight = FontWeight.Bold, fontSize = 20.sp)
+////        }
+//        itemsIndexed(sortedStatements) { id, item ->
+//            StatementItem(id, item = item, onStatementSelected = onStatementSelected)
 //        }
 //    }
+//
+////    Box(
+////        modifier = Modifier
+////            .fillMaxSize()
+////            .verticalScroll(rememberScrollState())
+////    ) {
+////        Column {
+////            statements.value.sortedBy { it.listNumber.toInt() }.forEach { item ->
+////                StatementItem(item = item, onStatementSelected = onStatementSelected)
+////            }
+////        }
+////    }
+//}
 
-    val sortedStatements = statements.value.sortedBy { it.listNumber.toInt() }
-    LazyColumn (modifier = Modifier) {
-//        item {
-//            Text(text = "Ведомости", fontWeight = FontWeight.Bold, fontSize = 20.sp)
-//        }
-        itemsIndexed(sortedStatements) { id, item ->
-            StatementItem(id, item = item, onStatementSelected = onStatementSelected)
-        }
-    }
-
-//    Box(
-//        modifier = Modifier
-//            .fillMaxSize()
-//            .verticalScroll(rememberScrollState())
-//    ) {
-//        Column {
-//            statements.value.sortedBy { it.listNumber.toInt() }.forEach { item ->
-//                StatementItem(item = item, onStatementSelected = onStatementSelected)
+//
+//@Composable
+//fun StatementDialog(
+//    statements: State<List<RecordStatement>>,
+//    isDialogVisible: Boolean,
+//    onDismiss: () -> Unit,
+//    onStatementSelected: (String) -> Unit
+//) {
+//    AlertDialog(
+//        shape = RoundedCornerShape(15.dp),
+//        onDismissRequest = { onDismiss() },
+//        title = {Text(text = "Ведомости", fontWeight = FontWeight.Bold, fontSize = 20.sp)},
+//        text = {
+//            Column (modifier = Modifier.padding(vertical = 15.dp)) {
+//                AlertDialogContent(
+//                    statements = statements,
+//                    onStatementSelected = onStatementSelected
+//                )
 //            }
-//        }
-//    }
-}
-
+//        },
+//        confirmButton = {
+//            Button(onClick = { onDismiss() }) {
+//                Text(text = "Закрыть")
+//            }
+//        },
+//
+//        modifier = Modifier
+//            .fillMaxWidth()
+//            .height(500.dp)
+//    )
+//}
 
 @Composable
 fun StatementDialog(
@@ -173,9 +206,9 @@ fun StatementDialog(
     AlertDialog(
         shape = RoundedCornerShape(15.dp),
         onDismissRequest = { onDismiss() },
-        title = {Text(text = "Ведомости", fontWeight = FontWeight.Bold, fontSize = 20.sp)},
+        title = { Text(text = "Ведомости", fontWeight = FontWeight.Bold, fontSize = 20.sp) },
         text = {
-            Column (modifier = Modifier.padding(5.dp)) {
+            ComposeView {
                 AlertDialogContent(
                     statements = statements,
                     onStatementSelected = onStatementSelected
@@ -187,29 +220,59 @@ fun StatementDialog(
                 Text(text = "Закрыть")
             }
         },
-
         modifier = Modifier
             .fillMaxWidth()
-            .height(450.dp)
-
+            .height(700.dp)
     )
 }
 
+@Composable
+fun AlertDialogContent(
+    statements: State<List<RecordStatement>>,
+    onStatementSelected: (String) -> Unit
+) {
+    val sortedStatements = statements.value.sortedBy { it.listNumber.toInt() }
+    LazyColumn(modifier = Modifier.fillMaxSize()) {
+        itemsIndexed(sortedStatements) { id, item ->
+            StatementItem(id, item = item, onStatementSelected = onStatementSelected)
+        }
+    }
+}
+
+@Composable
+fun ComposeView(content: @Composable (Modifier) -> Unit) {
+    AndroidView(
+        modifier = Modifier.height(550.dp),
+        factory = { context ->
+            androidx.compose.ui.platform.ComposeView(context).apply {
+                layoutParams = ViewGroup.LayoutParams(
+                    ViewGroup.LayoutParams.MATCH_PARENT,
+                    ViewGroup.LayoutParams.MATCH_PARENT
+                )
+            }
+        },
+        update = { view ->
+            view.setContent {
+                content(Modifier.fillMaxSize())
+            }
+        }
+    )
+}
 
 @Preview
 @Composable
 fun StatementDialogPreview() {
     val statements = remember {
-     mutableStateOf(listOf(
-        RecordStatement("1", "2024-02-06", "Source1", "StaffLink1", "StaffName1", "CompanyLink1", "Address1"),
-        RecordStatement("2", "2024-02-07", "Source2", "StaffLink2", "StaffName2", "CompanyLink2", null),
-        RecordStatement("2", "2024-02-07", "Source2", "StaffLink2", "StaffName2", "CompanyLink2", null),
-        RecordStatement("2", "2024-02-07", "Source2", "StaffLink2", "StaffName2", "CompanyLink2", null),
-        RecordStatement("2", "2024-02-07", "Source2", "StaffLink2", "StaffName2", "CompanyLink2", null),
-        RecordStatement("2", "2024-02-07", "Source2", "StaffLink2", "StaffName2", "CompanyLink2", null),
-        RecordStatement("2", "2024-02-07", "Source2", "StaffLink2", "StaffName2", "CompanyLink2", null),
-        RecordStatement("2", "2024-02-07", "Source2", "StaffLink2", "StaffName2", "CompanyLink2", null),
-       ))
+        mutableStateOf(listOf(
+            RecordStatement("1", "2024-02-06", "Source1", "StaffLink1", "StaffName1", "CompanyLink1", "Address1"),
+            RecordStatement("2", "2024-02-07", "Source2", "StaffLink2", "StaffName2", "CompanyLink2", null),
+            RecordStatement("2", "2024-02-07", "Source2", "StaffLink2", "StaffName2", "CompanyLink2", null),
+            RecordStatement("2", "2024-02-07", "Source2", "StaffLink2", "StaffName2", "CompanyLink2", null),
+            RecordStatement("2", "2024-02-07", "Source2", "StaffLink2", "StaffName2", "CompanyLink2", null),
+            RecordStatement("2", "2024-02-07", "Source2", "StaffLink2", "StaffName2", "CompanyLink2", null),
+            RecordStatement("2", "2024-02-07", "Source2", "StaffLink2", "StaffName2", "CompanyLink2", null),
+            RecordStatement("2", "2024-02-07", "Source2", "StaffLink2", "StaffName2", "CompanyLink2", null),
+        ))
     }
 
     StatementDialog(
