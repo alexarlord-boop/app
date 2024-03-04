@@ -2,10 +2,19 @@
 <project version="4">
   <component name="deploymentTargetDropDown">
     <value>
+      <entry key="BranchSelectorPreview">
+        <State />
+      </entry>
       <entry key="StatementDialogPreview">
         <State />
       </entry>
       <entry key="app">
+        <State />
+      </entry>
+      <entry key="headerPreview">
+        <State />
+      </entry>
+      <entry key="mainScreenPreview">
         <State />
       </entry>
     </value>

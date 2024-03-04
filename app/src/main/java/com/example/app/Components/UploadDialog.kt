@@ -1,4 +1,4 @@
-package com.example.app
+package com.example.app.Components
 
 import androidx.compose.material.AlertDialog
 import androidx.compose.material.Button
