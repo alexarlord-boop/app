@@ -1,24 +1,11 @@
 package com.example.app
 
 
-import android.Manifest
-import android.content.Context
-import android.content.SharedPreferences
-import android.content.pm.PackageManager
-import android.net.ConnectivityManager
-import android.net.NetworkCapabilities
-import android.os.Bundle
 import android.util.Log
 import android.widget.Toast
-import androidx.activity.compose.setContent
-import androidx.activity.viewModels
-import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
-import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -27,7 +14,6 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowUpward
@@ -38,27 +24,15 @@ import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import androidx.core.app.ActivityCompat
 import androidx.lifecycle.*
-import androidx.navigation.NavHostController
-import androidx.navigation.compose.rememberNavController
-import androidx.savedstate.SavedStateRegistryOwner
 import com.example.app.data.*
-import com.example.app.navigation.Screen
 import com.example.app.record.RecordDto
 import kotlinx.coroutines.*
-import java.io.File
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.app.Components.Selector
-import org.mockito.kotlin.mock
 import java.time.LocalDateTime
 
 
@@ -66,13 +40,16 @@ import java.time.LocalDateTime
 fun MainScreen(
     connected: Boolean,
     viewModel: SavedStateViewModel,
-    getBranchList: suspend() -> List<Branch>
+    getBranchList: suspend () -> List<Branch>,
+    getControllersForBranch: suspend (String) -> List<Controller>
 ) {
+    val cs = CoroutineScope(Dispatchers.Main)
+
     val listState = rememberLazyListState()
     val coroutineScope = rememberCoroutineScope()
 
     val records by viewModel.listOfRecords.observeAsState()
-    val selectedBranch by viewModel.selectedBranch.observeAsState()
+    val selectedBranch by viewModel.selectedBranch.observeAsState(null)
     val selectedControllerId by viewModel.selectedControllerId.observeAsState()
     val lastClicked by viewModel.position.observeAsState(LAST_LIST_POSITION)
     val statementId by viewModel.statementId.observeAsState("0")
@@ -95,6 +72,7 @@ fun MainScreen(
 
     // HEADER SELECTORS START
     var branches by remember { mutableStateOf(emptyList<Branch>()) } // branch objects
+    var controllers by remember { mutableStateOf(emptyList<Controller>()) } // controller objects
 
     // HEADER SELECTORS END
 
@@ -112,7 +90,6 @@ fun MainScreen(
     // LOGIC END
 
 
-
     Column(modifier = Modifier.fillMaxHeight()) {
         // Separated composable functions
         MainScreenHeader(
@@ -120,6 +97,8 @@ fun MainScreen(
             area = area,
             selectedBranch = selectedBranch,
             branchOptions = branches,
+            controllerOptions = controllers,
+            getControllersForBranch = getControllersForBranch,
             showUploadButton = showUploadButton,
             showDeleteBtn = showDeleteBtn,
             onUploadButtonClick = { isUploadDialogVisible = true },
@@ -133,12 +112,12 @@ fun MainScreen(
             navigateToRecord = { },
         )
     }
-        MainScreenButtons(
-            showLastButton = showLastButton,
-            showUpButton = showUpButton,
-            onLastButtonClick = { coroutineScope.launch { listState.animateScrollToItem(index = LAST_LIST_POSITION) } },
-            onUpButtonClick = { coroutineScope.launch { listState.animateScrollToItem(index = 0) } }
-        )
+    MainScreenButtons(
+        showLastButton = showLastButton,
+        showUpButton = showUpButton,
+        onLastButtonClick = { coroutineScope.launch { listState.animateScrollToItem(index = LAST_LIST_POSITION) } },
+        onUpButtonClick = { coroutineScope.launch { listState.animateScrollToItem(index = 0) } }
+    )
 
 }
 
@@ -148,11 +127,14 @@ fun MainScreenHeader(
     area: String,
     selectedBranch: Branch?,
     branchOptions: List<Branch>,
+    controllerOptions: List<Controller>,
+    getControllersForBranch: suspend (String) -> List<Controller>,
     showUploadButton: Boolean,
     showDeleteBtn: Boolean,
     onUploadButtonClick: () -> Unit,
     onDeleteButtonClick: () -> Unit
 ) {
+    val cs = CoroutineScope(Dispatchers.Main)
     Surface(
         modifier = Modifier
             .height(200.dp)
@@ -176,12 +158,28 @@ fun MainScreenHeader(
                         .weight(1f)
                         .fillMaxWidth()
                 ) {
+                    Log.i("SCREEN", selectedBranch.toString())
 
                     Selector<Branch>(
                         selectedValue = selectedBranch,
+                        label = "Филиал",
                         options = branchOptions,
-                        getLabel = {it.companyName},
-                        onValueSelected = {viewModel.onBranchChange(it)},
+                        getLabel = { it.companyName },
+                        onValueSelected = { newValue ->
+                            viewModel.onBranchChange(newValue)
+                            cs.launch {
+                                withContext(Dispatchers.IO) {
+                                    val fetchedControllers =
+                                        selectedBranch?.let { getControllersForBranch(it.companyLnk) }
+
+                                    withContext(Dispatchers.Main) {
+                                        if (fetchedControllers != null) {
+                                            viewModel.onControllerListChange(fetchedControllers)
+                                        }
+                                    }
+                                }
+                            }
+                        },
                         initialExpanded = false,
                         modifier = Modifier
                             .weight(1f)
@@ -200,11 +198,12 @@ fun MainScreenHeader(
                         .fillMaxWidth()
                         .padding(end = 8.dp)
                 ) {
-                    Selector(
-                        selectedValue = "controller",
-                        options = listOf("Option 1", "Option 2", "Option 3"),
-                        getLabel = {it},
-                        onValueSelected = {},
+                    Selector<Controller>(
+                        selectedValue = null,
+                        label = "Контролер",
+                        options = controllerOptions,
+                        getLabel = { it.Staff_Name },
+                        onValueSelected = { newValue -> viewModel.onControllerChange(newValue) },
                         initialExpanded = false,
                         modifier = Modifier.fillMaxWidth()
                     )
@@ -217,9 +216,10 @@ fun MainScreenHeader(
                         .padding(start = 8.dp)
                 ) {
                     Selector(
-                        selectedValue = "statement",
+                        selectedValue = null,
+                        label = "Ведомость",
                         options = listOf("Option A", "Option B", "Option C"),
-                        getLabel = {it},
+                        getLabel = { it },
                         onValueSelected = {},
                         initialExpanded = false,
                         modifier = Modifier.fillMaxWidth()
@@ -334,9 +334,13 @@ fun MainScreenButtons(
         exit = fadeOut(),
     ) {
 
-        Row(modifier = Modifier
-            .fillMaxWidth()
-            .fillMaxHeight(), verticalAlignment = Alignment.Bottom, horizontalArrangement = Arrangement.Center) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .fillMaxHeight(),
+            verticalAlignment = Alignment.Bottom,
+            horizontalArrangement = Arrangement.Center
+        ) {
             AnimatedVisibility(
                 visible = showLastButton, enter = fadeIn(),
                 exit = fadeOut(),
@@ -371,6 +375,7 @@ fun MainScreenButtons(
 
 val fakeSavedStateHandle = SavedStateHandle()
 val fakeViewModel = SavedStateViewModel(fakeSavedStateHandle)
+
 @Preview
 @Composable
 fun mainScreenPreview() {
@@ -378,7 +383,8 @@ fun mainScreenPreview() {
     MainScreen(
         connected = true,
         viewModel = fakeViewModel,
-        getBranchList = { emptyList() }
+        getBranchList = { emptyList() },
+        getControllersForBranch = { emptyList()}
     )
 }
 
@@ -394,6 +400,8 @@ fun headerPreview() {
         area = "Великий Новгород Новгород",
         selectedBranch = null,
         branchOptions = emptyList(),
+        controllerOptions = emptyList(),
+        getControllersForBranch = { emptyList() },
         showUploadButton = true,
         showDeleteBtn = true,
         onUploadButtonClick = { },
