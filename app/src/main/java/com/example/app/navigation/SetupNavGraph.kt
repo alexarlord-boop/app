@@ -16,7 +16,7 @@ fun SetupNavGraph(navController: NavHostController, connected: Boolean, dataHand
             AnimatedSplashScreen(navController, AppStrings.version)
         }
         composable(route = Screen.Home.route) {
-            MainScreen(connected = connected, getBranchList = { dataHandler.getBranchList() }, viewModel = viewModel)
+            MainScreen(connected = connected, getBranchList = { dataHandler.getBranchList() }, getControllersForBranch = dataHandler::getControllersForBranch, viewModel = viewModel)
         }
         composable(route = Screen.Record.route) {
             RecordScreen(viewModel = viewModel, navController)
