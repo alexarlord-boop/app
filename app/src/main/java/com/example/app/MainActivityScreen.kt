@@ -206,10 +206,6 @@ class SavedStateViewModel(savedStateHandle: SavedStateHandle) : ViewModel() {
     val filename: LiveData<String> = _filename
 
 
-    val defaultOption = "Выбрать контролера"
-    private val _selectedOptionText: MutableLiveData<String> =
-        savedStateHandle.getLiveData("selectedOptionText", defaultOption)
-    var selectedOptionText: LiveData<String> = _selectedOptionText
 
     val defaultBranch = Branch("", "")
     private val _selectedBranch: MutableLiveData<Branch> =
@@ -218,26 +214,11 @@ class SavedStateViewModel(savedStateHandle: SavedStateHandle) : ViewModel() {
 
 
 
-    private val defaultBranchId = ""
-    private val _selectedBranchId: MutableLiveData<String> =
-        savedStateHandle.getLiveData("selectedBranchId", defaultBranchId)
-    var selectedBranchId: LiveData<String> = _selectedBranchId
 
     private val _controllers: MutableLiveData<List<Controller>> =
         savedStateHandle.getLiveData("controllers", emptyList())
     var controllers: LiveData<List<Controller>> = _controllers
 
-    private val _selectedControllerName: MutableLiveData<String> =
-        savedStateHandle.getLiveData("selectedControllerName", "")
-    var selectedControllerName: LiveData<String> = _selectedControllerName
-
-    private val _selectedControllerId: MutableLiveData<String> =
-        savedStateHandle.getLiveData("selectedControllerId", "")
-    var selectedControllerId: LiveData<String> = _selectedControllerId
-
-    private val _selectedControllerCompany: MutableLiveData<String> =
-        savedStateHandle.getLiveData("selectedControllerCompany", "")
-    var selectedControllerCompany: LiveData<String> = _selectedControllerCompany
 
     private val _selectedRecord: MutableLiveData<RecordDto> =
         savedStateHandle.getLiveData("selectedRecord")
@@ -259,36 +240,12 @@ class SavedStateViewModel(savedStateHandle: SavedStateHandle) : ViewModel() {
         _selectedRecord.value = newRecord
     }
 
-    fun onControllerNameChange(controllerName: String) {
-        _selectedControllerName.value = controllerName
-    }
-
-    fun onControllerCompanyChange(controllerCompany: String) {
-        _selectedControllerCompany.value = controllerCompany
-    }
-
-    fun onControllerIdChange(controllerId: String) {
-        _selectedControllerId.value = controllerId
-    }
-
     fun onControllerListChange(controllers: List<Controller>) {
         _controllers.value = controllers
     }
 
     fun onBranchChange(newBranch: Branch) {
         _selectedBranch.value = newBranch
-    }
-
-    fun onOptionChange(newOption: String) {
-        _selectedOptionText.value = newOption
-    }
-
-//    fun onBranchNameChange(branchName: String) {
-//        _selectedBranch.value = branchName
-//    }
-
-    fun onBranchIdChange(newBranchId: String) {
-        _selectedBranchId.value = newBranchId
     }
 
     fun onPositionChange(newPosition: Int) {
@@ -298,6 +255,14 @@ class SavedStateViewModel(savedStateHandle: SavedStateHandle) : ViewModel() {
 
     fun onStatementIdChange(newId: String) {
         _statementId.value = newId
+    }
+
+    val defaultController = Controller("", "", "")
+    private val _selectedController: MutableLiveData<Controller> =
+        savedStateHandle.getLiveData("selectedController", defaultController)
+    var selectedController: LiveData<Controller> = _selectedController
+    fun onControllerChange(newValue: Controller) {
+        _selectedController.value = newValue
     }
 }
 
@@ -955,7 +920,6 @@ fun ControllerSelector(
                             viewModel.onControllerListChange(fetchedControllers)
                         }
                     }
-
                 }
 
             }) {
