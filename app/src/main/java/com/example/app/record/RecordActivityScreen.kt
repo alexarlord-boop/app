@@ -57,8 +57,7 @@ fun RecordScreen(viewModel: SavedStateViewModel, navController: NavHostControlle
 
 
     BackHandler(true) {
-
-        Log.d("OnBackPressed", "Controller: ${viewModel.selectedControllerName}. Statement: ${viewModel.statementId.value}")
+//        Log.d("OnBackPressed", "Controller: ${viewModel.selectedControllerName}. Statement: ${viewModel.statementId.value}")
         navController.popBackStack()
     }
 

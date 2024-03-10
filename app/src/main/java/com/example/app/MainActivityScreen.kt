@@ -3,7 +3,6 @@ package com.example.app
 
 import android.Manifest
 import android.content.Context
-import android.content.SharedPreferences
 import android.content.pm.PackageManager
 import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
@@ -13,13 +12,10 @@ import android.widget.Toast
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
 import androidx.compose.runtime.*
-import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -30,16 +26,11 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.core.app.ActivityCompat
 import androidx.lifecycle.*
-import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import androidx.savedstate.SavedStateRegistryOwner
-import com.example.app.Components.StatementDialog
 import com.example.app.data.*
-import com.example.app.navigation.Screen
 import com.example.app.record.RecordDto
-import kotlinx.coroutines.*
 import java.io.File
-import java.time.LocalDateTime
 
 
 var DATA_MODE = SavedStateViewModel.DataMode.SERVER
@@ -207,17 +198,29 @@ class SavedStateViewModel(savedStateHandle: SavedStateHandle) : ViewModel() {
 
 
 
-    val defaultBranch = Branch("", "")
+    val defaultBranch = Branch("", MainScreenStrings.branchLabel)
     private val _selectedBranch: MutableLiveData<Branch> =
         savedStateHandle.getLiveData("selectedBranch", defaultBranch)
     var selectedBranch: LiveData<Branch> = _selectedBranch
 
+    val defaultStatement = RecordStatement("Ведомость", "", "", "", "", "", "")
+    private val _selectedStatement: MutableLiveData<RecordStatement> =
+        savedStateHandle.getLiveData("selectedStatement", defaultStatement)
+    var selectedStatement: LiveData<RecordStatement> = _selectedStatement
 
 
 
     private val _controllers: MutableLiveData<List<Controller>> =
         savedStateHandle.getLiveData("controllers", emptyList())
     var controllers: LiveData<List<Controller>> = _controllers
+
+    private val _statements: MutableLiveData<List<RecordStatement>> =
+        savedStateHandle.getLiveData("statements", emptyList())
+    var statements: LiveData<List<RecordStatement>> = _statements
+
+    private val _branches: MutableLiveData<List<Branch>> =
+        savedStateHandle.getLiveData("branches", emptyList())
+    var branches: LiveData<List<Branch>> = _branches
 
 
     private val _selectedRecord: MutableLiveData<RecordDto> =
@@ -244,6 +247,10 @@ class SavedStateViewModel(savedStateHandle: SavedStateHandle) : ViewModel() {
         _controllers.value = controllers
     }
 
+    fun onBranchListChange(branches: List<Branch>) {
+        _branches.value = branches
+    }
+
     fun onBranchChange(newBranch: Branch) {
         _selectedBranch.value = newBranch
     }
@@ -257,12 +264,16 @@ class SavedStateViewModel(savedStateHandle: SavedStateHandle) : ViewModel() {
         _statementId.value = newId
     }
 
-    val defaultController = Controller("", "", "")
+    val defaultController = Controller("", MainScreenStrings.controllerLabel, "")
     private val _selectedController: MutableLiveData<Controller> =
         savedStateHandle.getLiveData("selectedController", defaultController)
     var selectedController: LiveData<Controller> = _selectedController
     fun onControllerChange(newValue: Controller) {
         _selectedController.value = newValue
+    }
+
+    fun onStatementListChange(fetchedStatements: List<RecordStatement>?) {
+        _statements.value = fetchedStatements
     }
 }
 
@@ -689,348 +700,348 @@ class SavedStateViewModel(savedStateHandle: SavedStateHandle) : ViewModel() {
 //}
 
 
-@OptIn(ExperimentalMaterialApi::class)
-@Composable
-fun ControllerSelector(
-    viewModel: SavedStateViewModel,
-    dataHandler: DataHandlerInterface,
-    sharedPreferences: SharedPreferences
-) {
-    val context = LocalContext.current
-    val cs = CoroutineScope(Dispatchers.Main)
-    var expanded by remember { mutableStateOf(false) }
-    val selectedStatementId = viewModel.statementId.observeAsState("0")
-    val selectedControllerName = viewModel.selectedControllerName.observeAsState()
-    val selectedControllerId = viewModel.selectedControllerId.observeAsState()
-    val selectedControllerCompany = viewModel.selectedControllerCompany.observeAsState()
-    val controllerId = viewModel.selectedControllerId.observeAsState().value
-    val statementId = viewModel.statementId.observeAsState("0").value
-
-    val statements = viewModel.loadedStatements.observeAsState(emptyList())
-    var isDialogVisible by remember { mutableStateOf(false) }
-    var isInfoVisible by remember { mutableStateOf(false) }
-
-    LaunchedEffect(statementId) {
-        val filename = AppStrings.deviceDirectory + "record-${controllerId}-${statementId}.json"
-        viewModel.onFileNameChange(filename)
-    }
-
-    val controllers =
-        viewModel.controllers.observeAsState(listOf(Controller("-", "-", "-")))
-    val selectedBranch = viewModel.selectedBranch.observeAsState("")
-    val selectedBranchId = viewModel.selectedBranchId.observeAsState("")
-
-
-    // Function to show the modal dialog with all controller's lists
-    @Composable
-    fun ShowStatementsDialog() {
-        Log.w("DATA", statements.toString())
-        StatementDialog(
-            statements = statements,
-            isDialogVisible = true,
-            onDismiss = { isDialogVisible = false },
-            onStatementSelected = {
-                viewModel.onStatementIdChange(it)
-                with(sharedPreferences.edit()) {
-                    putString("statementId", it)
-                    apply()
-                }
-
-                cs.launch {
-                    try {
-                        selectedControllerId.value?.let { controllerId ->
-                            withContext(Dispatchers.IO) {
-                                val data: List<RecordDto> =
-                                    dataHandler.getRecordsForStatement(
-                                        controllerId,
-                                        it,
-                                        context
-                                    )
-                                withContext(Dispatchers.Main) {
-                                    viewModel.onRecordListChange(data)
-                                }
-                            }
-                        }
-
-
-                    } catch (e: Exception) {
-                        println(e.stackTraceToString())
-                    }
-                }
-
-                viewModel.onPositionChange(-1)
-                isDialogVisible = false
-            }
-        )
-
-
-//        AlertDialog(
-//            shape = RoundedCornerShape(15.dp),
-//            onDismissRequest = { isDialogVisible = false },
-//            //onDismissRequest = {  },
-//            title = { Text(text = "Ведомости") },
-//            text = {
-//                Column {
-//                statements.value.sortedBy { it.listNumber.toInt() }.forEach { item ->
+//@OptIn(ExperimentalMaterialApi::class)
+//@Composable
+//fun ControllerSelector(
+//    viewModel: SavedStateViewModel,
+//    dataHandler: DataHandlerInterface,
+//    sharedPreferences: SharedPreferences
+//) {
+//    val context = LocalContext.current
+//    val cs = CoroutineScope(Dispatchers.Main)
+//    var expanded by remember { mutableStateOf(false) }
+//    val selectedStatementId = viewModel.statementId.observeAsState("0")
+//    val selectedControllerName = viewModel.selectedControllerName.observeAsState()
+//    val selectedControllerId = viewModel.selectedControllerId.observeAsState()
+//    val selectedControllerCompany = viewModel.selectedControllerCompany.observeAsState()
+//    val controllerId = viewModel.selectedControllerId.observeAsState().value
+//    val statementId = viewModel.statementId.observeAsState("0").value
 //
-//                        Column(
-//                            modifier = Modifier
-//                                .fillMaxWidth()
-//                                .padding(bottom = 10.dp)
-//                                .border(
-//                                    2.dp,
-//                                    color = Color.LightGray,
-//                                    shape = RoundedCornerShape(10.dp)
-//                                ),
-//                            horizontalAlignment = Alignment.Start
-//                        ) {
-//                            Row(
-//                                modifier = Modifier
-//                                    .fillMaxWidth()
-//                                    .padding(vertical = 0.dp)
-//                                    .height(55.dp),
-//                                horizontalArrangement = Arrangement.Start,
-//                                verticalAlignment = Alignment.CenterVertically
-//                            ) {
-//                                Text(
-//                                    text = item.listDate,
-//                                    fontSize = MaterialTheme.typography.h6.fontSize,
-//                                    fontWeight = FontWeight(300),
-//                                    modifier = Modifier.padding(horizontal = 10.dp)
-//                                )
+//    val statements = viewModel.loadedStatements.observeAsState(emptyList())
+//    var isDialogVisible by remember { mutableStateOf(false) }
+//    var isInfoVisible by remember { mutableStateOf(false) }
 //
-//                                Button(
-//                                    onClick = {
-//                                    viewModel.onStatementIdChange(item.listNumber)
-//                                    with(sharedPreferences.edit()) {
-//                                        putString("statementId", item.listNumber)
-//                                        apply()
-//                                    }
+//    LaunchedEffect(statementId) {
+//        val filename = AppStrings.deviceDirectory + "record-${controllerId}-${statementId}.json"
+//        viewModel.onFileNameChange(filename)
+//    }
 //
-//                                    cs.launch {
-//                                        try {
-//                                            selectedControllerId.value?.let { controllerId ->
-//                                                withContext(Dispatchers.IO) {
-//                                                    val data: List<RecordDto> =
-//                                                        dataHandler.getRecordsForStatement(
-//                                                            controllerId,
-//                                                            item.listNumber,
-//                                                            context
-//                                                        )
-//                                                    withContext(Dispatchers.Main) {
-//                                                        viewModel.onRecordListChange(data)
-//                                                    }
-//                                                }
-//                                            }
+//    val controllers =
+//        viewModel.controllers.observeAsState(listOf(Controller("-", "-", "-")))
+//    val selectedBranch = viewModel.selectedBranch.observeAsState("")
+//    val selectedBranchId = viewModel.selectedBranchId.observeAsState("")
 //
 //
-//                                        } catch (e: Exception) {
-//                                            println(e.stackTraceToString())
-//                                        }
-//                                    }
+//    // Function to show the modal dialog with all controller's lists
+//    @Composable
+//    fun ShowStatementsDialog() {
+//        Log.w("DATA", statements.toString())
+//        StatementDialog(
+//            statements = statements,
+//            isDialogVisible = true,
+//            onDismiss = { isDialogVisible = false },
+//            onStatementSelected = {
+//                viewModel.onStatementIdChange(it)
+//                with(sharedPreferences.edit()) {
+//                    putString("statementId", it)
+//                    apply()
+//                }
 //
-//                                    viewModel.onPositionChange(-1)
-//                                    isDialogVisible = false
-//                                    },
-//                                    contentPadding = PaddingValues(),
-//                                    modifier = Modifier
-//                                        .width(200.dp)
-//                                ) {
-//                                    Text(text = item.listNumber, fontSize = MaterialTheme.typography.h6.fontSize)
+//                cs.launch {
+//                    try {
+//                        selectedControllerId.value?.let { controllerId ->
+//                            withContext(Dispatchers.IO) {
+//                                val data: List<RecordDto> =
+//                                    dataHandler.getRecordsForStatement(
+//                                        controllerId,
+//                                        it,
+//                                        context
+//                                    )
+//                                withContext(Dispatchers.Main) {
+//                                    viewModel.onRecordListChange(data)
 //                                }
 //                            }
-//                            Text(
-//                                text = item.firstAddress?.split(", ")?.getOrNull(0) ?: "N/A",
-//                                fontSize = MaterialTheme.typography.h6.fontSize,
-//                                fontWeight = FontWeight(300),
-//                                modifier = Modifier.padding(horizontal = 10.dp).padding(bottom = 5.dp)
-//                            )
 //                        }
+//
+//
+//                    } catch (e: Exception) {
+//                        println(e.stackTraceToString())
 //                    }
 //                }
-//            },
+//
+//                viewModel.onPositionChange(-1)
+//                isDialogVisible = false
+//            }
+//        )
+//
+//
+////        AlertDialog(
+////            shape = RoundedCornerShape(15.dp),
+////            onDismissRequest = { isDialogVisible = false },
+////            //onDismissRequest = {  },
+////            title = { Text(text = "Ведомости") },
+////            text = {
+////                Column {
+////                statements.value.sortedBy { it.listNumber.toInt() }.forEach { item ->
+////
+////                        Column(
+////                            modifier = Modifier
+////                                .fillMaxWidth()
+////                                .padding(bottom = 10.dp)
+////                                .border(
+////                                    2.dp,
+////                                    color = Color.LightGray,
+////                                    shape = RoundedCornerShape(10.dp)
+////                                ),
+////                            horizontalAlignment = Alignment.Start
+////                        ) {
+////                            Row(
+////                                modifier = Modifier
+////                                    .fillMaxWidth()
+////                                    .padding(vertical = 0.dp)
+////                                    .height(55.dp),
+////                                horizontalArrangement = Arrangement.Start,
+////                                verticalAlignment = Alignment.CenterVertically
+////                            ) {
+////                                Text(
+////                                    text = item.listDate,
+////                                    fontSize = MaterialTheme.typography.h6.fontSize,
+////                                    fontWeight = FontWeight(300),
+////                                    modifier = Modifier.padding(horizontal = 10.dp)
+////                                )
+////
+////                                Button(
+////                                    onClick = {
+////                                    viewModel.onStatementIdChange(item.listNumber)
+////                                    with(sharedPreferences.edit()) {
+////                                        putString("statementId", item.listNumber)
+////                                        apply()
+////                                    }
+////
+////                                    cs.launch {
+////                                        try {
+////                                            selectedControllerId.value?.let { controllerId ->
+////                                                withContext(Dispatchers.IO) {
+////                                                    val data: List<RecordDto> =
+////                                                        dataHandler.getRecordsForStatement(
+////                                                            controllerId,
+////                                                            item.listNumber,
+////                                                            context
+////                                                        )
+////                                                    withContext(Dispatchers.Main) {
+////                                                        viewModel.onRecordListChange(data)
+////                                                    }
+////                                                }
+////                                            }
+////
+////
+////                                        } catch (e: Exception) {
+////                                            println(e.stackTraceToString())
+////                                        }
+////                                    }
+////
+////                                    viewModel.onPositionChange(-1)
+////                                    isDialogVisible = false
+////                                    },
+////                                    contentPadding = PaddingValues(),
+////                                    modifier = Modifier
+////                                        .width(200.dp)
+////                                ) {
+////                                    Text(text = item.listNumber, fontSize = MaterialTheme.typography.h6.fontSize)
+////                                }
+////                            }
+////                            Text(
+////                                text = item.firstAddress?.split(", ")?.getOrNull(0) ?: "N/A",
+////                                fontSize = MaterialTheme.typography.h6.fontSize,
+////                                fontWeight = FontWeight(300),
+////                                modifier = Modifier.padding(horizontal = 10.dp).padding(bottom = 5.dp)
+////                            )
+////                        }
+////                    }
+////                }
+////            },
+////            confirmButton = {
+////            Button(onClick = { isDialogVisible = false }) {
+////                //Button(onClick = {  }) {
+////                    Text(text = "Закрыть")
+////                }
+////            }
+////        )
+//    }
+//
+//
+//    // Function to show the warning dialog (empty list)
+//    @Composable
+//    fun ShowInfoDialog() {
+//        viewModel.onStatementIdChange("")
+//        with(sharedPreferences.edit()) {
+//            putString("statementId", "")
+//            apply()
+//        }
+//        AlertDialog(
+//            shape = RoundedCornerShape(15.dp),
+//            onDismissRequest = { isInfoVisible = false },
+//            title = { Text(text = "Нет ведомостей") },
+//            text = { Text(text = "Для контролера не найдены ведомости.") },
 //            confirmButton = {
-//            Button(onClick = { isDialogVisible = false }) {
-//                //Button(onClick = {  }) {
-//                    Text(text = "Закрыть")
+//                Button(onClick = { isInfoVisible = false }) {
+//                    Text(text = "ОК")
 //                }
 //            }
 //        )
-    }
-
-
-    // Function to show the warning dialog (empty list)
-    @Composable
-    fun ShowInfoDialog() {
-        viewModel.onStatementIdChange("")
-        with(sharedPreferences.edit()) {
-            putString("statementId", "")
-            apply()
-        }
-        AlertDialog(
-            shape = RoundedCornerShape(15.dp),
-            onDismissRequest = { isInfoVisible = false },
-            title = { Text(text = "Нет ведомостей") },
-            text = { Text(text = "Для контролера не найдены ведомости.") },
-            confirmButton = {
-                Button(onClick = { isInfoVisible = false }) {
-                    Text(text = "ОК")
-                }
-            }
-        )
-    }
-
-
-    ExposedDropdownMenuBox(
-        expanded = true, onExpandedChange = {
-            expanded = !expanded
-        }, modifier = Modifier.fillMaxWidth()
-    ) {
-
-        Button(
-            modifier = Modifier.fillMaxWidth(),
-            border = BorderStroke(1.dp, color = Color.Black),
-            colors = ButtonDefaults.buttonColors(backgroundColor = Color.White),
-            onClick = {
-                // Fetching controller lists
-
-                cs.launch {
-                    withContext(Dispatchers.IO) {
-
-                        val fetchedControllers =
-                            dataHandler.getControllersForBranch(
-                                viewModel.selectedBranchId.value ?: "0"
-                            )
-
-                        withContext(Dispatchers.Main) {
-                            // Perform UI-related operations here
-                            if (fetchedControllers.isEmpty()) {
-                                Toast.makeText(
-                                    context,
-                                    "Контролеры не найдены",
-                                    Toast.LENGTH_SHORT
-                                )
-                                    .show()
-                                viewModel.onStatementIdChange("")
-                                with(sharedPreferences.edit()) {
-                                    putString("statementId", "")
-                                    apply()
-                                }
-                            }
-                            viewModel.onControllerListChange(fetchedControllers)
-                        }
-                    }
-                }
-
-            }) {
-            var header = "Контролер | Ведомость"
-            if (selectedControllerName.value != "") {
-                header =
-                    "${selectedControllerName.value} | Ведомость ${selectedStatementId.value}"
-            }
-            Text(header)
-        }
-
-        ExposedDropdownMenu(
-            expanded = expanded,
-            onDismissRequest = { expanded = false },
-            modifier = Modifier.fillMaxWidth(),
-        ) {
-            if (controllers.value.isNotEmpty()) {
-                controllers.value.forEachIndexed { index, element ->
-                    DropdownMenuItem(onClick = {
-                        println(selectedControllerName.value)
-                        println(element.Staff_Name)
-                        if (!selectedControllerName.value.equals(element.Staff_Name)) {
-                            viewModel.onRecordListChange(emptyList())
-                            viewModel.onStatementIdChange("")
-                        }
-
-                        viewModel.onControllerNameChange(element.Staff_Name)
-                        with(sharedPreferences.edit()) {
-                            putString("controllerName", element.Staff_Name)
-                            apply()
-                        }
-                        viewModel.onControllerIdChange(element.Staff_Lnk)
-                        with(sharedPreferences.edit()) {
-                            putString("controllerId", element.Staff_Lnk)
-                            apply()
-                        }
-                        viewModel.onControllerNameChange(element.Staff_Name)
-                        with(sharedPreferences.edit()) {
-                            putString("controllerName", element.Staff_Name)
-                            apply()
-                        }
-                        viewModel.onControllerCompanyChange(element.Company_Lnk)
-                        with(sharedPreferences.edit()) {
-                            putString("controllerCompany", element.Company_Lnk)
-                            apply()
-                        }
-                        Log.w("SELECTOR", "Controller selected: ${element.Staff_Name}")
-                        Log.w("SELECTOR", "Controller id: ${element.Staff_Lnk}")
-                        expanded = false
-
-
-                        // Fetching controller statements
-                        cs.launch {
-                            try {
-                                var data: MutableList<RecordStatement>
-                                withContext(Dispatchers.IO) {
-                                    data = dataHandler.getStatementsForController(
-                                        element.Staff_Lnk,
-                                        selectedBranchId.value
-                                    ).toMutableList()
-                                }
-                                viewModel.onStatementsChange(data)
-                                if (statements.value.isNotEmpty()) {
-                                    isDialogVisible = true // Show the dialog
-                                } else {
-                                    isInfoVisible = true
-                                }
-                            } catch (e: Exception) {
-                                viewModel.onStatementIdChange("")
-                                with(sharedPreferences.edit()) {
-                                    putString("statementId", "")
-                                    apply()
-                                }
-                                viewModel.onRecordListChange(emptyList())
-                                println("Error occurred: ${e.message}")
-                                Toast.makeText(
-                                    context,
-                                    "Данные не были загружены",
-                                    Toast.LENGTH_LONG
-                                ).show()
-                            }
-                        }
-
-                    }) {
-                        Text(text = element.Staff_Name)
-                    }
-                }
-            } else {
-                DropdownMenuItem(onClick = {
-                    expanded = false
-                }) {
-                    val text =
-                        if (selectedBranch.value != "") "нет контролеров" else "выберите филиал"
-                    Text(text = text)
-                }
-            }
-        }
-
-        if (isDialogVisible && statements.value.isNotEmpty()) {
-//            viewModel.onStateIdChange("")
-            ShowStatementsDialog() // Show the modal dialog with fetched data
-        } else if (statements.value.isEmpty()) {
-            Log.w("DELETING RECORDS", "after modal dialog")
-//            viewModel.onRecordListChange(emptyList())
-//            viewModel.onAreaChange("") // TODO
-        }
-        if (isInfoVisible) {
-            ShowInfoDialog()
-        }
-    }
-}
+//    }
+//
+//
+//    ExposedDropdownMenuBox(
+//        expanded = true, onExpandedChange = {
+//            expanded = !expanded
+//        }, modifier = Modifier.fillMaxWidth()
+//    ) {
+//
+//        Button(
+//            modifier = Modifier.fillMaxWidth(),
+//            border = BorderStroke(1.dp, color = Color.Black),
+//            colors = ButtonDefaults.buttonColors(backgroundColor = Color.White),
+//            onClick = {
+//                // Fetching controller lists
+//
+//                cs.launch {
+//                    withContext(Dispatchers.IO) {
+//
+//                        val fetchedControllers =
+//                            dataHandler.getControllersForBranch(
+//                                viewModel.selectedBranchId.value ?: "0"
+//                            )
+//
+//                        withContext(Dispatchers.Main) {
+//                            // Perform UI-related operations here
+//                            if (fetchedControllers.isEmpty()) {
+//                                Toast.makeText(
+//                                    context,
+//                                    "Контролеры не найдены",
+//                                    Toast.LENGTH_SHORT
+//                                )
+//                                    .show()
+//                                viewModel.onStatementIdChange("")
+//                                with(sharedPreferences.edit()) {
+//                                    putString("statementId", "")
+//                                    apply()
+//                                }
+//                            }
+//                            viewModel.onControllerListChange(fetchedControllers)
+//                        }
+//                    }
+//                }
+//
+//            }) {
+//            var header = "Контролер | Ведомость"
+//            if (selectedControllerName.value != "") {
+//                header =
+//                    "${selectedControllerName.value} | Ведомость ${selectedStatementId.value}"
+//            }
+//            Text(header)
+//        }
+//
+//        ExposedDropdownMenu(
+//            expanded = expanded,
+//            onDismissRequest = { expanded = false },
+//            modifier = Modifier.fillMaxWidth(),
+//        ) {
+//            if (controllers.value.isNotEmpty()) {
+//                controllers.value.forEachIndexed { index, element ->
+//                    DropdownMenuItem(onClick = {
+//                        println(selectedControllerName.value)
+//                        println(element.Staff_Name)
+//                        if (!selectedControllerName.value.equals(element.Staff_Name)) {
+//                            viewModel.onRecordListChange(emptyList())
+//                            viewModel.onStatementIdChange("")
+//                        }
+//
+//                        viewModel.onControllerNameChange(element.Staff_Name)
+//                        with(sharedPreferences.edit()) {
+//                            putString("controllerName", element.Staff_Name)
+//                            apply()
+//                        }
+//                        viewModel.onControllerIdChange(element.Staff_Lnk)
+//                        with(sharedPreferences.edit()) {
+//                            putString("controllerId", element.Staff_Lnk)
+//                            apply()
+//                        }
+//                        viewModel.onControllerNameChange(element.Staff_Name)
+//                        with(sharedPreferences.edit()) {
+//                            putString("controllerName", element.Staff_Name)
+//                            apply()
+//                        }
+//                        viewModel.onControllerCompanyChange(element.Company_Lnk)
+//                        with(sharedPreferences.edit()) {
+//                            putString("controllerCompany", element.Company_Lnk)
+//                            apply()
+//                        }
+//                        Log.w("SELECTOR", "Controller selected: ${element.Staff_Name}")
+//                        Log.w("SELECTOR", "Controller id: ${element.Staff_Lnk}")
+//                        expanded = false
+//
+//
+//                        // Fetching controller statements
+//                        cs.launch {
+//                            try {
+//                                var data: MutableList<RecordStatement>
+//                                withContext(Dispatchers.IO) {
+//                                    data = dataHandler.getStatementsForController(
+//                                        element.Staff_Lnk,
+//                                        selectedBranchId.value
+//                                    ).toMutableList()
+//                                }
+//                                viewModel.onStatementsChange(data)
+//                                if (statements.value.isNotEmpty()) {
+//                                    isDialogVisible = true // Show the dialog
+//                                } else {
+//                                    isInfoVisible = true
+//                                }
+//                            } catch (e: Exception) {
+//                                viewModel.onStatementIdChange("")
+//                                with(sharedPreferences.edit()) {
+//                                    putString("statementId", "")
+//                                    apply()
+//                                }
+//                                viewModel.onRecordListChange(emptyList())
+//                                println("Error occurred: ${e.message}")
+//                                Toast.makeText(
+//                                    context,
+//                                    "Данные не были загружены",
+//                                    Toast.LENGTH_LONG
+//                                ).show()
+//                            }
+//                        }
+//
+//                    }) {
+//                        Text(text = element.Staff_Name)
+//                    }
+//                }
+//            } else {
+//                DropdownMenuItem(onClick = {
+//                    expanded = false
+//                }) {
+//                    val text =
+//                        if (selectedBranch.value != "") "нет контролеров" else "выберите филиал"
+//                    Text(text = text)
+//                }
+//            }
+//        }
+//
+//        if (isDialogVisible && statements.value.isNotEmpty()) {
+////            viewModel.onStateIdChange("")
+//            ShowStatementsDialog() // Show the modal dialog with fetched data
+//        } else if (statements.value.isEmpty()) {
+//            Log.w("DELETING RECORDS", "after modal dialog")
+////            viewModel.onRecordListChange(emptyList())
+////            viewModel.onAreaChange("") // TODO
+//        }
+//        if (isInfoVisible) {
+//            ShowInfoDialog()
+//        }
+//    }
+//}
 
 
 @Composable

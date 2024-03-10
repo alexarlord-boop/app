@@ -1,5 +1,6 @@
 package com.example.app.Components
 
+import android.util.Log
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material.Button
@@ -35,42 +36,39 @@ fun <T> Selector(
 ) {
     var expanded by remember { mutableStateOf(initialExpanded) }
 
-        ExposedDropdownMenuBox(
-            expanded = true, onExpandedChange = {
-                expanded = !expanded
-            },
+    ExposedDropdownMenuBox(
+        expanded = true,
+        onExpandedChange = {
+            expanded = !expanded
+        },
+    ) {
+
+        Button(
+            modifier = modifier,
+            border = BorderStroke(1.dp, color = Color.Black),
+            colors = ButtonDefaults.buttonColors(backgroundColor = Color.White),
+            onClick = {})
+        {
+
+            Text(text = selectedValue?.let { getLabel(it) } ?: label, textAlign = TextAlign.Center)
+
+        }
+
+        ExposedDropdownMenu(
+            expanded = expanded,
+            onDismissRequest = { expanded = false },
+            modifier = Modifier.fillMaxWidth(),
         ) {
-
-            Button(
-                modifier = modifier,
-                border = BorderStroke(1.dp, color = Color.Black),
-                colors = ButtonDefaults.buttonColors(backgroundColor = Color.White),
-                onClick = {})
-            {
-                selectedValue?.let{
-                    Text(text =  getLabel(it), textAlign = TextAlign.Center)
-                }
-                run {
-                    Text(text = label, textAlign = TextAlign.Center)
-                }
-
-            }
-
-            ExposedDropdownMenu(
-                expanded = expanded,
-                onDismissRequest = { expanded = false },
-                modifier = Modifier.fillMaxWidth(),
-            ) {
-                options.forEachIndexed { index, option ->
-                    DropdownMenuItem(onClick = {
-                        onValueSelected(option)
-                        expanded = false
-                    }) {
-                        Text(text = getLabel(option))
-                    }
+            options.forEachIndexed { index, option ->
+                DropdownMenuItem(onClick = {
+                    onValueSelected(option)
+                    expanded = false
+                }) {
+                    Text(text = getLabel(option))
                 }
             }
         }
+    }
 }
 
 @Preview
@@ -81,7 +79,7 @@ fun BranchSelectorPreview() {
         label = "Some init label",
         options = listOf("Option 1", "Option 2", "Option 3"),
         onValueSelected = { /* Handle selected value */ },
-        getLabel = {it},
+        getLabel = { it },
         initialExpanded = false,
         modifier = Modifier
     )

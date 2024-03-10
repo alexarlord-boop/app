@@ -28,3 +28,11 @@ class AppUIResponses {
         const val noNetworkAvailable: String = "No network available"
     }
 }
+
+class MainScreenStrings{
+    companion object {
+        const val branchLabel = "Филиал"
+        const val controllerLabel = "Контролер"
+        const val statementLabel = "Ведомость"
+    }
+}

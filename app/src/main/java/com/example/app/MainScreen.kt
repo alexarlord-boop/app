@@ -2,7 +2,6 @@ package com.example.app
 
 
 import android.util.Log
-import android.widget.Toast
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -34,6 +33,7 @@ import kotlinx.coroutines.*
 import androidx.compose.ui.tooling.preview.Preview
 import com.example.app.Components.Selector
 import java.time.LocalDateTime
+import kotlin.reflect.KSuspendFunction2
 
 
 @Composable
@@ -41,18 +41,18 @@ fun MainScreen(
     connected: Boolean,
     viewModel: SavedStateViewModel,
     getBranchList: suspend () -> List<Branch>,
-    getControllersForBranch: suspend (String) -> List<Controller>
+    getControllersForBranch: suspend (String) -> List<Controller>,
+    getStatementsForController: suspend (String, String) -> List<RecordStatement>
 ) {
-    val cs = CoroutineScope(Dispatchers.Main)
-
     val listState = rememberLazyListState()
     val coroutineScope = rememberCoroutineScope()
 
     val records by viewModel.listOfRecords.observeAsState()
     val selectedBranch by viewModel.selectedBranch.observeAsState(null)
-    val selectedControllerId by viewModel.selectedControllerId.observeAsState()
+    val selectedController by viewModel.selectedController.observeAsState(null)
+    val selectedStatement by viewModel.selectedStatement.observeAsState(null)
+
     val lastClicked by viewModel.position.observeAsState(LAST_LIST_POSITION)
-    val statementId by viewModel.statementId.observeAsState("0")
     val area by viewModel.area.observeAsState("Район")
     val filename by viewModel.filename.observeAsState("")
     val showDeleteBtn by remember { derivedStateOf { !records.isNullOrEmpty() } }
@@ -72,7 +72,8 @@ fun MainScreen(
 
     // HEADER SELECTORS START
     var branches by remember { mutableStateOf(emptyList<Branch>()) } // branch objects
-    var controllers by remember { mutableStateOf(emptyList<Controller>()) } // controller objects
+    val controllers by viewModel.controllers.observeAsState(emptyList()) // controller objects
+    val statements by viewModel.statements.observeAsState(emptyList()) // controller objects
 
     // HEADER SELECTORS END
 
@@ -96,14 +97,17 @@ fun MainScreen(
             viewModel = viewModel,
             area = area,
             selectedBranch = selectedBranch,
+            selectedController = selectedController,
+            selectedStatement = selectedStatement,
             branchOptions = branches,
             controllerOptions = controllers,
+            statementOptions = statements,
             getControllersForBranch = getControllersForBranch,
+            getStatementsForController = getStatementsForController,
             showUploadButton = showUploadButton,
             showDeleteBtn = showDeleteBtn,
-            onUploadButtonClick = { isUploadDialogVisible = true },
-            onDeleteButtonClick = { isDeleteDialogVisible = true }
-        )
+            onUploadButtonClick = { isUploadDialogVisible = true }
+        ) { isDeleteDialogVisible = true }
 
         MainScreenRecordList(
             sortedListToShow = sortedListToShow,
@@ -126,15 +130,19 @@ fun MainScreenHeader(
     viewModel: SavedStateViewModel,
     area: String,
     selectedBranch: Branch?,
+    selectedController: Controller?,
+    selectedStatement: RecordStatement?,
     branchOptions: List<Branch>,
     controllerOptions: List<Controller>,
+    statementOptions: List<RecordStatement>,
     getControllersForBranch: suspend (String) -> List<Controller>,
+    getStatementsForController: suspend (String, String) -> List<RecordStatement>,
     showUploadButton: Boolean,
     showDeleteBtn: Boolean,
     onUploadButtonClick: () -> Unit,
     onDeleteButtonClick: () -> Unit
 ) {
-    val cs = CoroutineScope(Dispatchers.Main)
+    val coroutineScope = CoroutineScope(Dispatchers.Main)
     Surface(
         modifier = Modifier
             .height(200.dp)
@@ -167,11 +175,13 @@ fun MainScreenHeader(
                         getLabel = { it.companyName },
                         onValueSelected = { newValue ->
                             viewModel.onBranchChange(newValue)
-                            cs.launch {
+
+                            coroutineScope.launch {
                                 withContext(Dispatchers.IO) {
                                     val fetchedControllers =
-                                        selectedBranch?.let { getControllersForBranch(it.companyLnk) }
+                                        selectedBranch?.let { getControllersForBranch(newValue.companyLnk) }
 
+                                    Log.i("Branch Selector", fetchedControllers.toString())
                                     withContext(Dispatchers.Main) {
                                         if (fetchedControllers != null) {
                                             viewModel.onControllerListChange(fetchedControllers)
@@ -199,11 +209,25 @@ fun MainScreenHeader(
                         .padding(end = 8.dp)
                 ) {
                     Selector<Controller>(
-                        selectedValue = null,
+                        selectedValue = selectedController,
                         label = "Контролер",
                         options = controllerOptions,
                         getLabel = { it.Staff_Name },
-                        onValueSelected = { newValue -> viewModel.onControllerChange(newValue) },
+                        onValueSelected = { newValue -> viewModel.onControllerChange(newValue)
+                            coroutineScope.launch {
+                                withContext(Dispatchers.IO) {
+                                    val fetchedStatements = selectedController?.let {
+                                        selectedBranch?.let { it1 -> getStatementsForController(newValue.Staff_Lnk, it1.companyLnk) }
+                                    }
+                                    Log.i("Controller Selector", fetchedStatements.toString())
+                                    withContext(Dispatchers.Main) {
+                                        if (fetchedStatements != null) {
+                                            viewModel.onStatementListChange(fetchedStatements)
+                                        }
+                                    }
+                                }
+                            }
+                                          },
                         initialExpanded = false,
                         modifier = Modifier.fillMaxWidth()
                     )
@@ -215,11 +239,11 @@ fun MainScreenHeader(
                         .fillMaxWidth()
                         .padding(start = 8.dp)
                 ) {
-                    Selector(
-                        selectedValue = null,
+                    Selector<RecordStatement>(
+                        selectedValue = selectedStatement,
                         label = "Ведомость",
-                        options = listOf("Option A", "Option B", "Option C"),
-                        getLabel = { it },
+                        options = statementOptions,
+                        getLabel = { it.listNumber },
                         onValueSelected = {},
                         initialExpanded = false,
                         modifier = Modifier.fillMaxWidth()
@@ -384,7 +408,8 @@ fun mainScreenPreview() {
         connected = true,
         viewModel = fakeViewModel,
         getBranchList = { emptyList() },
-        getControllersForBranch = { emptyList()}
+        getControllersForBranch = { emptyList() },
+        getStatementsForController = { _, _ -> emptyList() }
     )
 }
 
@@ -399,14 +424,17 @@ fun headerPreview() {
         viewModel = fakeViewModel,
         area = "Великий Новгород Новгород",
         selectedBranch = null,
+        selectedController = null,
+        selectedStatement = null,
         branchOptions = emptyList(),
         controllerOptions = emptyList(),
+        statementOptions = emptyList(),
         getControllersForBranch = { emptyList() },
+        getStatementsForController = { _,_ -> emptyList() },
         showUploadButton = true,
         showDeleteBtn = true,
-        onUploadButtonClick = { },
-        onDeleteButtonClick = { }
-    )
+        onUploadButtonClick = { }
+    ) { }
 }
 
 @Preview
