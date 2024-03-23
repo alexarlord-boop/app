@@ -10,5 +10,5 @@ data class RecordStatement(
     @SerializedName("Staff_Lnk") val staffLink: String,
     @SerializedName("Staff_Name") val staffName: String,
     @SerializedName("Company_Lnk") val companyLnk: String,
-    @SerializedName("FirstAddress") val firstAddress: String,
+    @SerializedName("FirstAddress") val firstAddress: String?,
 ): Serializable

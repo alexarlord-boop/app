@@ -1,17 +1,19 @@
 plugins {
     id 'com.android.application'
     id 'org.jetbrains.kotlin.android'
-    id 'org.jetbrains.kotlin.android.extensions'
+//    id 'org.jetbrains.kotlin.android.extensions'
 }
 
 android {
     packagingOptions {
-        exclude("META-INF/DEPENDENCIES")
+        resources {
+            excludes += ['META-INF/DEPENDENCIES']
+        }
     }
 
-    androidExtensions {
-        experimental = true
-    }
+//    androidExtensions {
+//        experimental = true
+//    }
     namespace 'com.example.app'
     compileSdk 33
 
@@ -49,8 +51,13 @@ android {
 
 dependencies {
 
+    // mock
+    implementation "org.mockito.kotlin:mockito-kotlin:3.2.0"
+
+
     implementation 'com.android.volley:volley:1.2.1'
     implementation 'com.google.firebase:firebase-crashlytics-buildtools:2.9.4'
+    implementation 'junit:junit:4.12'
     def compose_version = "1.3.2"
 
     implementation("androidx.compose.runtime:runtime:$compose_version")
