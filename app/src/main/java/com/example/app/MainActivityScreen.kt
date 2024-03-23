@@ -166,14 +166,10 @@ class SavedStateViewModel(savedStateHandle: SavedStateHandle) : ViewModel() {
         savedStateHandle.getLiveData("listOfRecords")
     val listOfRecords: LiveData<List<RecordDto>> = _listOfRecords
 
-    fun onRecordListChange(newRecords: List<RecordDto>) {
+    fun onRecordListChange(newRecords: List<RecordDto>?) {
         Log.w("RECORDS CHANGES", "$newRecords")
         _listOfRecords.value = newRecords
-        if (newRecords.isEmpty()) {
-            onAreaChange("Район")
-        } else {
-            onAreaChange(newRecords[0].area)
-        }
+
     }
 
     private val _area: MutableLiveData<String> =
@@ -235,15 +231,12 @@ class SavedStateViewModel(savedStateHandle: SavedStateHandle) : ViewModel() {
         _filename.value = filename
     }
 
-    fun onStatementsChange(statements: List<RecordStatement>) {
-        _loadedStatements.value = statements
-    }
 
     fun onRecordChange(newRecord: RecordDto) {
         _selectedRecord.value = newRecord
     }
 
-    fun onControllerListChange(controllers: List<Controller>) {
+    fun onControllerListChange(controllers: List<Controller>?) {
         _controllers.value = controllers
     }
 
@@ -255,20 +248,21 @@ class SavedStateViewModel(savedStateHandle: SavedStateHandle) : ViewModel() {
         _selectedBranch.value = newBranch
     }
 
+    fun onStatementChange(newStatement: RecordStatement?) {
+        _selectedStatement.value = newStatement
+    }
+
     fun onPositionChange(newPosition: Int) {
         _position.value = newPosition
         LAST_LIST_POSITION = newPosition
     }
 
-    fun onStatementIdChange(newId: String) {
-        _statementId.value = newId
-    }
 
     val defaultController = Controller("", MainScreenStrings.controllerLabel, "")
     private val _selectedController: MutableLiveData<Controller> =
         savedStateHandle.getLiveData("selectedController", defaultController)
     var selectedController: LiveData<Controller> = _selectedController
-    fun onControllerChange(newValue: Controller) {
+    fun onControllerChange(newValue: Controller?) {
         _selectedController.value = newValue
     }
 

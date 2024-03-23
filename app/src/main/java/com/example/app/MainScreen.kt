@@ -1,6 +1,7 @@
 package com.example.app
 
 
+import android.content.Context
 import android.util.Log
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
@@ -23,6 +24,7 @@ import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -42,7 +44,8 @@ fun MainScreen(
     viewModel: SavedStateViewModel,
     getBranchList: suspend () -> List<Branch>,
     getControllersForBranch: suspend (String) -> List<Controller>,
-    getStatementsForController: suspend (String, String) -> List<RecordStatement>
+    getStatementsForController: suspend (String, String) -> List<RecordStatement>,
+    getRecordsForStatement: suspend (controllerId: String, statementId: String, context: Context) -> List<RecordDto>,
 ) {
     val listState = rememberLazyListState()
     val coroutineScope = rememberCoroutineScope()
@@ -72,8 +75,8 @@ fun MainScreen(
 
     // HEADER SELECTORS START
     var branches by remember { mutableStateOf(emptyList<Branch>()) } // branch objects
-    val controllers by viewModel.controllers.observeAsState(emptyList()) // controller objects
-    val statements by viewModel.statements.observeAsState(emptyList()) // controller objects
+    val controllers by viewModel.controllers.observeAsState(null) // controller objects
+    val statements by viewModel.statements.observeAsState(null) // controller objects
 
     // HEADER SELECTORS END
 
@@ -104,6 +107,7 @@ fun MainScreen(
             statementOptions = statements,
             getControllersForBranch = getControllersForBranch,
             getStatementsForController = getStatementsForController,
+            getRecordsForStatement = getRecordsForStatement,
             showUploadButton = showUploadButton,
             showDeleteBtn = showDeleteBtn,
             onUploadButtonClick = { isUploadDialogVisible = true }
@@ -114,6 +118,7 @@ fun MainScreen(
             listState = listState,
 //        navigateToRecord = { navController.navigate(route = Screen.Record.route) },
             navigateToRecord = { },
+            viewModel = viewModel
         )
     }
     MainScreenButtons(
@@ -132,17 +137,19 @@ fun MainScreenHeader(
     selectedBranch: Branch?,
     selectedController: Controller?,
     selectedStatement: RecordStatement?,
-    branchOptions: List<Branch>,
-    controllerOptions: List<Controller>,
-    statementOptions: List<RecordStatement>,
+    branchOptions: List<Branch>?,
+    controllerOptions: List<Controller>?,
+    statementOptions: List<RecordStatement>?,
     getControllersForBranch: suspend (String) -> List<Controller>,
     getStatementsForController: suspend (String, String) -> List<RecordStatement>,
+    getRecordsForStatement: suspend (controllerId: String, statementId: String, context: Context) -> List<RecordDto>,
     showUploadButton: Boolean,
     showDeleteBtn: Boolean,
     onUploadButtonClick: () -> Unit,
     onDeleteButtonClick: () -> Unit
 ) {
     val coroutineScope = CoroutineScope(Dispatchers.Main)
+    val context = LocalContext.current
     Surface(
         modifier = Modifier
             .height(200.dp)
@@ -171,10 +178,16 @@ fun MainScreenHeader(
                     Selector<Branch>(
                         selectedValue = selectedBranch,
                         label = "Филиал",
+                        ctaText = "Нет доступных филиалов",
+                        nullText = "Не удалось загрузить список филиалов",
                         options = branchOptions,
                         getLabel = { it.companyName },
                         onValueSelected = { newValue ->
                             viewModel.onBranchChange(newValue)
+                            viewModel.onControllerChange(null)
+                            viewModel.onStatementChange(null)
+                            viewModel.onStatementListChange(null)
+
 
                             coroutineScope.launch {
                                 withContext(Dispatchers.IO) {
@@ -183,9 +196,7 @@ fun MainScreenHeader(
 
                                     Log.i("Branch Selector", fetchedControllers.toString())
                                     withContext(Dispatchers.Main) {
-                                        if (fetchedControllers != null) {
-                                            viewModel.onControllerListChange(fetchedControllers)
-                                        }
+                                        viewModel.onControllerListChange(fetchedControllers)
                                     }
                                 }
                             }
@@ -211,23 +222,33 @@ fun MainScreenHeader(
                     Selector<Controller>(
                         selectedValue = selectedController,
                         label = "Контролер",
+                        ctaText = "Выберите филиал",
+                        nullText = "Нет списка контролеров",
                         options = controllerOptions,
                         getLabel = { it.Staff_Name },
-                        onValueSelected = { newValue -> viewModel.onControllerChange(newValue)
+                        onValueSelected = { newValue ->
+                            viewModel.onControllerChange(newValue)
+                            viewModel.onStatementChange(null)
+                            viewModel.onRecordListChange(null)
+
+
                             coroutineScope.launch {
                                 withContext(Dispatchers.IO) {
-                                    val fetchedStatements = selectedController?.let {
-                                        selectedBranch?.let { it1 -> getStatementsForController(newValue.Staff_Lnk, it1.companyLnk) }
-                                    }
-                                    Log.i("Controller Selector", fetchedStatements.toString())
-                                    withContext(Dispatchers.Main) {
-                                        if (fetchedStatements != null) {
-                                            viewModel.onStatementListChange(fetchedStatements)
+                                    val fetchedStatements = newValue.let { controller ->
+                                        selectedBranch?.let { branch ->
+                                            getStatementsForController(
+                                                controller.Staff_Lnk,
+                                                branch.companyLnk
+                                            )
                                         }
+                                    }
+                                    withContext(Dispatchers.Main) {
+                                        Log.i("Controller Selector", fetchedStatements.toString())
+                                        viewModel.onStatementListChange(fetchedStatements)
                                     }
                                 }
                             }
-                                          },
+                        },
                         initialExpanded = false,
                         modifier = Modifier.fillMaxWidth()
                     )
@@ -242,9 +263,32 @@ fun MainScreenHeader(
                     Selector<RecordStatement>(
                         selectedValue = selectedStatement,
                         label = "Ведомость",
+                        ctaText = "Выберите контролера",
+                        nullText = "Нет списка ведомостей",
                         options = statementOptions,
                         getLabel = { it.listNumber },
-                        onValueSelected = {},
+                        onValueSelected = { newValue ->
+                            viewModel.onStatementChange(newValue)
+
+                            coroutineScope.launch {
+                                withContext(Dispatchers.IO) {
+                                    val fetchedRecords = newValue.let { statement ->
+                                        selectedController?.let { controller ->
+                                            getRecordsForStatement(
+                                                controller.Staff_Lnk,
+                                                statement.listNumber,
+                                                context
+                                            )
+                                        }
+                                    }
+                                    withContext(Dispatchers.Main) {
+                                        Log.i("Controller Selector", fetchedRecords.toString())
+                                        viewModel.onRecordListChange(fetchedRecords)
+                                    }
+                                }
+                            }
+
+                        },
                         initialExpanded = false,
                         modifier = Modifier.fillMaxWidth()
                     )
@@ -325,6 +369,7 @@ fun MainScreenRecordList(
     sortedListToShow: List<RecordDto>,
     listState: LazyListState,
     navigateToRecord: () -> Unit,
+    viewModel: SavedStateViewModel,
 ) {
     // Existing record list composable...
     Box(
@@ -337,7 +382,14 @@ fun MainScreenRecordList(
             modifier = Modifier.fillMaxSize()
         ) {
             itemsIndexed(sortedListToShow) { id, record ->
-                RecordItem(id, record, 1, {}, {}, navigateToRecord)
+                RecordItem(
+                    id = id,
+                    record = record,
+                    lastPosition = -1,
+                    onPositionChange = {viewModel.onPositionChange(id)},
+                    onRecordChange = {viewModel.onRecordChange(record)},
+                    navigateToRecord = navigateToRecord
+                )
             }
         }
     }
@@ -409,7 +461,8 @@ fun mainScreenPreview() {
         viewModel = fakeViewModel,
         getBranchList = { emptyList() },
         getControllersForBranch = { emptyList() },
-        getStatementsForController = { _, _ -> emptyList() }
+        getStatementsForController = { _, _ -> emptyList() },
+        getRecordsForStatement = { _, _, _ -> emptyList() }
     )
 }
 
@@ -430,7 +483,8 @@ fun headerPreview() {
         controllerOptions = emptyList(),
         statementOptions = emptyList(),
         getControllersForBranch = { emptyList() },
-        getStatementsForController = { _,_ -> emptyList() },
+        getStatementsForController = { _, _ -> emptyList() },
+        getRecordsForStatement = { _, _, _ -> emptyList() },
         showUploadButton = true,
         showDeleteBtn = true,
         onUploadButtonClick = { }
@@ -486,7 +540,8 @@ fun RecordListPreview() {
     MainScreenRecordList(
         sortedListToShow = sortedListToShow,
         listState = listState,
-        navigateToRecord = {}
+        navigateToRecord = {},
+        viewModel = fakeViewModel
     )
 }
 

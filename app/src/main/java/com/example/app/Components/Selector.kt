@@ -28,9 +28,11 @@ import kotlin.reflect.typeOf
 fun <T> Selector(
     selectedValue: T?,
     label: String,
-    options: List<T>,
+    options: List<T>?,
     getLabel: (T) -> String,
     onValueSelected: (T) -> Unit,
+    ctaText: String,
+    nullText: String,
     initialExpanded: Boolean = false,
     modifier: Modifier
 ) {
@@ -59,12 +61,24 @@ fun <T> Selector(
             onDismissRequest = { expanded = false },
             modifier = Modifier.fillMaxWidth(),
         ) {
-            options.forEachIndexed { index, option ->
-                DropdownMenuItem(onClick = {
-                    onValueSelected(option)
-                    expanded = false
-                }) {
-                    Text(text = getLabel(option))
+            if (options == null) {
+                DropdownMenuItem(onClick = {}) {
+                    Text(text = nullText)
+                }
+            } else {
+                if (options.isEmpty()) {
+                    DropdownMenuItem(onClick = {}) {
+                        Text(text = ctaText)
+                    }
+                } else {
+                    options.forEachIndexed { index, option ->
+                        DropdownMenuItem(onClick = {
+                            onValueSelected(option)
+                            expanded = false
+                        }) {
+                            Text(text = getLabel(option))
+                        }
+                    }
                 }
             }
         }
@@ -77,9 +91,11 @@ fun BranchSelectorPreview() {
     Selector(
         selectedValue = null,
         label = "Some init label",
-        options = listOf("Option 1", "Option 2", "Option 3"),
+        options = null,
         onValueSelected = { /* Handle selected value */ },
         getLabel = { it },
+        ctaText = "Choose something",
+        nullText = "No list",
         initialExpanded = false,
         modifier = Modifier
     )
